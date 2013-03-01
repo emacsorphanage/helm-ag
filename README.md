@@ -31,4 +31,8 @@ Move to before jump point
 
 Base ag command, default is `ag --nocolor --nogroup`
 
-    helm-ag-base-command
+    (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
+
+Command line option of base command. Default is `nil`.
+
+    (setq helm-ag-command-option "--all-text")

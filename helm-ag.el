@@ -33,8 +33,13 @@
   "the silver searcher with helm interface"
   :group 'helm)
 
-(defcustom helm-ag-base-command "ag --nocolor --nogroup "
+(defcustom helm-ag-base-command "ag --nocolor --nogroup"
   "Base command of `ag'"
+  :type 'string
+  :group 'helm-ag)
+
+(defcustom helm-ag-command-option nil
+  "Command line option of `ag'. This is appended after `helm-ag-base-command'"
   :type 'string
   :group 'helm-ag)
 
@@ -47,9 +52,17 @@
                     (point))))
     (push (list :file file :point curpoint) helm-ag-context-stack)))
 
+(defun helm-ag-initial-command ()
+  (format "%s%s"
+          helm-ag-base-command
+          (helm-aif helm-ag-command-option
+              (format " %s " it)
+            " ")))
+
 (defun helm-ag-init ()
   (let* ((cmd (read-string "Ag: "
-                           helm-ag-base-command 'helm-ag-command-history)))
+                           (helm-ag-initial-command)
+                           'helm-ag-command-history)))
     (helm-attrset 'recenter t)
     (helm-attrset 'before-jump-hook 'helm-ag-save-current-context)
     (with-current-buffer (helm-candidate-buffer 'global)
