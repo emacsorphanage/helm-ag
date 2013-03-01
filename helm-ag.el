@@ -49,10 +49,10 @@
 (defvar helm-ag-default-directory nil)
 
 (defun helm-ag-save-current-context ()
-  (let ((file (buffer-file-name helm-current-buffer))
-        (curpoint (with-helm-current-buffer
-                    (point))))
-    (push (list :file file :point curpoint) helm-ag-context-stack)))
+  (helm-aif (buffer-file-name helm-current-buffer)
+      (let ((curpoint (with-helm-current-buffer
+                        (point))))
+        (push (list :file it :point curpoint) helm-ag-context-stack))))
 
 (defun helm-ag-initial-command ()
   (format "%s%s"
