@@ -22,6 +22,10 @@ Input search word with `ag` command.
 
     M-x helm-ag
 
+Same as `helm-ag` except to search only current file
+
+    M-x helm-ag-this-file
+
 Move to before jump point
 
     M-x helm-ag-pop-stack

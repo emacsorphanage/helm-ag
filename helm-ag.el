@@ -67,16 +67,24 @@
                            'helm-ag-command-history)))
     (helm-attrset 'recenter t)
     (with-current-buffer (helm-candidate-buffer 'global)
-      (let ((default-directory helm-ag-default-directory))
-        (eshell-command cmd t)
+      (let ((default-directory (or helm-ag-default-directory
+                                   default-directory)))
+        (eshell-command (helm-aif (helm-attr 'search-this-file)
+                            (format "%s %s" cmd it)
+                          cmd) t)
         (helm-ag-save-current-context))
       (when (zerop (length (buffer-string)))
-        (error "No output: '%s'" cmd)))))
+        (error "No output: '%s'" cmd))
+      (unless (zerop eshell-last-command-status)
+        (error "Failed: '%s'" cmd)))))
 
 (defun helm-ag-find-file-action (candidate find-func)
   (let* ((elems (split-string candidate ":"))
-         (filename (first elems))
-         (line (string-to-number (second elems)))
+         (search-this-file (helm-attr 'search-this-file))
+         (filename (or search-this-file (first elems)))
+         (line (string-to-number (if search-this-file
+                                     (first elems)
+                                   (second elems))))
          (default-directory helm-ag-default-directory))
     (funcall find-func filename)
     (goto-char (point-min))
@@ -103,6 +111,14 @@
           (curpoint (plist-get context :point)))
       (find-file file)
       (goto-char curpoint))))
+
+;;;###autoload
+(defun helm-ag-this-file ()
+  (interactive)
+  (let ((filename (file-name-nondirectory (buffer-file-name))))
+    (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
+    (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
+    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
 
 ;;;###autoload
 (defun helm-ag ()
