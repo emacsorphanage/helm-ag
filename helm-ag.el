@@ -46,6 +46,7 @@
 
 (defvar helm-ag-command-history '())
 (defvar helm-ag-context-stack nil)
+(defvar helm-ag-default-directory nil)
 
 (defun helm-ag-save-current-context ()
   (let ((file (buffer-file-name helm-current-buffer))
@@ -67,15 +68,29 @@
     (helm-attrset 'recenter t)
     (helm-attrset 'before-jump-hook 'helm-ag-save-current-context)
     (with-current-buffer (helm-candidate-buffer 'global)
-      (eshell-command cmd t)
+      (let ((default-directory helm-ag-default-directory))
+        (eshell-command cmd t))
       (when (zerop (length (buffer-string)))
         (error "No output: '%s'" cmd)))))
+
+(defun helm-ag-find-file-action (candidate find-func)
+  (let* ((elems (split-string candidate ":"))
+         (filename (first elems))
+         (line (string-to-number (second elems)))
+         (default-directory helm-ag-default-directory))
+    (funcall find-func filename)
+    (goto-char (point-min))
+    (forward-line (1- line))))
 
 (defvar helm-ag-source
   '((name . "the silver searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
-    (type . file-line)
+    (action . (("Open File" . (lambda (c)
+                                (helm-ag-find-file-action c 'find-file)))
+               ("Open File Other Window" .
+                (lambda (c)
+                  (helm-ag-find-file-action c 'find-file-other-window)))))
     (candidate-number-limit . 9999)))
 
 ;;;###autoload
@@ -92,7 +107,11 @@
 ;;;###autoload
 (defun helm-ag ()
   (interactive)
-  (helm :sources '(helm-ag-source) :buffer "*helm-ag*"))
+  (let ((helm-ag-default-directory (if current-prefix-arg
+                                       (read-directory-name "Search Directory: ")
+                                     default-directory)))
+    (helm-attrset 'name (format "At %s" helm-ag-default-directory) helm-ag-source)
+    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
 
 (provide 'helm-ag)
 
