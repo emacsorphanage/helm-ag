@@ -1,7 +1,8 @@
 # helm-ag.el
 
 ## Introduction
-`helm-ag.el` provides interfaces of [the silver searcher](https://github.com/ggreer/the_silver_searcher).
+`helm-ag.el` provides interfaces of [the silver searcher](https://github.com/ggreer/the_silver_searcher) with helm.
+
 
 ## Screenshot
 
