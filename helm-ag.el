@@ -66,10 +66,10 @@
                            (helm-ag-initial-command)
                            'helm-ag-command-history)))
     (helm-attrset 'recenter t)
-    (helm-attrset 'before-jump-hook 'helm-ag-save-current-context)
     (with-current-buffer (helm-candidate-buffer 'global)
       (let ((default-directory helm-ag-default-directory))
-        (eshell-command cmd t))
+        (eshell-command cmd t)
+        (helm-ag-save-current-context))
       (when (zerop (length (buffer-string)))
         (error "No output: '%s'" cmd)))))
 
