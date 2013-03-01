@@ -107,10 +107,11 @@
 ;;;###autoload
 (defun helm-ag ()
   (interactive)
-  (let ((helm-ag-default-directory (if current-prefix-arg
-                                       (read-directory-name "Search Directory: ")
-                                     default-directory)))
-    (helm-attrset 'name (format "At %s" helm-ag-default-directory) helm-ag-source)
+  (let* ((helm-ag-default-directory (if current-prefix-arg
+                                        (read-directory-name "Search Directory: ")
+                                      default-directory))
+         (header-name (format "Search at %s" helm-ag-default-directory)))
+    (helm-attrset 'name header-name helm-ag-source)
     (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
 
 (provide 'helm-ag)
