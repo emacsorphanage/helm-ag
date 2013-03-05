@@ -26,7 +26,11 @@ Same as `helm-ag` except to search only current file
 
     M-x helm-ag-this-file
 
-Move to before jump point
+Move to point before jump
+
+    M-x helm-ag-pop-stack
+
+Clear context stack
 
     M-x helm-ag-pop-stack
 
