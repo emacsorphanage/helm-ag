@@ -113,6 +113,11 @@
       (goto-char curpoint))))
 
 ;;;###autoload
+(defun helm-ag-clear-stack ()
+  (interactive)
+  (setq helm-ag-context-stack nil))
+
+;;;###autoload
 (defun helm-ag-this-file ()
   (interactive)
   (let ((filename (file-name-nondirectory (buffer-file-name))))
