@@ -18,7 +18,8 @@
 
 ## Basic Usage
 
-Input search word with `ag` command.
+Input search word with `ag` command. You can change search directory
+with `C-u` prefix.
 
     M-x helm-ag
 
