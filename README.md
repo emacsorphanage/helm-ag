@@ -36,6 +36,12 @@ Clear context stack
     M-x helm-ag-pop-stack
 
 
+## Persistent action
+
+You can see file content temporarily by persistent action(`C-z`)
+at `helm-ag` and `helm-ag-this-file`.
+
+
 ## Customize
 
 Base ag command, default is `ag --nocolor --nogroup`
