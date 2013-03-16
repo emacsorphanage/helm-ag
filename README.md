@@ -51,3 +51,9 @@ Base ag command, default is `ag --nocolor --nogroup`
 Command line option of base command. Default is `nil`.
 
     (setq helm-ag-command-option "--all-text")
+
+Insert thing at point as default search pattern, if this value is `non nil`.
+You can set parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
+Default value is `nil`.
+
+    (setq helm-ag-thing-at-point 'symbol)

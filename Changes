@@ -1,4 +1,7 @@
 Revision history for helm-ag.el
 
+Revision 0.02 2013/03/16 syohex
+    - Implement inserting search pattern at cursor
+
 Revision 0.01 2013/03/06 syohex
     - Initial Release
