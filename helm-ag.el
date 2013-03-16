@@ -44,6 +44,12 @@
   :type 'string
   :group 'helm-ag)
 
+(defcustom helm-ag-insert-at-point nil
+  "Insert thing at point as search pattern.
+   You can set value same as `thing-at-point'"
+  :type 'symbol
+  :group 'helm-ag)
+
 (defvar helm-ag-command-history '())
 (defvar helm-ag-context-stack nil)
 (defvar helm-ag-default-directory nil)
@@ -55,11 +61,17 @@
         (push (list :file it :point curpoint) helm-ag-context-stack))))
 
 (defun helm-ag-initial-command ()
-  (format "%s%s"
-          helm-ag-base-command
-          (helm-aif helm-ag-command-option
-              (format " %s " it)
-            " ")))
+  (substring-no-properties
+   (format "%s%s%s"
+           helm-ag-base-command
+           (if helm-ag-command-option
+               (format " %s" helm-ag-command-option)
+             "")
+           (if helm-ag-insert-at-point
+               (format " %s"
+                       (with-helm-current-buffer
+                         (thing-at-point helm-ag-insert-at-point)))
+             " "))))
 
 (defun helm-ag-init ()
   (let* ((cmd (read-string "Ag: "
