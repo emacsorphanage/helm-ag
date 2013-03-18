@@ -18,22 +18,22 @@
 
 ## Basic Usage
 
+#### helm-ag
+
 Input search word with `ag` command. You can change search directory
 with `C-u` prefix.
 
-    M-x helm-ag
+#### helm-ag-this-file
 
 Same as `helm-ag` except to search only current file
 
-    M-x helm-ag-this-file
+#### helm-ag-pop-stack
 
 Move to point before jump
 
-    M-x helm-ag-pop-stack
+#### helm-ag-pop-stack
 
 Clear context stack
-
-    M-x helm-ag-pop-stack
 
 
 ## Persistent action
