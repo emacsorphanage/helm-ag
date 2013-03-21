@@ -11,7 +11,7 @@
 
 ## Requirements
 
-* Emacs 24 or higher
+* Emacs 23 or higher
 * helm 1.0 or higher
 * [the silver searcher](https://github.com/ggreer/the_silver_searcher).
 
