@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.03 2013/03/21 syohex
+    - Fix for insert-at-point
+
 Revision 0.02 2013/03/16 syohex
     - Implement inserting search pattern at cursor
 
