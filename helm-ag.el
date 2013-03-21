@@ -67,11 +67,12 @@
            (if helm-ag-command-option
                (format " %s" helm-ag-command-option)
              "")
-           (if helm-ag-insert-at-point
-               (format " %s"
-                       (with-helm-current-buffer
-                         (thing-at-point helm-ag-insert-at-point)))
-             " "))))
+           (let ((at-point (thing-at-point helm-ag-insert-at-point)))
+             (if (and helm-ag-insert-at-point at-point)
+                 (format " %s"
+                         (with-helm-current-buffer
+                           (thing-at-point helm-ag-insert-at-point)))
+               " ")))))
 
 (defun helm-ag-init ()
   (let* ((cmd (read-string "Ag: "
