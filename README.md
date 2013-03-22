@@ -31,7 +31,7 @@ Same as `helm-ag` except to search only current file
 
 Move to point before jump
 
-#### helm-ag-pop-stack
+#### helm-ag-clear-stack
 
 Clear context stack
 
