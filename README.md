@@ -16,6 +16,11 @@
 * [the silver searcher](https://github.com/ggreer/the_silver_searcher).
 
 
+## Installation
+
+You can install `helm-ag.el` from [MELPA](https://github.com/milkypostman/melpa.git) with package.el (`M-x package-install git-gutter`).
+
+
 ## Basic Usage
 
 #### helm-ag
@@ -44,16 +49,23 @@ at `helm-ag` and `helm-ag-this-file`.
 
 ## Customize
 
-Base ag command, default is `ag --nocolor --nogroup`
+#### helm-ag-base-command(Default: `ag --nocolor --nogroup`)
 
-    (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
+Base command of `ag`.
 
-Command line option of base command. Default is `nil`.
+#### helm-ag-command-option(Default: `nil`)
 
-    (setq helm-ag-command-option "--all-text")
+Command line option of base command.
+
+#### helm-ag-thing-at-point(Default: `'nil`)
 
 Insert thing at point as default search pattern, if this value is `non nil`.
-You can set parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
-Default value is `nil`.
+You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
 
-    (setq helm-ag-thing-at-point 'symbol)
+### Sample Configuration
+
+````elisp
+(setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
+(setq helm-ag-command-option "--all-text")
+(setq helm-ag-thing-at-point 'symbol)
+````
