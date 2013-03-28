@@ -1,7 +1,7 @@
 # helm-ag.el
 
 ## Introduction
-`helm-ag.el` provides interfaces of [the silver searcher](https://github.com/ggreer/the_silver_searcher) with helm.
+`helm-ag.el` provides interfaces of [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) with helm.
 
 
 ## Screenshot
@@ -13,7 +13,7 @@
 
 * Emacs 23 or higher
 * helm 1.0 or higher
-* [the silver searcher](https://github.com/ggreer/the_silver_searcher).
+* [The Silver Searcher](https://github.com/ggreer/the_silver_searcher).
 
 
 ## Installation
@@ -64,8 +64,8 @@ You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc
 
 ### Sample Configuration
 
-````elisp
+```elisp
 (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
 (setq helm-ag-command-option "--all-text")
 (setq helm-ag-thing-at-point 'symbol)
-````
+```
