@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.04 2013/04/01 syohex
+    - Fix bug that helm-ag does not work with helm-resume.
+    - remove needless import
+
 Revision 0.03 2013/03/21 syohex
     - Fix for insert-at-point
 
