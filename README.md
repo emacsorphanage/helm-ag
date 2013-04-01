@@ -23,20 +23,20 @@ You can install `helm-ag.el` from [MELPA](https://github.com/milkypostman/melpa.
 
 ## Basic Usage
 
-#### helm-ag
+#### `helm-ag`
 
 Input search word with `ag` command. You can change search directory
 with `C-u` prefix.
 
-#### helm-ag-this-file
+#### `helm-ag-this-file`
 
 Same as `helm-ag` except to search only current file
 
-#### helm-ag-pop-stack
+#### `helm-ag-pop-stack`
 
 Move to point before jump
 
-#### helm-ag-clear-stack
+#### `helm-ag-clear-stack`
 
 Clear context stack
 
@@ -49,15 +49,15 @@ at `helm-ag` and `helm-ag-this-file`.
 
 ## Customize
 
-#### helm-ag-base-command(Default: `ag --nocolor --nogroup`)
+#### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
 
 Base command of `ag`.
 
-#### helm-ag-command-option(Default: `nil`)
+#### `helm-ag-command-option`(Default: `nil`)
 
 Command line option of base command.
 
-#### helm-ag-thing-at-point(Default: `'nil`)
+#### `helm-ag-thing-at-point`(Default: `'nil`)
 
 Insert thing at point as default search pattern, if this value is `non nil`.
 You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
