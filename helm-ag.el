@@ -53,6 +53,7 @@
 (defvar helm-ag-command-history '())
 (defvar helm-ag-context-stack nil)
 (defvar helm-ag-default-directory nil)
+(defvar helm-ag-last-default-directory nil)
 
 (defun helm-ag-save-current-context ()
   (helm-aif (buffer-file-name helm-current-buffer)
@@ -97,7 +98,9 @@
          (line (string-to-number (if search-this-file
                                      (first elems)
                                    (second elems))))
-         (default-directory helm-ag-default-directory))
+         (default-directory (or helm-ag-default-directory
+                                helm-ag-last-default-directory)))
+    (setq helm-ag-last-default-directory default-directory)
     (funcall find-func filename)
     (goto-char (point-min))
     (forward-line (1- line))))
