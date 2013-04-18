@@ -25,7 +25,6 @@
 ;;; Code:
 
 (require 'helm)
-(require 'eshell)
 
 (defgroup helm-ag nil
   "the silver searcher with helm interface"
@@ -77,16 +76,17 @@
                            'helm-ag-command-history)))
     (helm-attrset 'recenter t)
     (with-current-buffer (helm-candidate-buffer 'global)
-      (let ((default-directory (or helm-ag-default-directory
-                                   default-directory)))
-        (eshell-command (helm-aif (helm-attr 'search-this-file)
-                            (format "%s %s" cmd it)
-                          cmd) t)
-        (helm-ag-save-current-context))
-      (when (zerop (length (buffer-string)))
-        (error "No output: '%s'" cmd))
-      (unless (zerop eshell-last-command-status)
-        (error "Failed: '%s'" cmd)))))
+      (let* ((default-directory (or helm-ag-default-directory
+                                    default-directory))
+             (full-cmd (helm-aif (helm-attr 'search-this-file)
+                           (format "%s %s" cmd it)
+                         cmd))
+             (ret (call-process-shell-command full-cmd nil t)))
+        (unless (zerop ret)
+          (error "Failed: '%s'" cmd))
+        (when (zerop (length (buffer-string)))
+          (error "No output: '%s'" cmd))
+        (helm-ag-save-current-context)))))
 
 (defun helm-ag-find-file-action (candidate find-func)
   (let* ((elems (split-string candidate ":"))
