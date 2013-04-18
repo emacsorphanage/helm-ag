@@ -144,6 +144,7 @@
                                         (read-directory-name "Search Directory: ")
                                       default-directory))
          (header-name (format "Search at %s" helm-ag-default-directory)))
+    (helm-attrset 'search-this-file nil helm-ag-source)
     (helm-attrset 'name header-name helm-ag-source)
     (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
 
