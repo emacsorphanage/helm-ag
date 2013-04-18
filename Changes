@@ -1,5 +1,12 @@
 Revision history for helm-ag.el
 
+Revision 0.05 2013/04/18 syohex
+    [IMCOMPATIBLE CHANGE]
+    - remove eshell dendency
+      - https://github.com/ggreer/the_silver_searcher/pull/166
+
+    Please update lasted The silver searcher
+
 Revision 0.04 2013/04/01 syohex
     - Fix bug that helm-ag does not work with helm-resume.
     - remove needless import
