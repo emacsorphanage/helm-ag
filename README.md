@@ -72,3 +72,9 @@ You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc
 (setq helm-ag-command-option "--all-text")
 (setq helm-ag-thing-at-point 'symbol)
 ```
+
+
+## Alternatives
+
+[ag.el](https://github.com/Wilfred/ag.el) provides `M-x grep` interface.
+Also it can work without helm.
