@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.07 2013/07/31 syohex
+    - fix encoding problem
+
 Revision 0.06 2013/05/16 syohex
     - remove extra spaces
 
