@@ -71,9 +71,10 @@
              " "))))
 
 (defun helm-ag-init ()
-  (let* ((cmd (read-string "Ag: "
-                           (helm-ag-initial-command)
-                           'helm-ag-command-history)))
+  (let ((cmd (read-string "Ag: "
+                          (helm-ag-initial-command)
+                          'helm-ag-command-history))
+        (buf-coding buffer-file-coding-system))
     (helm-attrset 'recenter t)
     (with-current-buffer (helm-candidate-buffer 'global)
       (let* ((default-directory (or helm-ag-default-directory
@@ -81,8 +82,9 @@
              (full-cmd (helm-aif (helm-attr 'search-this-file)
                            (format "%s %s" cmd it)
                          cmd))
-             (ret (call-process-shell-command full-cmd nil t)))
-        (unless (zerop ret)
+             (coding-system-for-read buf-coding)
+             (coding-system-for-write buf-coding))
+        (unless (zerop (call-process-shell-command full-cmd nil t))
           (error "Failed: '%s'" cmd))
         (when (zerop (length (buffer-string)))
           (error "No output: '%s'" cmd))
