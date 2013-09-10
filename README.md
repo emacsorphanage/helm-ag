@@ -21,7 +21,7 @@ You can get older helm-ag from [here](https://github.com/syohex/emacs-helm-ag/ta
 
 ## Installation
 
-You can install `helm-ag.el` from [MELPA](https://github.com/milkypostman/melpa.git) with package.el (`M-x package-install git-gutter`).
+You can install `helm-ag.el` from [MELPA](https://github.com/milkypostman/melpa.git) with package.el (`M-x package-install helm-ag`).
 
 
 ## Basic Usage
