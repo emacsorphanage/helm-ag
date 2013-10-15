@@ -65,6 +65,13 @@ Command line option of base command.
 Insert thing at point as default search pattern, if this value is `non nil`.
 You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
 
+#### `helm-ag-source-type`(Default: `'one-line`)
+
+If this value is `'file-line`, `helm-ag` displays candidate as helm `file-line` style.
+
+![helm-ag-file-line](image/helm-ag-file-line.png)
+
+
 ### Sample Configuration
 
 ```elisp
