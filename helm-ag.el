@@ -46,6 +46,12 @@
   :type 'symbol
   :group 'helm-ag)
 
+(defcustom helm-ag-source-type 'one-line
+  "Style of candidates"
+  :type '(choice (const :tag "Show file:line number:content in one line" one-line)
+                 (const :tag "Helm file-line style" file-line))
+  :group 'helm-ag)
+
 (defvar helm-ag-command-history '())
 (defvar helm-ag-context-stack nil)
 (defvar helm-ag-default-directory nil)
@@ -115,6 +121,13 @@
                   (helm-ag-find-file-action c 'find-file-other-window)))))
     (candidate-number-limit . 9999)))
 
+(defvar helm-ag-source-grep
+  '((name . "the silver searcher")
+    (init . helm-ag-init)
+    (candidates-in-buffer)
+    (type . file-line)
+    (candidate-number-limit . 9999)))
+
 ;;;###autoload
 (defun helm-ag-pop-stack ()
   (interactive)
@@ -131,13 +144,18 @@
   (interactive)
   (setq helm-ag-context-stack nil))
 
+(defun helm-ag--select-source ()
+  (if (eq helm-ag-source-type 'file-line)
+      '(helm-ag-source-grep)
+    '(helm-ag-source)))
+
 ;;;###autoload
 (defun helm-ag-this-file ()
   (interactive)
   (let ((filename (file-name-nondirectory (buffer-file-name))))
     (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
+    (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
 ;;;###autoload
 (defun helm-ag ()
@@ -148,7 +166,7 @@
          (header-name (format "Search at %s" helm-ag-default-directory)))
     (helm-attrset 'search-this-file nil helm-ag-source)
     (helm-attrset 'name header-name helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
+    (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
 (provide 'helm-ag)
 
