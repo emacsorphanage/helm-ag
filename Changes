@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.08 2013/10/15 syohex
+    - Add style "file-line"
+
 Revision 0.07 2013/07/31 syohex
     - fix encoding problem
 
