@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.09 2013/10/27 syohex
+    - Add highlight line feature at persistent action
+
 Revision 0.08 2013/10/15 syohex
     - Add style "file-line"
 
