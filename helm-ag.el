@@ -110,10 +110,25 @@
     (goto-char (point-min))
     (forward-line (1- line))))
 
+(defun helm-ag-persistent-action (candidate)
+  (let* ((elems (split-string candidate ":"))
+         (search-this-file (helm-attr 'search-this-file))
+         (filename (or search-this-file (first elems)))
+         (line (string-to-number (if search-this-file
+                                     (first elems)
+                                   (second elems))))
+         (default-directory (or helm-ag-default-directory
+                                helm-ag-last-default-directory)))
+    (find-file filename)
+    (goto-char (point-min))
+    (forward-line (1- line))
+    (helm-match-line-color-current-line)))
+
 (defvar helm-ag-source
   '((name . "the silver searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
+    (persistent-action . helm-ag-persistent-action)
     (action . (("Open File" . (lambda (c)
                                 (helm-ag-find-file-action c 'find-file)))
                ("Open File Other Window" .
