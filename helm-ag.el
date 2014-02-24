@@ -5,7 +5,7 @@
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-helm-ag
 ;; Version: 0.10
-;; Package-Requires: ((helm "1.5.6"))
+;; Package-Requires: ((helm "1.5.6") (cl-lib "0.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'helm)
 
 (defgroup helm-ag nil
@@ -99,10 +100,10 @@
 (defun helm-ag-find-file-action (candidate find-func)
   (let* ((elems (split-string candidate ":"))
          (search-this-file (helm-attr 'search-this-file))
-         (filename (or search-this-file (first elems)))
+         (filename (or search-this-file (cl-first elems)))
          (line (string-to-number (if search-this-file
-                                     (first elems)
-                                   (second elems))))
+                                     (cl-first elems)
+                                   (cl-second elems))))
          (default-directory (or helm-ag-default-directory
                                 helm-ag-last-default-directory)))
     (setq helm-ag-last-default-directory default-directory)
@@ -113,10 +114,10 @@
 (defun helm-ag-persistent-action (candidate)
   (let* ((elems (split-string candidate ":"))
          (search-this-file (helm-attr 'search-this-file))
-         (filename (or search-this-file (first elems)))
+         (filename (or search-this-file (cl-first elems)))
          (line (string-to-number (if search-this-file
-                                     (first elems)
-                                   (second elems))))
+                                     (cl-first elems)
+                                   (cl-second elems))))
          (default-directory (or helm-ag-default-directory
                                 helm-ag-last-default-directory)))
     (find-file filename)
