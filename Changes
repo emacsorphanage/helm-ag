@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.11 2014/02/25 syohex
+    - Use cl-lib.el
+
 Revision 0.10 2013/11/26 syohex
     - Add highlight line feature at persistent action
 
