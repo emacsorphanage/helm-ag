@@ -125,10 +125,30 @@
     (forward-line (1- line))
     (helm-highlight-current-line)))
 
+(defun helm-ag-filter-one-by-one (candidate)
+  (require 'helm-grep)
+  (let* ((split  (helm-grep-split-line candidate))
+         (buf    (car split))
+         (lineno (nth 1 split))
+         (str    (nth 2 split)))
+    (cons (concat (propertize
+                   buf
+                   'face 'helm-moccur-buffer
+                   'help-echo (buffer-file-name
+                               (get-buffer buf))
+                   'buffer-name buf)
+                  ":"
+                  (propertize lineno 'face 'helm-grep-lineno)
+                  ":"
+                  (helm-grep-highlight-match
+                   str helm-occur-match-plugin-mode))
+          candidate)))
+
 (defvar helm-ag-source
   '((name . "the silver searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
+    (filter-one-by-one . helm-ag-filter-one-by-one)
     (persistent-action . helm-ag-persistent-action)
     (action . (("Open File" . (lambda (c)
                                 (helm-ag-find-file-action c 'find-file)))
