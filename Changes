@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.12 2014/02/26 syohex
+    - Support highlighting candidate(file and line number)
+
 Revision 0.11 2014/02/25 syohex
     - Use cl-lib.el
 
