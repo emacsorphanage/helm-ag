@@ -125,11 +125,25 @@
     (forward-line (1- line))
     (helm-highlight-current-line)))
 
+(defun helm-ag--candidate-transformer (candidate)
+  (let* ((elems (split-string candidate ":"))
+         (search-this-file (helm-attr 'search-this-file))
+         (filename (or search-this-file (cl-first elems)))
+         (line (if search-this-file (cl-first elems) (cl-second elems)))
+         (remainder (if search-this-file (cdr elems) (cddr elems))))
+    (format "%s%s:%s"
+            (if search-this-file
+                ""
+              (concat (propertize filename 'face 'helm-moccur-buffer) ":"))
+            (propertize line 'face 'helm-grep-lineno)
+            (mapconcat 'identity remainder ""))))
+
 (defvar helm-ag-source
   '((name . "the silver searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
     (persistent-action . helm-ag-persistent-action)
+    (real-to-display . helm-ag--candidate-transformer)
     (action . (("Open File" . (lambda (c)
                                 (helm-ag-find-file-action c 'find-file)))
                ("Open File Other Window" .
