@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.13 2014/02/26 syohex
+    - Fix invalid highlighting issue.
+      Invalid highlighting is occurred if line has colons
+
 Revision 0.12 2014/02/26 syohex
     - Support highlighting candidate(file and line number)
 
