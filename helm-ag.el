@@ -26,6 +26,7 @@
 
 (require 'cl-lib)
 (require 'helm)
+(require 'helm-utils)
 
 (defgroup helm-ag nil
   "the silver searcher with helm interface"
