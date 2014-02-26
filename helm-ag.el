@@ -125,18 +125,23 @@
     (forward-line (1- line))
     (helm-highlight-current-line)))
 
+(defun helm-ag--candidate-transform-for-this-file (candidate)
+  (when (string-match "\\`\\([^:]+\\):\\(.+\\)" candidate)
+    (format "%s:%s"
+            (propertize (match-string 1 candidate) 'face 'helm-grep-lineno)
+            (match-string 2 candidate))))
+
+(defun helm-ag--candidate-transform-for-files (candidate)
+  (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.+\\)" candidate)
+    (format "%s:%s:%s"
+            (propertize (match-string 1 candidate) 'face 'helm-moccur-buffer)
+            (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
+            (match-string 3 candidate))))
+
 (defun helm-ag--candidate-transformer (candidate)
-  (let* ((elems (split-string candidate ":"))
-         (search-this-file (helm-attr 'search-this-file))
-         (filename (or search-this-file (cl-first elems)))
-         (line (if search-this-file (cl-first elems) (cl-second elems)))
-         (remainder (if search-this-file (cdr elems) (cddr elems))))
-    (format "%s%s:%s"
-            (if search-this-file
-                ""
-              (concat (propertize filename 'face 'helm-moccur-buffer) ":"))
-            (propertize line 'face 'helm-grep-lineno)
-            (mapconcat 'identity remainder ""))))
+  (if (helm-attr 'search-this-file)
+      (helm-ag--candidate-transform-for-this-file candidate)
+    (helm-ag--candidate-transform-for-files candidate)))
 
 (defvar helm-ag-source
   '((name . "the silver searcher")
