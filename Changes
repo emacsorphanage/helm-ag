@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.15 2014/03/08 syohex
+    - Enable lexical binding
+
 Revision 0.14 2014/02/27 syohex
     - Fix byte-compile warnings
 
