@@ -58,6 +58,7 @@
 (defvar helm-ag-context-stack nil)
 (defvar helm-ag-default-directory nil)
 (defvar helm-ag-last-default-directory nil)
+(defvar helm-ag--last-input nil)
 
 (defun helm-ag-save-current-context ()
   (helm-aif (buffer-file-name helm-current-buffer)
@@ -79,10 +80,10 @@
              " "))))
 
 (defun helm-ag-init ()
-  (let ((cmd (read-string "Ag: "
-                          (helm-ag-initial-command)
-                          'helm-ag-command-history))
-        (buf-coding buffer-file-coding-system))
+  (let* ((base-command (helm-ag-initial-command))
+         (cmd (read-string "Ag: " base-command 'helm-ag-command-history))
+         (buf-coding buffer-file-coding-system))
+    (setq helm-ag--last-input (substring cmd (length base-command)))
     (helm-attrset 'recenter t)
     (with-current-buffer (helm-candidate-buffer 'global)
       (let* ((default-directory (or helm-ag-default-directory
@@ -126,18 +127,29 @@
     (forward-line (1- line))
     (helm-highlight-current-line)))
 
+(defun helm-ag--highlight-candidate (candidate)
+  (let ((limit (1- (length candidate)))
+        (last-pos 0))
+    (while (and (< last-pos limit)
+                (string-match helm-ag--last-input candidate last-pos))
+      (put-text-property (match-beginning 0) (match-end 0)
+                         'face 'helm-match
+                         candidate)
+      (setq last-pos (1+ (match-end 0))))
+    candidate))
+
 (defun helm-ag--candidate-transform-for-this-file (candidate)
   (when (string-match "\\`\\([^:]+\\):\\(.+\\)" candidate)
     (format "%s:%s"
             (propertize (match-string 1 candidate) 'face 'helm-grep-lineno)
-            (match-string 2 candidate))))
+            (helm-ag--highlight-candidate (match-string 2 candidate)))))
 
 (defun helm-ag--candidate-transform-for-files (candidate)
   (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.+\\)" candidate)
     (format "%s:%s:%s"
             (propertize (match-string 1 candidate) 'face 'helm-moccur-buffer)
             (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
-            (match-string 3 candidate))))
+            (helm-ag--highlight-candidate (match-string 3 candidate)))))
 
 (defun helm-ag--candidate-transformer (candidate)
   (if (helm-attr 'search-this-file)
