@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.16 2014/03/28 syohex
+    - Improve highlighting candidate
+
 Revision 0.15 2014/03/08 syohex
     - Enable lexical binding
 
