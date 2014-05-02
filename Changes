@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.17 2014/05/02 syohex
+    - Fix for helm error
+      My code was not good with newer helm.
+
 Revision 0.16 2014/03/28 syohex
     - Improve highlighting candidate
 
