@@ -62,10 +62,11 @@
 (defvar helm-ag--last-input nil)
 
 (defun helm-ag-save-current-context ()
-  (helm-aif (buffer-file-name helm-current-buffer)
-      (let ((curpoint (with-helm-current-buffer
-                        (point))))
-        (push (list :file it :point curpoint) helm-ag-context-stack))))
+  (let ((curpoint (with-helm-current-buffer
+                    (point))))
+    (helm-aif (buffer-file-name helm-current-buffer)
+        (push (list :file it :point curpoint) helm-ag-context-stack)
+      (push (list :buffer helm-current-buffer :point curpoint) helm-ag-context-stack))))
 
 (defun helm-ag-initial-command ()
   (substring-no-properties
@@ -182,7 +183,9 @@
       (error "Context stack is empty!!"))
     (let ((file (plist-get context :file))
           (curpoint (plist-get context :point)))
-      (find-file file)
+      (if file
+          (find-file file)
+        (switch-to-buffer (plist-get context :buffer)))
       (goto-char curpoint))))
 
 ;;;###autoload
