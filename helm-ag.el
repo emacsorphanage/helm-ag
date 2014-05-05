@@ -211,11 +211,12 @@
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
 ;;;###autoload
-(defun helm-ag ()
+(defun helm-ag (&optional basedir)
   (interactive)
-  (let* ((helm-ag-default-directory (if current-prefix-arg
-                                        (read-directory-name "Search Directory: ")
-                                      default-directory))
+  (let* ((helm-ag-default-directory (or basedir
+                                        (if current-prefix-arg
+                                            (read-directory-name "Search Directory: ")
+                                          default-directory)))
          (header-name (format "Search at %s" helm-ag-default-directory)))
     (helm-ag--query)
     (helm-attrset 'search-this-file nil helm-ag-source)
