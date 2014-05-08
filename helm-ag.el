@@ -181,12 +181,13 @@
   (let ((context (pop helm-ag-context-stack)))
     (unless context
       (error "Context stack is empty!!"))
-    (let ((file (plist-get context :file))
-          (curpoint (plist-get context :point)))
-      (if file
-          (find-file file)
-        (switch-to-buffer (plist-get context :buffer)))
-      (goto-char curpoint))))
+    (helm-aif (plist-get context :file)
+        (find-file it)
+      (let ((buf (plist-get context :buffer)))
+        (if (buffer-live-p buf)
+            (switch-to-buffer buf)
+          (error "the buffer is already killed"))))
+    (goto-char (plist-get context :point))))
 
 ;;;###autoload
 (defun helm-ag-clear-stack ()
