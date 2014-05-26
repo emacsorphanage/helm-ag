@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.20 2014/05/26 syohex
+    - Fix input issue
+
 Revision 0.19 2014/05/03 syohex
     - Improve popup context stack
       Show error message if the buffer is already killed
