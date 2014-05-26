@@ -76,9 +76,7 @@
                (format " %s" helm-ag-command-option)
              "")
            (if helm-ag-insert-at-point
-               (format " %s"
-                       (with-helm-current-buffer
-                         (or (thing-at-point helm-ag-insert-at-point) "")))
+               (concat " " (or (thing-at-point helm-ag-insert-at-point) ""))
              " "))))
 
 (defun helm-ag-init ()
