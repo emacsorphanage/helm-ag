@@ -68,16 +68,20 @@
         (push (list :file it :point curpoint) helm-ag-context-stack)
       (push (list :buffer helm-current-buffer :point curpoint) helm-ag-context-stack))))
 
-(defun helm-ag-initial-command ()
-  (substring-no-properties
-   (format "%s%s%s"
-           helm-ag-base-command
-           (if helm-ag-command-option
-               (format " %s" helm-ag-command-option)
-             "")
-           (if helm-ag-insert-at-point
-               (concat " " (or (thing-at-point helm-ag-insert-at-point) ""))
-             " "))))
+(defsubst helm-ag--insert-thing-at-point (thing)
+  (concat (or (thing-at-point thing) "")))
+
+(defun helm-ag--base-command ()
+  (format "%s%s -- "
+          helm-ag-base-command
+          (if helm-ag-command-option
+              (format " %s" helm-ag-command-option)
+            "")))
+
+(defun helm-ag--searched-word ()
+  (if helm-ag-insert-at-point
+      (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
+    ""))
 
 (defun helm-ag-init ()
   (let ((buf-coding buffer-file-coding-system))
@@ -198,10 +202,14 @@
     '(helm-ag-source)))
 
 (defun helm-ag--query ()
-  (let* ((base-command (helm-ag-initial-command))
-         (cmd (read-string "Ag: " base-command 'helm-ag-command-history)))
+  (let* ((base-command (helm-ag--base-command))
+         (base-command-length (length base-command))
+         (searched-word (helm-ag--searched-word))
+         (cmd (read-string "Ag: " (concat base-command searched-word)
+                           'helm-ag-command-history)))
     (setq helm-ag--last-query cmd)
-    (setq helm-ag--last-input (substring cmd (length base-command)))))
+    (when (> (length cmd) base-command-length)
+      (setq helm-ag--last-input (substring cmd base-command-length)))))
 
 ;;;###autoload
 (defun helm-ag-this-file ()
