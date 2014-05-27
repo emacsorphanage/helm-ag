@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.21 2014/05/27 syohex
+    - Fix 'Args out of range' issue
+
 Revision 0.20 2014/05/26 syohex
     - Fix input issue
 
