@@ -159,18 +159,20 @@
       (helm-ag--candidate-transform-for-this-file candidate)
     (helm-ag--candidate-transform-for-files candidate)))
 
+(defun helm-ag--action-find-file (candidate)
+  (helm-ag-find-file-action candidate 'find-file))
+
+(defun helm-ag--action--find-file-other-window (candidate)
+  (helm-ag-find-file-action candidate 'find-file-other-window))
+
 (defvar helm-ag-source
   '((name . "the silver searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
     (persistent-action . helm-ag-persistent-action)
     (real-to-display . helm-ag--candidate-transformer)
-    (action . (("Open File" . (lambda (c)
-                                (helm-ag-find-file-action c 'find-file)))
-               ("Open File Other Window" .
-                (lambda (c)
-                  (helm-ag-find-file-action c 'find-file-other-window)))))
-    (candidate-number-limit . 9999)))
+    (action . (("Open File" . helm-ag--action-find-file)
+               ("Open File Other Window" . helm-ag--action--find-file-other-window)))))
 
 (defvar helm-ag-source-grep
   '((name . "the silver searcher")
