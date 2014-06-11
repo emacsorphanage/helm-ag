@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.22 2014/06/11 syohex
+    - Strip thing at cursor
+    - Refactoring for helm actions
+
 Revision 0.21 2014/05/27 syohex
     - Fix 'Args out of range' issue
 
