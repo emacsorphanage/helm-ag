@@ -237,6 +237,33 @@
     (helm-attrset 'name header-name helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
+(defvar helm-source-do-ag
+  `((name . "helm do ag")
+    (candidates-process
+     . (lambda ()
+         (prog1
+          (start-process "helm-do-ag" nil
+                         "ag" "--nocolor" "--nogroup" "--" helm-pattern)
+          (set-process-sentinel
+           (get-process "helm-do-ag")
+           (lambda (process event)
+             (helm-process-deferred-sentinel-hook
+              process event (helm-default-directory)))))))
+    (persistent-action . helm-ag-persistent-action)
+    (action . (("Open File" . helm-ag--action-find-file)
+               ("Open File Other Window" . helm-ag--action--find-file-other-window)))
+    (no-matchplugin)
+    (nohighlight)
+    (requires-pattern . 3)
+    (candidate-number-limit . 9999)))
+
+;;;###autoload
+(defun helm-do-ag (&optional basedir)
+  (interactive)
+  (let ((helm-ag-default-directory (or basedir default-directory)))
+    (helm-ag-save-current-context)
+    (helm :sources '(helm-source-do-ag))) :buffer "*helm-ag*")
+
 (provide 'helm-ag)
 
 ;;; helm-ag.el ends here
