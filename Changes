@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.23 2014/06/15 syohex
+    - Implement helm-do-ag
+
 Revision 0.22 2014/06/11 syohex
     - Strip thing at cursor
     - Refactoring for helm actions
