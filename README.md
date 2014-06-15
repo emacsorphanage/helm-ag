@@ -35,6 +35,10 @@ with `C-u` prefix.
 
 Same as `helm-ag` except to search only current file
 
+#### `helm-do-ag`
+
+Search with `ag` like `helm-do-grep`.
+
 #### `helm-ag-pop-stack`
 
 Move to point before jump
