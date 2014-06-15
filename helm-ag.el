@@ -237,18 +237,40 @@
     (helm-attrset 'name header-name helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
+(defun helm-ag--do-ag-propertize ()
+  (with-helm-window
+    (goto-char (point-min))
+    (cl-loop while (not (eobp))
+             do
+             (progn
+               (let ((start (point))
+                     (bound (line-end-position))
+                     file-end line-end)
+                 (when (search-forward ":" bound t)
+                   (setq file-end (1- (point)))
+                   (when (search-forward ":" bound t)
+                     (setq line-end (1- (point)))
+                     (set-text-properties start file-end '(face helm-moccur-buffer))
+                     (set-text-properties (1+ file-end) line-end
+                                          '(face helm-grep-lineno)))))
+               (forward-line 1)))
+    (goto-char (point-min))))
+
+(defun helm-ag--do-ag-candidate-process ()
+  (let ((proc (start-process "helm-do-ag" nil
+                             "ag" "--nocolor" "--nogroup" "--" helm-pattern)))
+    (prog1 proc
+      (set-process-sentinel
+       proc
+       (lambda (process event)
+         (when (string= event "finished\n")
+           (helm-ag--do-ag-propertize))
+         (helm-process-deferred-sentinel-hook
+          process event (helm-default-directory)))))))
+
 (defvar helm-source-do-ag
   `((name . "helm do ag")
-    (candidates-process
-     . (lambda ()
-         (prog1
-          (start-process "helm-do-ag" nil
-                         "ag" "--nocolor" "--nogroup" "--" helm-pattern)
-          (set-process-sentinel
-           (get-process "helm-do-ag")
-           (lambda (process event)
-             (helm-process-deferred-sentinel-hook
-              process event (helm-default-directory)))))))
+    (candidates-process . helm-ag--do-ag-candidate-process)
     (persistent-action . helm-ag-persistent-action)
     (action . (("Open File" . helm-ag--action-find-file)
                ("Open File Other Window" . helm-ag--action--find-file-other-window)))
