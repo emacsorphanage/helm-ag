@@ -252,9 +252,14 @@
                      (setq line-end (1- (point)))
                      (set-text-properties start file-end '(face helm-moccur-buffer))
                      (set-text-properties (1+ file-end) line-end
-                                          '(face helm-grep-lineno)))))
+                                          '(face helm-grep-lineno))
+
+                     (when (re-search-forward helm-input bound t)
+                       (set-text-properties (match-beginning 0) (match-end 0)
+                                            '(face helm-match))))))
                (forward-line 1)))
-    (goto-char (point-min))))
+    (goto-char (point-min))
+    (helm-display-mode-line (helm-get-current-source))))
 
 (defun helm-ag--do-ag-candidate-process ()
   (let ((proc (start-process "helm-do-ag" nil
@@ -263,10 +268,10 @@
       (set-process-sentinel
        proc
        (lambda (process event)
-         (when (string= event "finished\n")
-           (helm-ag--do-ag-propertize))
          (helm-process-deferred-sentinel-hook
-          process event (helm-default-directory)))))))
+          process event (helm-default-directory))
+         (when (string= event "finished\n")
+           (helm-ag--do-ag-propertize)))))))
 
 (defvar helm-source-do-ag
   `((name . "the silver searcher")
@@ -284,7 +289,7 @@
   (interactive)
   (let ((helm-ag-default-directory (or basedir default-directory)))
     (helm-ag-save-current-context)
-    (helm :sources '(helm-source-do-ag))) :buffer "*helm-ag*")
+    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*")))
 
 (provide 'helm-ag)
 
