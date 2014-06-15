@@ -269,7 +269,7 @@
           process event (helm-default-directory)))))))
 
 (defvar helm-source-do-ag
-  `((name . "helm do ag")
+  `((name . "the silver searcher")
     (candidates-process . helm-ag--do-ag-candidate-process)
     (persistent-action . helm-ag-persistent-action)
     (action . (("Open File" . helm-ag--action-find-file)
