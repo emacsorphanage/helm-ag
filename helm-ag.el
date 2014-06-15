@@ -237,6 +237,60 @@
     (helm-attrset 'name header-name helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
+(defun helm-ag--do-ag-propertize ()
+  (with-helm-window
+    (goto-char (point-min))
+    (cl-loop while (not (eobp))
+             do
+             (progn
+               (let ((start (point))
+                     (bound (line-end-position))
+                     file-end line-end)
+                 (when (search-forward ":" bound t)
+                   (setq file-end (1- (point)))
+                   (when (search-forward ":" bound t)
+                     (setq line-end (1- (point)))
+                     (set-text-properties start file-end '(face helm-moccur-buffer))
+                     (set-text-properties (1+ file-end) line-end
+                                          '(face helm-grep-lineno))
+
+                     (when (re-search-forward helm-input bound t)
+                       (set-text-properties (match-beginning 0) (match-end 0)
+                                            '(face helm-match))))))
+               (forward-line 1)))
+    (goto-char (point-min))
+    (helm-display-mode-line (helm-get-current-source))))
+
+(defun helm-ag--do-ag-candidate-process ()
+  (let ((proc (start-process "helm-do-ag" nil
+                             "ag" "--nocolor" "--nogroup" "--" helm-pattern)))
+    (prog1 proc
+      (set-process-sentinel
+       proc
+       (lambda (process event)
+         (helm-process-deferred-sentinel-hook
+          process event (helm-default-directory))
+         (when (string= event "finished\n")
+           (helm-ag--do-ag-propertize)))))))
+
+(defvar helm-source-do-ag
+  `((name . "the silver searcher")
+    (candidates-process . helm-ag--do-ag-candidate-process)
+    (persistent-action . helm-ag-persistent-action)
+    (action . (("Open File" . helm-ag--action-find-file)
+               ("Open File Other Window" . helm-ag--action--find-file-other-window)))
+    (no-matchplugin)
+    (nohighlight)
+    (requires-pattern . 3)
+    (candidate-number-limit . 9999)))
+
+;;;###autoload
+(defun helm-do-ag (&optional basedir)
+  (interactive)
+  (let ((helm-ag-default-directory (or basedir default-directory)))
+    (helm-ag-save-current-context)
+    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*")))
+
 (provide 'helm-ag)
 
 ;;; helm-ag.el ends here
