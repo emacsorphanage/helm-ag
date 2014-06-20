@@ -39,6 +39,8 @@ Same as `helm-ag` except to search only current file
 
 Search with `ag` like `helm-do-grep`.
 
+![helm-do-ag](image/helm-do-ag.gif)
+
 #### `helm-ag-pop-stack`
 
 Move to point before jump
