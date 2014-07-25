@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.24 2014/07/25 syohex
+    - Improve helm-do-ag(Thanks arejensen)
+
 Revision 0.23 2014/06/15 syohex
     - Implement helm-do-ag
 
