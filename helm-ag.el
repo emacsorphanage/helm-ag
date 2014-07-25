@@ -289,7 +289,7 @@
   (interactive)
   (let ((helm-ag-default-directory (or basedir default-directory)))
     (helm-ag-save-current-context)
-    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*")))
+    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :input (helm-ag--insert-thing-at-point helm-ag-thing-at-point))))
 
 (provide 'helm-ag)
 
