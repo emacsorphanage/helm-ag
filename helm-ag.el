@@ -262,7 +262,8 @@
     (helm-display-mode-line (helm-get-current-source))))
 
 (defun helm-ag--do-ag-candidate-process ()
-  (let ((proc (start-process "helm-do-ag" nil
+ (let* ((default-directory (or helm-ag-default-directory default-directory))
+        (proc (start-process "helm-do-ag" nil
                              "ag" "--nocolor" "--nogroup" "--" helm-pattern)))
     (prog1 proc
       (set-process-sentinel
