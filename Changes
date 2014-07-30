@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.25 2014/07/31 syohex
+    - Fix setting default-directory for helm-do-ag(Thanks nkpart)
+
 Revision 0.24 2014/07/25 syohex
     - Improve helm-do-ag(Thanks arejensen)
 
