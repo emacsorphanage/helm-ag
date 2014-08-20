@@ -206,6 +206,11 @@
       '(helm-ag-source-grep)
     '(helm-ag-source)))
 
+(defun helm-ag--strip-quote (str)
+  (if (string-match "\\`\\(['\"]\\)\\(.+\\)\\1\\'" str)
+      (match-string-no-properties 2 str)
+    str))
+
 (defun helm-ag--query ()
   (let* ((base-command (helm-ag--base-command))
          (base-command-length (length base-command))
@@ -214,7 +219,8 @@
                            'helm-ag-command-history)))
     (setq helm-ag--last-query cmd)
     (when (> (length cmd) base-command-length)
-      (setq helm-ag--last-input (substring cmd base-command-length)))))
+      (let ((input (substring cmd base-command-length)))
+        (setq helm-ag--last-input (helm-ag--strip-quote input))))))
 
 ;;;###autoload
 (defun helm-ag-this-file ()
