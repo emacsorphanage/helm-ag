@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.26 2014/08/20 syohex
+    - Improve error check for newer ag
+    - Fix highlighting query which is quoted
+
 Revision 0.25 2014/07/31 syohex
     - Fix setting default-directory for helm-do-ag(Thanks nkpart)
 
