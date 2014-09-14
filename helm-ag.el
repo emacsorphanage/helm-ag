@@ -96,7 +96,7 @@
                          helm-ag--last-query))
              (coding-system-for-read buf-coding)
              (coding-system-for-write buf-coding))
-        (let ((ret (call-process-shell-command full-cmd nil t)))
+        (let ((ret (process-file-shell-command full-cmd nil t)))
           (if (zerop (length (buffer-string)))
               (error "No output: '%s'" helm-ag--last-query)
             (unless (zerop ret)
