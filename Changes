@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.27 2014/09/14 syohex
+    - Support tramp
+
 Revision 0.26 2014/08/20 syohex
     - Improve error check for newer ag
     - Fix highlighting query which is quoted
