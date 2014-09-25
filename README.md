@@ -66,7 +66,7 @@ Base command of `ag`.
 
 Command line option of base command.
 
-#### `helm-ag-thing-at-point`(Default: `'nil`)
+#### `helm-ag-insert-at-point`(Default: `'nil`)
 
 Insert thing at point as default search pattern, if this value is `non nil`.
 You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
