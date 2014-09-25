@@ -86,6 +86,15 @@ If this value is `'file-line`, `helm-ag` displays candidate as helm `file-line` 
 (setq helm-ag-thing-at-point 'symbol)
 ```
 
+### For [projectile](https://github.com/bbatsov/projectile/) users
+
+You can use `helm-ag` with `projectile` by following command.
+
+```lisp
+(defun projectile-helm-ag ()
+  (interactive)
+  (helm-ag (projectile-project-root)))
+```
 
 ## Alternatives
 
