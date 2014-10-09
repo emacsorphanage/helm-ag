@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.28 2014/10/09 syohex
+    - Fix case that using only helm-ag source
+      Thanks manateelazycat
+
 Revision 0.27 2014/09/14 syohex
     - Support tramp
 
