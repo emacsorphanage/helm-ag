@@ -111,7 +111,8 @@
                                      (cl-first elems)
                                    (cl-second elems))))
          (default-directory (or helm-ag-default-directory
-                                helm-ag-last-default-directory)))
+                                helm-ag-last-default-directory
+                                default-directory)))
     (setq helm-ag-last-default-directory default-directory)
     (funcall find-func filename)
     (goto-char (point-min))
