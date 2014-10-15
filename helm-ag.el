@@ -269,10 +269,16 @@
     (goto-char (point-min))
     (helm-display-mode-line (helm-get-current-source))))
 
+(defun helm-ag--construct-command (pattern)
+  (let ((cmds (split-string helm-ag-base-command nil t)))
+    (when helm-ag-command-option
+      (setq cmds (append cmds (split-string helm-ag-command-option nil t))))
+    (append cmds (list "--" pattern))))
+
 (defun helm-ag--do-ag-candidate-process ()
- (let* ((default-directory (or helm-ag-default-directory default-directory))
-        (proc (start-process "helm-do-ag" nil
-                             "ag" "--nocolor" "--nogroup" "--" helm-pattern)))
+  (let* ((default-directory (or helm-ag-default-directory default-directory))
+         (proc (apply 'start-process "helm-do-ag" nil
+                      (helm-ag--construct-command helm-pattern))))
     (prog1 proc
       (set-process-sentinel
        proc
