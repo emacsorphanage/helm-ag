@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.29 2014/10/16 syohex
+    - Use customizable variables instead of string literal for helm-do-ag
+      Thanks mash
+
 Revision 0.28 2014/10/09 syohex
     - Fix case that using only helm-ag source
       Thanks manateelazycat
