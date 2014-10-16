@@ -1,4 +1,4 @@
-# helm-ag.el
+# helm-ag.el[![Build Status](https://travis-ci.org/syohex/emacs-helm-ag.png)](https://travis-ci.org/syohex/emacs-helm-ag)
 
 ## Introduction
 `helm-ag.el` provides interfaces of [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) with helm.
