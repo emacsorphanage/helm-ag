@@ -103,7 +103,7 @@ Also it can work without helm.
 
 [travis-badge]: https://travis-ci.org/syohex/emacs-helm-ag.png
 [travis-link]: https://travis-ci.org/syohex/emacs-helm-ag
-[melpa-link]: http://melpa.milkbox.net/#/helm-ag
-[melpa-stable-link]: http://melpa-stable.milkbox.net/#/helm-ag
-[melpa-badge]: http://melpa.milkbox.net/packages/helm-ag-badge.svg
-[melpa-stable-badge]: http://melpa-stable.milkbox.net/packages/helm-ag-badge.svg
+[melpa-link]: http://melpa.org/#/helm-ag
+[melpa-stable-link]: http://stable.melpa.org/#/helm-ag
+[melpa-badge]: http://melpa.org/packages/helm-ag-badge.svg
+[melpa-stable-badge]: http://stable.melpa.org/packages/helm-ag-badge.svg
