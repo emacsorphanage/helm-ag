@@ -1,4 +1,4 @@
-# helm-ag.el[![Build Status](https://travis-ci.org/syohex/emacs-helm-ag.png)](https://travis-ci.org/syohex/emacs-helm-ag)
+# helm-ag.el [![travis badge][travis-badge]][travis-link] [![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
 
 ## Introduction
 `helm-ag.el` provides interfaces of [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) with helm.
@@ -100,3 +100,10 @@ You can use `helm-ag` with `projectile` by following command.
 
 [ag.el](https://github.com/Wilfred/ag.el) provides `M-x grep` interface.
 Also it can work without helm.
+
+[travis-badge]: https://travis-ci.org/syohex/emacs-helm-ag.png
+[travis-link]: https://travis-ci.org/syohex/emacs-helm-ag
+[melpa-link]: http://melpa.milkbox.net/#/helm-ag
+[melpa-stable-link]: http://melpa-stable.milkbox.net/#/helm-ag
+[melpa-badge]: http://melpa.milkbox.net/packages/helm-ag-badge.svg
+[melpa-stable-badge]: http://melpa-stable.milkbox.net/packages/helm-ag-badge.svg
