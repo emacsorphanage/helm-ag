@@ -280,7 +280,7 @@
 
 (defun helm-ag--do-ag-candidate-process ()
   (let* ((default-directory (or helm-ag-default-directory default-directory))
-         (proc (apply 'start-process "helm-do-ag" nil
+         (proc (apply 'start-file-process "helm-do-ag" nil
                       (helm-ag--construct-command helm-pattern))))
     (prog1 proc
       (set-process-sentinel
