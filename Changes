@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.31 2014/11/11 syohex
+    - Improve for remote execution such as tramp
+
 Revision 0.30 2014/10/22 syohex
     - Fix directory select issue of 'helm-ag'
     - Support change directory feature for 'helm-do-ag'
