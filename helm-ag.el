@@ -168,16 +168,16 @@
   (helm-ag-find-file-action candidate 'find-file-other-window))
 
 (defvar helm-ag-source
-  '((name . "the silver searcher")
+  '((name . "The Silver Searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
     (persistent-action . helm-ag-persistent-action)
     (real-to-display . helm-ag--candidate-transformer)
-    (action . (("Open File" . helm-ag--action-find-file)
-               ("Open File Other Window" . helm-ag--action--find-file-other-window)))))
+    (action . (("Open file" . helm-ag--action-find-file)
+               ("Open file other window" . helm-ag--action--find-file-other-window)))))
 
 (defvar helm-ag-source-grep
-  '((name . "the silver searcher")
+  '((name . "The Silver Searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
     (type . file-line)
@@ -292,11 +292,11 @@
            (helm-ag--do-ag-propertize)))))))
 
 (defvar helm-source-do-ag
-  `((name . "the silver searcher")
+  `((name . "The Silver Searcher")
     (candidates-process . helm-ag--do-ag-candidate-process)
     (persistent-action . helm-ag-persistent-action)
-    (action . (("Open File" . helm-ag--action-find-file)
-               ("Open File Other Window" . helm-ag--action--find-file-other-window)))
+    (action . (("Open file" . helm-ag--action-find-file)
+               ("Open file other window" . helm-ag--action--find-file-other-window)))
     (no-matchplugin)
     (nohighlight)
     (requires-pattern . 3)
