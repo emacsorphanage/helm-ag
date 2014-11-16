@@ -168,16 +168,16 @@
   (helm-ag-find-file-action candidate 'find-file-other-window))
 
 (defvar helm-ag-source
-  '((name . "the silver searcher")
+  '((name . "The Silver Searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
     (persistent-action . helm-ag-persistent-action)
     (real-to-display . helm-ag--candidate-transformer)
-    (action . (("Open File" . helm-ag--action-find-file)
-               ("Open File Other Window" . helm-ag--action--find-file-other-window)))))
+    (action . (("Open file" . helm-ag--action-find-file)
+               ("Open file other window" . helm-ag--action--find-file-other-window)))))
 
 (defvar helm-ag-source-grep
-  '((name . "the silver searcher")
+  '((name . "The Silver Searcher")
     (init . helm-ag-init)
     (candidates-in-buffer)
     (type . file-line)
@@ -188,13 +188,13 @@
   (interactive)
   (let ((context (pop helm-ag-context-stack)))
     (unless context
-      (error "Context stack is empty!!"))
+      (error "Context stack is empty !"))
     (helm-aif (plist-get context :file)
         (find-file it)
       (let ((buf (plist-get context :buffer)))
         (if (buffer-live-p buf)
             (switch-to-buffer buf)
-          (error "the buffer is already killed"))))
+          (error "The buffer is already killed."))))
     (goto-char (plist-get context :point))))
 
 ;;;###autoload
@@ -235,7 +235,7 @@
 (defun helm-ag--default-directory ()
   (if current-prefix-arg
       (file-name-as-directory
-       (read-directory-name "Search Directory: " nil nil t))
+       (read-directory-name "Search directory: " nil nil t))
     default-directory))
 
 ;;;###autoload
@@ -292,11 +292,11 @@
            (helm-ag--do-ag-propertize)))))))
 
 (defvar helm-source-do-ag
-  `((name . "the silver searcher")
+  `((name . "The Silver Searcher")
     (candidates-process . helm-ag--do-ag-candidate-process)
     (persistent-action . helm-ag-persistent-action)
-    (action . (("Open File" . helm-ag--action-find-file)
-               ("Open File Other Window" . helm-ag--action--find-file-other-window)))
+    (action . (("Open file" . helm-ag--action-find-file)
+               ("Open file other window" . helm-ag--action--find-file-other-window)))
     (no-matchplugin)
     (nohighlight)
     (requires-pattern . 3)
