@@ -188,13 +188,13 @@
   (interactive)
   (let ((context (pop helm-ag-context-stack)))
     (unless context
-      (error "Context stack is empty!!"))
+      (error "Context stack is empty !"))
     (helm-aif (plist-get context :file)
         (find-file it)
       (let ((buf (plist-get context :buffer)))
         (if (buffer-live-p buf)
             (switch-to-buffer buf)
-          (error "the buffer is already killed"))))
+          (error "The buffer is already killed."))))
     (goto-char (plist-get context :point))))
 
 ;;;###autoload
@@ -235,7 +235,7 @@
 (defun helm-ag--default-directory ()
   (if current-prefix-arg
       (file-name-as-directory
-       (read-directory-name "Search Directory: " nil nil t))
+       (read-directory-name "Search directory: " nil nil t))
     default-directory))
 
 ;;;###autoload
