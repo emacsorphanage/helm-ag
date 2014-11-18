@@ -100,6 +100,8 @@
           (if (zerop (length (buffer-string)))
               (error "No output: '%s'" helm-ag--last-query)
             (unless (zerop ret)
+              (unless (executable-find "ag")
+                (error "'ag' is not installed."))
               (error "Failed: '%s'" helm-ag--last-query))))
         (helm-ag-save-current-context)))))
 
