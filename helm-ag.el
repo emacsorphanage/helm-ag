@@ -141,15 +141,23 @@
     (forward-line (1- line))
     (helm-highlight-current-line)))
 
+(defun helm-ag--validate-regexp (regexp)
+  (condition-case nil
+      (progn
+        (string-match-p regexp "")
+        t)
+    (invalid-regexp nil)))
+
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
         (last-pos 0))
-    (while (and (< last-pos limit)
-                (string-match helm-ag--last-query candidate last-pos))
-      (put-text-property (match-beginning 0) (match-end 0)
-                         'face 'helm-match
-                         candidate)
-      (setq last-pos (1+ (match-end 0))))
+    (when (helm-ag--validate-regexp helm-ag--last-query)
+      (while (and (< last-pos limit)
+                  (string-match helm-ag--last-query candidate last-pos))
+        (put-text-property (match-beginning 0) (match-end 0)
+                           'face 'helm-match
+                           candidate)
+        (setq last-pos (1+ (match-end 0)))))
     candidate))
 
 (defun helm-ag--candidate-transform-for-this-file (candidate)
@@ -254,24 +262,25 @@
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
     (goto-char (point-min))
-    (cl-loop while (not (eobp))
-             do
-             (progn
-               (let ((start (point))
-                     (bound (line-end-position))
-                     file-end line-end)
-                 (when (search-forward ":" bound t)
-                   (setq file-end (1- (point)))
+    (when (helm-ag--validate-regexp helm-input)
+      (cl-loop while (not (eobp))
+               do
+               (progn
+                 (let ((start (point))
+                       (bound (line-end-position))
+                       file-end line-end)
                    (when (search-forward ":" bound t)
-                     (setq line-end (1- (point)))
-                     (set-text-properties start file-end '(face helm-moccur-buffer))
-                     (set-text-properties (1+ file-end) line-end
-                                          '(face helm-grep-lineno))
+                     (setq file-end (1- (point)))
+                     (when (search-forward ":" bound t)
+                       (setq line-end (1- (point)))
+                       (set-text-properties start file-end '(face helm-moccur-buffer))
+                       (set-text-properties (1+ file-end) line-end
+                                            '(face helm-grep-lineno))
 
-                     (when (re-search-forward helm-input bound t)
-                       (set-text-properties (match-beginning 0) (match-end 0)
-                                            '(face helm-match))))))
-               (forward-line 1)))
+                       (when (re-search-forward helm-input bound t)
+                         (set-text-properties (match-beginning 0) (match-end 0)
+                                              '(face helm-match))))))
+                 (forward-line 1))))
     (goto-char (point-min))
     (helm-display-mode-line (helm-get-current-source))))
 
