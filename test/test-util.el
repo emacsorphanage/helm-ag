@@ -24,15 +24,15 @@
 (require 'ert)
 (require 'helm-ag)
 
-(ert-deftest construct-command ()
-  "helm-ag--construct-command"
+(ert-deftest construct-do-ag-command ()
+  "helm-ag--construct-do-ag-command"
   (let ((helm-ag-base-command "ag --nocolor --nogroup"))
-    (let ((got (helm-ag--construct-command "somepattern"))
+    (let ((got (helm-ag--construct-do-ag-command "somepattern"))
           (expected '("ag" "--nocolor" "--nogroup" "--" "somepattern")))
       (should (equal got expected)))
 
     (let* ((helm-ag-command-option "--ignore-case --all-text")
-           (got (helm-ag--construct-command "somepattern"))
+           (got (helm-ag--construct-do-ag-command "somepattern"))
            (expected '("ag" "--nocolor" "--nogroup" "--ignore-case" "--all-text"
                        "--" "somepattern")))
       (should (equal got expected)))))
