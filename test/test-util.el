@@ -63,4 +63,10 @@
                        "--" "somepattern")))
       (should (equal got expected)))))
 
+(ert-deftest validate-regexp-with-valid-regexp ()
+  (should (helm-ag--validate-regexp "[a-z]\\([[:word:]]\\)")))
+
+(ert-deftest validate-regexp-with-invalid-regexp ()
+  (should-not (helm-ag--validate-regexp "\\(")))
+
 ;;; test-util.el ends here
