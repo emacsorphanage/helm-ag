@@ -224,11 +224,6 @@
       '(helm-ag-source-grep)
     '(helm-ag-source)))
 
-(defun helm-ag--strip-quote (str)
-  (if (string-match "\\`\\(['\"]\\)\\(.+\\)\\1\\'" str)
-      (match-string-no-properties 2 str)
-    str))
-
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
          (query (read-string "Pattern: " searched-word 'helm-ag-command-history)))
