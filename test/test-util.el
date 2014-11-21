@@ -69,4 +69,16 @@
 (ert-deftest validate-regexp-with-invalid-regexp ()
   (should-not (helm-ag--validate-regexp "\\(")))
 
+(ert-deftest transform-for-this-file ()
+  "helm-ag--candidate-transform-for-this-file"
+  (let ((helm-ag--last-query "hoge"))
+    (should (helm-ag--candidate-transform-for-this-file "10:hoge"))
+    (should-not (helm-ag--candidate-transform-for-this-file ":hoge"))))
+
+(ert-deftest transform-for-files ()
+  "helm-ag--candidate-transform-for-files"
+  (let ((helm-ag--last-query "hoge"))
+    (should (helm-ag--candidate-transform-for-files "10:5:hoge"))
+    (should-not (helm-ag--candidate-transform-for-files "10:hoge"))))
+
 ;;; test-util.el ends here
