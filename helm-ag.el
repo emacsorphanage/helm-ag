@@ -72,13 +72,6 @@
       (substring-no-properties it)
     ""))
 
-(defun helm-ag--base-command ()
-  (format "%s%s -- "
-          helm-ag-base-command
-          (if helm-ag-command-option
-              (format " %s" helm-ag-command-option)
-            "")))
-
 (defun helm-ag--searched-word ()
   (if helm-ag-insert-at-point
       (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
