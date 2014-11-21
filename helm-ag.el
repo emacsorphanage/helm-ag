@@ -82,7 +82,7 @@
     (when helm-ag-command-option
       (let ((ag-options (split-string helm-ag-command-option nil t)))
         (setq commands (append commands ag-options))))
-    (setq commands (append commands (list helm-ag--last-query)))
+    (setq commands (append commands (list "--" helm-ag--last-query)))
     (when this-file
       (setq commands (append commands (list this-file))))
     commands))
