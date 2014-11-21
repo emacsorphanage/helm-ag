@@ -37,13 +37,4 @@
                        "--" "somepattern")))
       (should (equal got expected)))))
 
-(ert-deftest strip-quote ()
-  "helm-ag--strip-quote"
-  (let ((got (helm-ag--strip-quote "'foo bar'")))
-    (should (string= got "foo bar")))
-  (let ((got (helm-ag--strip-quote "\"foo bar\"")))
-    (should (string= got "foo bar")))
-  (let ((got (helm-ag--strip-quote "apple")))
-    (should (string= got "apple"))))
-
 ;;; test-util.el ends here
