@@ -24,6 +24,32 @@
 (require 'ert)
 (require 'helm-ag)
 
+(ert-deftest construct-command ()
+  "helm-ag--construct--command"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag--last-query "pattern"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("--nocolor" "--nogroup" "--" "pattern")))
+      (should (equal got expected)))))
+
+(ert-deftest construct-command-this-file ()
+  "helm-ag--construct--command for this file"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag--last-query "pattern"))
+    (let ((got (helm-ag--construct-command "foo.el"))
+          (expected '("--nocolor" "--nogroup" "--" "pattern" "foo.el")))
+      (should (equal got expected)))))
+
+(ert-deftest construct-command-with-options ()
+  "helm-ag--construct--command with options"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag-command-option "--all-text --hidden -D")
+        (helm-ag--last-query "pattern"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("--nocolor" "--nogroup" "--all-text" "--hidden" "-D"
+                      "--" "pattern")))
+      (should (equal got expected)))))
+
 (ert-deftest construct-do-ag-command ()
   "helm-ag--construct-do-ag-command"
   (let ((helm-ag-base-command "ag --nocolor --nogroup"))
