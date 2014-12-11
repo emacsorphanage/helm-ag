@@ -32,7 +32,7 @@
   "the silver searcher with helm interface"
   :group 'helm)
 
-(defcustom helm-ag-base-command "ag --nocolor --nogroup"
+(defcustom helm-ag-base-command "ag --nocolor --nogroup --literal"
   "Base command of `ag'"
   :type 'string
   :group 'helm-ag)
