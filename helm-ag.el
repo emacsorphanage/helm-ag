@@ -59,7 +59,6 @@
 (defvar helm-ag-default-directory nil)
 (defvar helm-ag-last-default-directory nil)
 (defvar helm-ag--last-query nil)
-(defvar helm-ag--last-input nil)
 
 (defun helm-ag-save-current-context ()
   (let ((curpoint (with-helm-current-buffer
@@ -73,17 +72,20 @@
       (substring-no-properties it)
     ""))
 
-(defun helm-ag--base-command ()
-  (format "%s%s -- "
-          helm-ag-base-command
-          (if helm-ag-command-option
-              (format " %s" helm-ag-command-option)
-            "")))
-
 (defun helm-ag--searched-word ()
   (if helm-ag-insert-at-point
       (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
     ""))
+
+(defun helm-ag--construct-command (this-file)
+  (let ((commands (cdr (split-string helm-ag-base-command nil t))))
+    (when helm-ag-command-option
+      (let ((ag-options (split-string helm-ag-command-option nil t)))
+        (setq commands (append commands ag-options))))
+    (setq commands (append commands (list "--" helm-ag--last-query)))
+    (when this-file
+      (setq commands (append commands (list this-file))))
+    commands))
 
 (defun helm-ag-init ()
   (let ((buf-coding buffer-file-coding-system))
@@ -91,12 +93,10 @@
     (with-current-buffer (helm-candidate-buffer 'global)
       (let* ((default-directory (or helm-ag-default-directory
                                     default-directory))
-             (full-cmd (helm-aif (helm-attr 'search-this-file)
-                           (format "%s %s" helm-ag--last-query it)
-                         helm-ag--last-query))
+             (cmds (helm-ag--construct-command (helm-attr 'search-this-file)))
              (coding-system-for-read buf-coding)
              (coding-system-for-write buf-coding))
-        (let ((ret (process-file-shell-command full-cmd nil t)))
+        (let ((ret (apply 'process-file "ag" nil t nil cmds)))
           (if (zerop (length (buffer-string)))
               (error "No output: '%s'" helm-ag--last-query)
             (unless (zerop ret)
@@ -134,15 +134,23 @@
     (forward-line (1- line))
     (helm-highlight-current-line)))
 
+(defun helm-ag--validate-regexp (regexp)
+  (condition-case nil
+      (progn
+        (string-match-p regexp "")
+        t)
+    (invalid-regexp nil)))
+
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
         (last-pos 0))
-    (while (and (< last-pos limit)
-                (string-match helm-ag--last-input candidate last-pos))
-      (put-text-property (match-beginning 0) (match-end 0)
-                         'face 'helm-match
-                         candidate)
-      (setq last-pos (1+ (match-end 0))))
+    (when (helm-ag--validate-regexp helm-ag--last-query)
+      (while (and (< last-pos limit)
+                  (string-match helm-ag--last-query candidate last-pos))
+        (put-text-property (match-beginning 0) (match-end 0)
+                           'face 'helm-match
+                           candidate)
+        (setq last-pos (1+ (match-end 0)))))
     candidate))
 
 (defun helm-ag--candidate-transform-for-this-file (candidate)
@@ -209,21 +217,10 @@
       '(helm-ag-source-grep)
     '(helm-ag-source)))
 
-(defun helm-ag--strip-quote (str)
-  (if (string-match "\\`\\(['\"]\\)\\(.+\\)\\1\\'" str)
-      (match-string-no-properties 2 str)
-    str))
-
 (defun helm-ag--query ()
-  (let* ((base-command (helm-ag--base-command))
-         (base-command-length (length base-command))
-         (searched-word (helm-ag--searched-word))
-         (cmd (read-string "Ag: " (concat base-command searched-word)
-                           'helm-ag-command-history)))
-    (setq helm-ag--last-query cmd)
-    (when (> (length cmd) base-command-length)
-      (let ((input (substring cmd base-command-length)))
-        (setq helm-ag--last-input (helm-ag--strip-quote input))))))
+  (let* ((searched-word (helm-ag--searched-word))
+         (query (read-string "Pattern: " searched-word 'helm-ag-command-history)))
+    (setq helm-ag--last-query query)))
 
 ;;;###autoload
 (defun helm-ag-this-file ()
@@ -253,28 +250,29 @@
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
     (goto-char (point-min))
-    (cl-loop while (not (eobp))
-             do
-             (progn
-               (let ((start (point))
-                     (bound (line-end-position))
-                     file-end line-end)
-                 (when (search-forward ":" bound t)
-                   (setq file-end (1- (point)))
+    (when (helm-ag--validate-regexp helm-input)
+      (cl-loop while (not (eobp))
+               do
+               (progn
+                 (let ((start (point))
+                       (bound (line-end-position))
+                       file-end line-end)
                    (when (search-forward ":" bound t)
-                     (setq line-end (1- (point)))
-                     (set-text-properties start file-end '(face helm-moccur-buffer))
-                     (set-text-properties (1+ file-end) line-end
-                                          '(face helm-grep-lineno))
+                     (setq file-end (1- (point)))
+                     (when (search-forward ":" bound t)
+                       (setq line-end (1- (point)))
+                       (set-text-properties start file-end '(face helm-moccur-buffer))
+                       (set-text-properties (1+ file-end) line-end
+                                            '(face helm-grep-lineno))
 
-                     (when (re-search-forward helm-input bound t)
-                       (set-text-properties (match-beginning 0) (match-end 0)
-                                            '(face helm-match))))))
-               (forward-line 1)))
+                       (when (re-search-forward helm-input bound t)
+                         (set-text-properties (match-beginning 0) (match-end 0)
+                                              '(face helm-match))))))
+                 (forward-line 1))))
     (goto-char (point-min))
     (helm-display-mode-line (helm-get-current-source))))
 
-(defun helm-ag--construct-command (pattern)
+(defun helm-ag--construct-do-ag-command (pattern)
   (let ((cmds (split-string helm-ag-base-command nil t)))
     (when helm-ag-command-option
       (setq cmds (append cmds (split-string helm-ag-command-option nil t))))
@@ -283,7 +281,7 @@
 (defun helm-ag--do-ag-candidate-process ()
   (let* ((default-directory (or helm-ag-default-directory default-directory))
          (proc (apply 'start-file-process "helm-do-ag" nil
-                      (helm-ag--construct-command helm-pattern))))
+                      (helm-ag--construct-do-ag-command helm-pattern))))
     (prog1 proc
       (set-process-sentinel
        proc

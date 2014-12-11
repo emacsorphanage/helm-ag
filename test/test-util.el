@@ -25,25 +25,60 @@
 (require 'helm-ag)
 
 (ert-deftest construct-command ()
-  "helm-ag--construct-command"
+  "helm-ag--construct--command"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag--last-query "pattern"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("--nocolor" "--nogroup" "--" "pattern")))
+      (should (equal got expected)))))
+
+(ert-deftest construct-command-this-file ()
+  "helm-ag--construct--command for this file"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag--last-query "pattern"))
+    (let ((got (helm-ag--construct-command "foo.el"))
+          (expected '("--nocolor" "--nogroup" "--" "pattern" "foo.el")))
+      (should (equal got expected)))))
+
+(ert-deftest construct-command-with-options ()
+  "helm-ag--construct--command with options"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag-command-option "--all-text --hidden -D")
+        (helm-ag--last-query "pattern"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("--nocolor" "--nogroup" "--all-text" "--hidden" "-D"
+                      "--" "pattern")))
+      (should (equal got expected)))))
+
+(ert-deftest construct-do-ag-command ()
+  "helm-ag--construct-do-ag-command"
   (let ((helm-ag-base-command "ag --nocolor --nogroup"))
-    (let ((got (helm-ag--construct-command "somepattern"))
+    (let ((got (helm-ag--construct-do-ag-command "somepattern"))
           (expected '("ag" "--nocolor" "--nogroup" "--" "somepattern")))
       (should (equal got expected)))
 
     (let* ((helm-ag-command-option "--ignore-case --all-text")
-           (got (helm-ag--construct-command "somepattern"))
+           (got (helm-ag--construct-do-ag-command "somepattern"))
            (expected '("ag" "--nocolor" "--nogroup" "--ignore-case" "--all-text"
                        "--" "somepattern")))
       (should (equal got expected)))))
 
-(ert-deftest strip-quote ()
-  "helm-ag--strip-quote"
-  (let ((got (helm-ag--strip-quote "'foo bar'")))
-    (should (string= got "foo bar")))
-  (let ((got (helm-ag--strip-quote "\"foo bar\"")))
-    (should (string= got "foo bar")))
-  (let ((got (helm-ag--strip-quote "apple")))
-    (should (string= got "apple"))))
+(ert-deftest validate-regexp-with-valid-regexp ()
+  (should (helm-ag--validate-regexp "[a-z]\\([[:word:]]\\)")))
+
+(ert-deftest validate-regexp-with-invalid-regexp ()
+  (should-not (helm-ag--validate-regexp "\\(")))
+
+(ert-deftest transform-for-this-file ()
+  "helm-ag--candidate-transform-for-this-file"
+  (let ((helm-ag--last-query "hoge"))
+    (should (helm-ag--candidate-transform-for-this-file "10:hoge"))
+    (should-not (helm-ag--candidate-transform-for-this-file ":hoge"))))
+
+(ert-deftest transform-for-files ()
+  "helm-ag--candidate-transform-for-files"
+  (let ((helm-ag--last-query "hoge"))
+    (should (helm-ag--candidate-transform-for-files "10:5:hoge"))
+    (should-not (helm-ag--candidate-transform-for-files "10:hoge"))))
 
 ;;; test-util.el ends here
