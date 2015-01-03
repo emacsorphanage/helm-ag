@@ -29,7 +29,7 @@
   (let ((helm-ag-base-command "ag --nocolor --nogroup")
         (helm-ag--last-query "pattern"))
     (let ((got (helm-ag--construct-command nil))
-          (expected '("--nocolor" "--nogroup" "--" "pattern")))
+          (expected '("ag" "--nocolor" "--nogroup" "--" "pattern")))
       (should (equal got expected)))))
 
 (ert-deftest construct-command-this-file ()
@@ -37,7 +37,7 @@
   (let ((helm-ag-base-command "ag --nocolor --nogroup")
         (helm-ag--last-query "pattern"))
     (let ((got (helm-ag--construct-command "foo.el"))
-          (expected '("--nocolor" "--nogroup" "--" "pattern" "foo.el")))
+          (expected '("ag" "--nocolor" "--nogroup" "--" "pattern" "foo.el")))
       (should (equal got expected)))))
 
 (ert-deftest construct-command-with-options ()
@@ -46,7 +46,7 @@
         (helm-ag-command-option "--all-text --hidden -D")
         (helm-ag--last-query "pattern"))
     (let ((got (helm-ag--construct-command nil))
-          (expected '("--nocolor" "--nogroup" "--all-text" "--hidden" "-D"
+          (expected '("ag" "--nocolor" "--nogroup" "--all-text" "--hidden" "-D"
                       "--" "pattern")))
       (should (equal got expected)))))
 
