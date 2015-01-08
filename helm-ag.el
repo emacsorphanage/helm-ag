@@ -249,8 +249,8 @@
     map)
   "Keymap for `helm-ag'.")
 
-(defun helm-ag--up-one-level (arg)
-  (interactive "p")
+(defun helm-ag--up-one-level ()
+  (interactive)
   (let ((parent (file-name-directory (directory-file-name default-directory))))
     (helm-run-after-quit
      (lambda ()
