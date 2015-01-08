@@ -239,15 +239,35 @@
        (read-directory-name "Search directory: " nil nil t))
     default-directory))
 
+(defsubst helm-ag--helm-header (dir)
+  (concat "Search at " dir))
+
+(defvar helm-ag-keymap
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-l") 'helm-ag--up-one-level)
+    map)
+  "Keymap for `helm-ag'.")
+
+(defun helm-ag--up-one-level (arg)
+  (interactive "p")
+  (let ((parent (file-name-directory (directory-file-name default-directory))))
+    (helm-run-after-quit
+     (lambda ()
+       (let ((default-directory parent))
+         (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
+         (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
+               :keymap helm-ag-keymap))))))
+
 ;;;###autoload
 (defun helm-ag (&optional basedir)
   (interactive)
-  (let* ((helm-ag-default-directory (or basedir (helm-ag--default-directory)))
-         (header-name (format "Search at %s" helm-ag-default-directory)))
+  (let ((helm-ag-default-directory (or basedir (helm-ag--default-directory))))
     (helm-ag--query)
     (helm-attrset 'search-this-file nil helm-ag-source)
-    (helm-attrset 'name header-name helm-ag-source)
-    (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
+    (helm-attrset 'name (helm-ag--helm-header helm-ag-default-directory) helm-ag-source)
+    (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
+          :keymap helm-ag-keymap)))
 
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
