@@ -78,6 +78,13 @@ If this value is `'file-line`, `helm-ag` displays candidate as helm `file-line` 
 ![helm-ag-file-line](image/helm-ag-file-line.png)
 
 
+## Keymap
+
+| Key                  | Action                     |
+|:---------------------|:--------------------------:|
+| `C-l`                | Search in parent directory |
+
+
 ### Sample Configuration
 
 ```lisp
