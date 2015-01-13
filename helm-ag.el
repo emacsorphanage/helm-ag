@@ -242,7 +242,7 @@
 (defsubst helm-ag--helm-header (dir)
   (concat "Search at " dir))
 
-(defvar helm-ag-keymap
+(defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
@@ -257,7 +257,7 @@
        (let ((default-directory parent))
          (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
          (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
-               :keymap helm-ag-keymap))))))
+               :keymap helm-ag-map))))))
 
 ;;;###autoload
 (defun helm-ag (&optional basedir)
@@ -267,7 +267,7 @@
     (helm-attrset 'search-this-file nil helm-ag-source)
     (helm-attrset 'name (helm-ag--helm-header helm-ag-default-directory) helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
-          :keymap helm-ag-keymap)))
+          :keymap helm-ag-map)))
 
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
