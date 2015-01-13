@@ -242,7 +242,7 @@
 (defsubst helm-ag--helm-header (dir)
   (concat "Search at " dir))
 
-(defvar helm-ag-keymap
+(defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
@@ -257,7 +257,7 @@
        (let ((default-directory parent))
          (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
          (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
-               :keymap helm-ag-keymap))))))
+               :keymap helm-ag-map))))))
 
 ;;;###autoload
 (defun helm-ag (&optional basedir)
@@ -267,7 +267,7 @@
     (helm-attrset 'search-this-file nil helm-ag-source)
     (helm-attrset 'name (helm-ag--helm-header helm-ag-default-directory) helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
-          :keymap helm-ag-keymap)))
+          :keymap helm-ag-map)))
 
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
@@ -313,6 +313,24 @@
          (when (string= event "finished\n")
            (helm-ag--do-ag-propertize)))))))
 
+(defvar helm-do-ag-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
+    map)
+  "Keymap for `helm-do-ag'.")
+
+(defun helm-ag--do-ag-up-one-level ()
+  (interactive)
+  (let ((parent (file-name-directory (directory-file-name default-directory)))
+        (initial-input helm-input))
+    (helm-run-after-quit
+     (lambda ()
+       (let ((default-directory parent))
+         (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+               :input initial-input
+               :keymap helm-do-ag-map))))))
+
 (defvar helm-source-do-ag
   `((name . "The Silver Searcher")
     (candidates-process . helm-ag--do-ag-candidate-process)
@@ -330,7 +348,8 @@
   (let ((helm-ag-default-directory (or basedir (helm-ag--default-directory))))
     (helm-ag-save-current-context)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-          :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point))))
+          :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
+          :keymap helm-do-ag-map)))
 
 (provide 'helm-ag)
 
