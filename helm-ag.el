@@ -90,8 +90,8 @@ They are specified to `--ignore' options."
            collect (concat "--ignore=" ignore)))
 
 (defun helm-ag--parse-query (query)
-  (let ((inputs (split-string-and-unquote query)))
-    (if (= (length inputs) 1)
+  (let ((inputs (ignore-errors (split-string-and-unquote query))))
+    (if (or (null inputs) (= (length inputs) 1))
         (list query)
       (setq helm-ag--last-query (car (last inputs)))
       (append (butlast inputs) (last inputs)))))
