@@ -89,6 +89,13 @@ They are specified to `--ignore' options."
                                  grep-find-ignored-directories)
            collect (concat "--ignore=" ignore)))
 
+(defun helm-ag--parse-query (query)
+  (let ((inputs (split-string-and-unquote query)))
+    (if (= (length inputs) 1)
+        (list query)
+      (setq helm-ag--last-query (car (last inputs)))
+      (append (butlast inputs) (last inputs)))))
+
 (defun helm-ag--construct-command (this-file)
   (let* ((commands (split-string helm-ag-base-command nil t))
          (command (car commands))
@@ -98,7 +105,7 @@ They are specified to `--ignore' options."
         (setq args (append args ag-options))))
     (when helm-ag-use-grep-ignore-list
       (setq args (append args (helm-ag--grep-ignore-list-to-options))))
-    (setq args (append args (list "--" helm-ag--last-query)))
+    (setq args (append args (helm-ag--parse-query helm-ag--last-query)))
     (when this-file
       (setq args (append args (list this-file))))
     (cons command args)))
