@@ -60,11 +60,17 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag-always-set-extra-option nil
+  "Always set `ag' options of `helm-do-ag'."
+  :type 'boolean
+  :group 'helm-ag)
+
 (defvar helm-ag-command-history '())
 (defvar helm-ag-context-stack nil)
 (defvar helm-ag-default-directory nil)
 (defvar helm-ag-last-default-directory nil)
 (defvar helm-ag--last-query nil)
+(defvar helm-ag--extra-options nil)
 
 (defun helm-ag-save-current-context ()
   (let ((curpoint (with-helm-current-buffer
@@ -89,6 +95,13 @@ They are specified to `--ignore' options."
                                  grep-find-ignored-directories)
            collect (concat "--ignore=" ignore)))
 
+(defun helm-ag--parse-query (query)
+  (let ((inputs (ignore-errors (split-string-and-unquote query))))
+    (if (or (null inputs) (= (length inputs) 1))
+        (list query)
+      (setq helm-ag--last-query (car (last inputs)))
+      (append (butlast inputs) (last inputs)))))
+
 (defun helm-ag--construct-command (this-file)
   (let* ((commands (split-string helm-ag-base-command nil t))
          (command (car commands))
@@ -98,7 +111,7 @@ They are specified to `--ignore' options."
         (setq args (append args ag-options))))
     (when helm-ag-use-grep-ignore-list
       (setq args (append args (helm-ag--grep-ignore-list-to-options))))
-    (setq args (append args (list "--" helm-ag--last-query)))
+    (setq args (append args (helm-ag--parse-query helm-ag--last-query)))
     (when this-file
       (setq args (append args (list this-file))))
     (cons command args)))
@@ -247,8 +260,13 @@ They are specified to `--ignore' options."
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
+(defsubst helm-ag--has-c-u-preffix-p ()
+  (and current-prefix-arg
+       (or (equal current-prefix-arg '(4))
+           (equal current-prefix-arg '(-4)))))
+
 (defun helm-ag--default-directory ()
-  (if current-prefix-arg
+  (if (helm-ag--has-c-u-preffix-p)
       (file-name-as-directory
        (read-directory-name "Search directory: " nil nil t))
     default-directory))
@@ -312,6 +330,8 @@ They are specified to `--ignore' options."
   (let ((cmds (split-string helm-ag-base-command nil t)))
     (when helm-ag-command-option
       (setq cmds (append cmds (split-string helm-ag-command-option nil t))))
+    (when helm-ag--extra-options
+      (setq cmds (append cmds (split-string helm-ag--extra-options))))
     (append cmds (list "--" pattern))))
 
 (defun helm-ag--do-ag-candidate-process ()
@@ -356,10 +376,19 @@ They are specified to `--ignore' options."
     (requires-pattern . 3)
     (candidate-number-limit . 9999)))
 
+(defun helm-ag--set-do-ag-option ()
+  (when (or (< (prefix-numeric-value current-prefix-arg) 0)
+            helm-ag-always-set-extra-option)
+    (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
+                               'helm-ag--do-ag-option-history
+                               helm-ag--extra-options)))
+      (setq helm-ag--extra-options option))))
+
 ;;;###autoload
 (defun helm-do-ag (&optional basedir)
   (interactive)
   (let ((helm-ag-default-directory (or basedir (helm-ag--default-directory))))
+    (helm-ag--set-do-ag-option)
     (helm-ag-save-current-context)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
           :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
