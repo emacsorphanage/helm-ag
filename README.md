@@ -77,6 +77,11 @@ If this value is `'file-line`, `helm-ag` displays candidate as helm `file-line` 
 
 ![helm-ag-file-line](image/helm-ag-file-line.png)
 
+#### `helm-ag-use-grep-ignore-list`(Default: `'nil`)
+
+Use `grep-find-ignored-files` and `grep-find-ignored-directories` as ignore pattern.
+They are specified to `--ignore' options."
+
 
 ## Keymap
 
