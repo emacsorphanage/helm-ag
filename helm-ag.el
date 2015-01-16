@@ -260,8 +260,13 @@ They are specified to `--ignore' options."
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
 
+(defsubst helm-ag--has-c-u-preffix-p ()
+  (and current-prefix-arg
+       (or (equal current-prefix-arg '(4))
+           (equal current-prefix-arg '(-4)))))
+
 (defun helm-ag--default-directory ()
-  (if current-prefix-arg
+  (if (helm-ag--has-c-u-preffix-p)
       (file-name-as-directory
        (read-directory-name "Search directory: " nil nil t))
     default-directory))
