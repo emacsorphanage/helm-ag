@@ -73,6 +73,14 @@
                        "--" "somepattern")))
       (should (equal got expected)))))
 
+(ert-deftest construct-do-ag-command-with-extra-option ()
+  "helm-ag--construct-do-ag-command"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag--extra-options "-G\\.md$"))
+    (let ((got (helm-ag--construct-do-ag-command "somepattern"))
+          (expected '("ag" "--nocolor" "--nogroup" "-G\\.md$" "--" "somepattern")))
+      (should (equal got expected)))))
+
 (ert-deftest validate-regexp-with-valid-regexp ()
   (should (helm-ag--validate-regexp "[a-z]\\([[:word:]]\\)")))
 
