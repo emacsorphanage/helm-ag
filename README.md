@@ -37,7 +37,8 @@ Same as `helm-ag` except to search only current file
 
 #### `helm-do-ag`
 
-Search with `ag` like `helm-do-grep`.
+Search with `ag` like `helm-do-grep`. You can specify extra command line option
+of `ag` with minus prefix(`C--`).
 
 ![helm-do-ag](image/helm-do-ag.gif)
 
@@ -81,6 +82,11 @@ If this value is `'file-line`, `helm-ag` displays candidate as helm `file-line` 
 
 Use `grep-find-ignored-files` and `grep-find-ignored-directories` as ignore pattern.
 They are specified to `--ignore' options."
+
+#### `helm-ag-always-set-extra-option`(Default: `'nil`)
+
+Always set extra command line option of `ag` in `helm-do-ag`
+if this value is non-nil.
 
 
 ## Keymap
