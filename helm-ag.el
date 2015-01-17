@@ -381,8 +381,7 @@ They are specified to `--ignore' options."
   (when (or (< (prefix-numeric-value current-prefix-arg) 0)
             helm-ag-always-set-extra-option)
     (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
-                               'helm-ag--extra-options-history
-                               helm-ag--extra-options)))
+                               'helm-ag--extra-options-history)))
       (setq helm-ag--extra-options option))))
 
 ;;;###autoload
