@@ -282,15 +282,22 @@ They are specified to `--ignore' options."
     map)
   "Keymap for `helm-ag'.")
 
+(defsubst helm-ag--root-directory-p ()
+  (cl-loop for dir in '(".git/" ".hg/")
+           thereis (file-directory-p dir)))
+
 (defun helm-ag--up-one-level ()
   (interactive)
-  (let ((parent (file-name-directory (directory-file-name default-directory))))
-    (helm-run-after-quit
-     (lambda ()
-       (let ((default-directory parent))
-         (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
-         (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
-               :keymap helm-ag-map))))))
+  (if (or (not (helm-ag--root-directory-p))
+          (y-or-n-p "Here may be project root. Continue searcing ? "))
+      (let ((parent (file-name-directory (directory-file-name default-directory))))
+        (helm-run-after-quit
+         (lambda ()
+           (let ((default-directory parent))
+             (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
+             (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
+                   :keymap helm-ag-map)))))
+    (message nil)))
 
 ;;;###autoload
 (defun helm-ag (&optional basedir)
@@ -357,14 +364,17 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
-  (let ((parent (file-name-directory (directory-file-name default-directory)))
-        (initial-input helm-input))
-    (helm-run-after-quit
-     (lambda ()
-       (let ((default-directory parent))
-         (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-               :input initial-input
-               :keymap helm-do-ag-map))))))
+  (if (or (not (helm-ag--root-directory-p))
+          (y-or-n-p "Here may be project root. Continue searcing ? "))
+      (let ((parent (file-name-directory (directory-file-name default-directory)))
+            (initial-input helm-input))
+        (helm-run-after-quit
+         (lambda ()
+           (let ((default-directory parent))
+             (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+                   :input initial-input
+                   :keymap helm-do-ag-map)))))
+    (message nil)))
 
 (defvar helm-source-do-ag
   `((name . "The Silver Searcher")
