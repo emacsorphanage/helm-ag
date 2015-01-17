@@ -71,6 +71,7 @@ They are specified to `--ignore' options."
 (defvar helm-ag-last-default-directory nil)
 (defvar helm-ag--last-query nil)
 (defvar helm-ag--extra-options nil)
+(defvar helm-ag--extra-options-history nil)
 
 (defun helm-ag-save-current-context ()
   (let ((curpoint (with-helm-current-buffer
@@ -380,7 +381,7 @@ They are specified to `--ignore' options."
   (when (or (< (prefix-numeric-value current-prefix-arg) 0)
             helm-ag-always-set-extra-option)
     (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
-                               'helm-ag--do-ag-option-history
+                               'helm-ag--extra-options-history
                                helm-ag--extra-options)))
       (setq helm-ag--extra-options option))))
 
