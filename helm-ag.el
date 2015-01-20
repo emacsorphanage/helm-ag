@@ -352,8 +352,9 @@ They are specified to `--ignore' options."
     (when helm-do-ag--extensions
       (setq cmds (append cmds (helm-ag--construct-extension-options))))
     (setq cmds (append cmds (list "--" pattern)))
-    (when helm-do-ag--default-target
-      (append cmds helm-do-ag--default-target))))
+    (if helm-do-ag--default-target
+        (append cmds helm-do-ag--default-target)
+      cmds)))
 
 (defun helm-ag--do-ag-candidate-process ()
   (let ((proc (apply 'start-file-process "helm-do-ag" nil
