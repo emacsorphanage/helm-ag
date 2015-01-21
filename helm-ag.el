@@ -338,6 +338,7 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--construct-extension-options ()
   (cl-loop for ext in helm-do-ag--extensions
+           unless (string= "*")
            collect
            (concat "-G" (replace-regexp-in-string
                          "\\*" ""
