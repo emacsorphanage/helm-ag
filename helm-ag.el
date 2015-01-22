@@ -313,21 +313,27 @@ They are specified to `--ignore' options."
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
           :keymap helm-ag-map)))
 
+(defsubst helm-ag--search-only-one-file-p ()
+  (and (= (length helm-do-ag--default-target) 1)
+       (not (file-directory-p (car helm-do-ag--default-target)))))
+
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
     (goto-char (point-min))
     (when (helm-ag--validate-regexp helm-input)
-      (cl-loop while (not (eobp))
+      (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
+               while (not (eobp))
                do
                (progn
                  (let ((start (point))
                        (bound (line-end-position))
                        file-end line-end)
-                   (when (search-forward ":" bound t)
+                   (when (or one-file-p (search-forward ":" bound t))
                      (setq file-end (1- (point)))
                      (when (search-forward ":" bound t)
                        (setq line-end (1- (point)))
-                       (set-text-properties start file-end '(face helm-moccur-buffer))
+                       (unless one-file-p
+                         (set-text-properties start file-end '(face helm-moccur-buffer)))
                        (set-text-properties (1+ file-end) line-end
                                             '(face helm-grep-lineno))
 
