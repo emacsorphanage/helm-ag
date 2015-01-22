@@ -139,9 +139,16 @@ They are specified to `--ignore' options."
               (error "Failed: '%s'" helm-ag--last-query))))
         (helm-ag-save-current-context)))))
 
+(defun helm-ag--search-only-one-file-p ()
+  (when (and helm-do-ag--default-target (= (length helm-do-ag--default-target) 1))
+    (let ((target (car helm-do-ag--default-target)))
+      (unless (file-directory-p target)
+        target))))
+
 (defun helm-ag-find-file-action (candidate find-func)
   (let* ((elems (split-string candidate ":"))
-         (search-this-file (helm-attr 'search-this-file))
+         (search-this-file (or (helm-attr 'search-this-file)
+                               (helm-ag--search-only-one-file-p)))
          (filename (or search-this-file (cl-first elems)))
          (line (string-to-number (if search-this-file
                                      (cl-first elems)
@@ -312,10 +319,6 @@ They are specified to `--ignore' options."
     (helm-attrset 'name (helm-ag--helm-header helm-ag-default-directory) helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
           :keymap helm-ag-map)))
-
-(defsubst helm-ag--search-only-one-file-p ()
-  (and (= (length helm-do-ag--default-target) 1)
-       (not (file-directory-p (car helm-do-ag--default-target)))))
 
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
