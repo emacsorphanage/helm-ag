@@ -28,6 +28,8 @@
 (require 'helm)
 (require 'helm-utils)
 
+(declare-function helm-read-file-name "helm-mode")
+
 (defgroup helm-ag nil
   "the silver searcher with helm interface"
   :group 'helm)
@@ -338,11 +340,15 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--construct-extension-options ()
   (cl-loop for ext in helm-do-ag--extensions
-           unless (string= "*")
+           unless (string= ext "*")
            collect
            (concat "-G" (replace-regexp-in-string
                          "\\*" ""
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
+
+(defun helm-ag--construct-targets (targets)
+  (cl-loop for target in targets
+           collect (file-relative-name target)))
 
 (defun helm-ag--construct-do-ag-command (pattern)
   (let ((cmds (split-string helm-ag-base-command nil t)))
@@ -354,7 +360,7 @@ They are specified to `--ignore' options."
       (setq cmds (append cmds (helm-ag--construct-extension-options))))
     (setq cmds (append cmds (list "--" pattern)))
     (if helm-do-ag--default-target
-        (append cmds helm-do-ag--default-target)
+        (append cmds (helm-ag--construct-targets helm-do-ag--default-target))
       cmds)))
 
 (defun helm-ag--do-ag-candidate-process ()
@@ -408,13 +414,6 @@ They are specified to `--ignore' options."
                                'helm-ag--extra-options-history)))
       (setq helm-ag--extra-options option))))
 
-(defun helm-ag--do-ag-default-target ()
-  (if (helm-ag--has-c-u-preffix-p)
-      (let ((preselection (or (dired-get-filename nil t)
-                              (buffer-file-name (current-buffer)))))
-        (helm-read-file-name "Search in file(s): " :marked-candidates t))
-    default-directory))
-
 (defun helm-ag--do-ag-searched-extensions ()
   (when (helm-ag--has-c-u-preffix-p)
     (helm-grep-get-file-extensions helm-do-ag--default-target)))
@@ -423,7 +422,10 @@ They are specified to `--ignore' options."
 (defun helm-do-ag (&optional basedir)
   (interactive)
   (require 'helm-mode)
-  (let* ((helm-do-ag--default-target (or basedir (helm-ag--do-ag-default-target)))
+  (let* ((helm-do-ag--default-target (or basedir (helm-read-file-name
+                                                  "Search in file(s): "
+                                                  :default default-directory
+                                                  :marked-candidates t :must-match t)))
          (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions)))
     (helm-ag--set-do-ag-option)
     (helm-ag-save-current-context)
