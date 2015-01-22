@@ -28,6 +28,8 @@
 (require 'helm)
 (require 'helm-utils)
 
+(declare-function helm-read-file-name "helm-mode")
+
 (defgroup helm-ag nil
   "the silver searcher with helm interface"
   :group 'helm)
@@ -72,6 +74,8 @@ They are specified to `--ignore' options."
 (defvar helm-ag--last-query nil)
 (defvar helm-ag--extra-options nil)
 (defvar helm-ag--extra-options-history nil)
+(defvar helm-do-ag--default-target nil)
+(defvar helm-do-ag--extensions nil)
 
 (defun helm-ag-save-current-context ()
   (let ((curpoint (with-helm-current-buffer
@@ -135,9 +139,16 @@ They are specified to `--ignore' options."
               (error "Failed: '%s'" helm-ag--last-query))))
         (helm-ag-save-current-context)))))
 
+(defun helm-ag--search-only-one-file-p ()
+  (when (and helm-do-ag--default-target (= (length helm-do-ag--default-target) 1))
+    (let ((target (car helm-do-ag--default-target)))
+      (unless (file-directory-p target)
+        target))))
+
 (defun helm-ag-find-file-action (candidate find-func)
   (let* ((elems (split-string candidate ":"))
-         (search-this-file (helm-attr 'search-this-file))
+         (search-this-file (or (helm-attr 'search-this-file)
+                               (helm-ag--search-only-one-file-p)))
          (filename (or search-this-file (cl-first elems)))
          (line (string-to-number (if search-this-file
                                      (cl-first elems)
@@ -313,17 +324,19 @@ They are specified to `--ignore' options."
   (with-helm-window
     (goto-char (point-min))
     (when (helm-ag--validate-regexp helm-input)
-      (cl-loop while (not (eobp))
+      (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
+               while (not (eobp))
                do
                (progn
                  (let ((start (point))
                        (bound (line-end-position))
                        file-end line-end)
-                   (when (search-forward ":" bound t)
+                   (when (or one-file-p (search-forward ":" bound t))
                      (setq file-end (1- (point)))
                      (when (search-forward ":" bound t)
                        (setq line-end (1- (point)))
-                       (set-text-properties start file-end '(face helm-moccur-buffer))
+                       (unless one-file-p
+                         (set-text-properties start file-end '(face helm-moccur-buffer)))
                        (set-text-properties (1+ file-end) line-end
                                             '(face helm-grep-lineno))
 
@@ -334,18 +347,34 @@ They are specified to `--ignore' options."
     (goto-char (point-min))
     (helm-display-mode-line (helm-get-current-source))))
 
+(defun helm-ag--construct-extension-options ()
+  (cl-loop for ext in helm-do-ag--extensions
+           unless (string= ext "*")
+           collect
+           (concat "-G" (replace-regexp-in-string
+                         "\\*" ""
+                         (replace-regexp-in-string "\\." "\\\\." ext)))))
+
+(defun helm-ag--construct-targets (targets)
+  (cl-loop for target in targets
+           collect (file-relative-name target)))
+
 (defun helm-ag--construct-do-ag-command (pattern)
   (let ((cmds (split-string helm-ag-base-command nil t)))
     (when helm-ag-command-option
       (setq cmds (append cmds (split-string helm-ag-command-option nil t))))
     (when helm-ag--extra-options
       (setq cmds (append cmds (split-string helm-ag--extra-options))))
-    (append cmds (list "--" pattern))))
+    (when helm-do-ag--extensions
+      (setq cmds (append cmds (helm-ag--construct-extension-options))))
+    (setq cmds (append cmds (list "--" pattern)))
+    (if helm-do-ag--default-target
+        (append cmds (helm-ag--construct-targets helm-do-ag--default-target))
+      cmds)))
 
 (defun helm-ag--do-ag-candidate-process ()
-  (let* ((default-directory (or helm-ag-default-directory default-directory))
-         (proc (apply 'start-file-process "helm-do-ag" nil
-                      (helm-ag--construct-do-ag-command helm-pattern))))
+  (let ((proc (apply 'start-file-process "helm-do-ag" nil
+                     (helm-ag--construct-do-ag-command helm-pattern))))
     (prog1 proc
       (set-process-sentinel
        proc
@@ -394,10 +423,19 @@ They are specified to `--ignore' options."
                                'helm-ag--extra-options-history)))
       (setq helm-ag--extra-options option))))
 
+(defun helm-ag--do-ag-searched-extensions ()
+  (when (helm-ag--has-c-u-preffix-p)
+    (helm-grep-get-file-extensions helm-do-ag--default-target)))
+
 ;;;###autoload
 (defun helm-do-ag (&optional basedir)
   (interactive)
-  (let ((helm-ag-default-directory (or basedir (helm-ag--default-directory))))
+  (require 'helm-mode)
+  (let* ((helm-do-ag--default-target (or basedir (helm-read-file-name
+                                                  "Search in file(s): "
+                                                  :default default-directory
+                                                  :marked-candidates t :must-match t)))
+         (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions)))
     (helm-ag--set-do-ag-option)
     (helm-ag-save-current-context)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
