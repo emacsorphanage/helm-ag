@@ -67,10 +67,10 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
-(defvar helm-ag-command-history '())
-(defvar helm-ag-context-stack nil)
-(defvar helm-ag-default-directory nil)
-(defvar helm-ag-last-default-directory nil)
+(defvar helm-ag--command-history '())
+(defvar helm-ag--context-stack nil)
+(defvar helm-ag--default-directory nil)
+(defvar helm-ag--last-default-directory nil)
 (defvar helm-ag--last-query nil)
 (defvar helm-ag--extra-options nil)
 (defvar helm-ag--extra-options-history nil)
@@ -81,8 +81,8 @@ They are specified to `--ignore' options."
   (let ((curpoint (with-helm-current-buffer
                     (point))))
     (helm-aif (buffer-file-name helm-current-buffer)
-        (push (list :file it :point curpoint) helm-ag-context-stack)
-      (push (list :buffer helm-current-buffer :point curpoint) helm-ag-context-stack))))
+        (push (list :file it :point curpoint) helm-ag--context-stack)
+      (push (list :buffer helm-current-buffer :point curpoint) helm-ag--context-stack))))
 
 (defsubst helm-ag--insert-thing-at-point (thing)
   (helm-aif (thing-at-point thing)
@@ -125,7 +125,7 @@ They are specified to `--ignore' options."
   (let ((buf-coding buffer-file-coding-system))
     (helm-attrset 'recenter t)
     (with-current-buffer (helm-candidate-buffer 'global)
-      (let* ((default-directory (or helm-ag-default-directory
+      (let* ((default-directory (or helm-ag--default-directory
                                     default-directory))
              (cmds (helm-ag--construct-command (helm-attr 'search-this-file)))
              (coding-system-for-read buf-coding)
@@ -153,10 +153,10 @@ They are specified to `--ignore' options."
          (line (string-to-number (if search-this-file
                                      (cl-first elems)
                                    (cl-second elems))))
-         (default-directory (or helm-ag-default-directory
-                                helm-ag-last-default-directory
+         (default-directory (or helm-ag--default-directory
+                                helm-ag--last-default-directory
                                 default-directory)))
-    (setq helm-ag-last-default-directory default-directory)
+    (setq helm-ag--last-default-directory default-directory)
     (funcall find-func filename)
     (goto-char (point-min))
     (forward-line (1- line))))
@@ -168,8 +168,8 @@ They are specified to `--ignore' options."
          (line (string-to-number (if search-this-file
                                      (cl-first elems)
                                    (cl-second elems))))
-         (default-directory (or helm-ag-default-directory
-                                helm-ag-last-default-directory)))
+         (default-directory (or helm-ag--default-directory
+                                helm-ag--last-default-directory)))
     (find-file filename)
     (goto-char (point-min))
     (forward-line (1- line))
@@ -237,7 +237,7 @@ They are specified to `--ignore' options."
 ;;;###autoload
 (defun helm-ag-pop-stack ()
   (interactive)
-  (let ((context (pop helm-ag-context-stack)))
+  (let ((context (pop helm-ag--context-stack)))
     (unless context
       (error "Context stack is empty !"))
     (helm-aif (plist-get context :file)
@@ -251,7 +251,7 @@ They are specified to `--ignore' options."
 ;;;###autoload
 (defun helm-ag-clear-stack ()
   (interactive)
-  (setq helm-ag-context-stack nil))
+  (setq helm-ag--context-stack nil))
 
 (defun helm-ag--select-source ()
   (if (eq helm-ag-source-type 'file-line)
@@ -260,12 +260,16 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
-         (query (read-string "Pattern: " searched-word 'helm-ag-command-history)))
+         (query (read-string "Pattern: " searched-word 'helm-ag--command-history)))
     (setq helm-ag--last-query query)))
+
+(defsubst helm-ag--clear-variables ()
+  (setq helm-ag--last-default-directory nil))
 
 ;;;###autoload
 (defun helm-ag-this-file ()
   (interactive)
+  (helm-ag--clear-variables)
   (let ((filename (file-name-nondirectory (buffer-file-name))))
     (helm-ag--query)
     (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
@@ -313,10 +317,11 @@ They are specified to `--ignore' options."
 ;;;###autoload
 (defun helm-ag (&optional basedir)
   (interactive)
-  (let ((helm-ag-default-directory (or basedir (helm-ag--default-directory))))
+  (helm-ag--clear-variables)
+  (let ((helm-ag--default-directory (or basedir (helm-ag--default-directory))))
     (helm-ag--query)
     (helm-attrset 'search-this-file nil helm-ag-source)
-    (helm-attrset 'name (helm-ag--helm-header helm-ag-default-directory) helm-ag-source)
+    (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
     (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
           :keymap helm-ag-map)))
 
@@ -373,7 +378,7 @@ They are specified to `--ignore' options."
       cmds)))
 
 (defun helm-ag--do-ag-candidate-process ()
-  (let* ((default-directory (or helm-ag-default-directory default-directory))
+  (let* ((default-directory (or helm-ag--default-directory default-directory))
          (proc (apply 'start-file-process "helm-do-ag" nil
                       (helm-ag--construct-do-ag-command helm-pattern))))
     (prog1 proc
@@ -432,7 +437,8 @@ They are specified to `--ignore' options."
 (defun helm-do-ag (&optional basedir)
   (interactive)
   (require 'helm-mode)
-  (let* ((helm-ag-default-directory basedir)
+  (helm-ag--clear-variables)
+  (let* ((helm-ag--default-directory (or basedir default-directory))
          (helm-do-ag--default-target (or basedir (helm-read-file-name
                                                   "Search in file(s): "
                                                   :default default-directory
