@@ -70,7 +70,7 @@ They are specified to `--ignore' options."
 (defvar helm-ag-command-history '())
 (defvar helm-ag-context-stack nil)
 (defvar helm-ag-default-directory nil)
-(defvar helm-ag-last-default-directory nil)
+(defvar helm-ag--last-default-directory nil)
 (defvar helm-ag--last-query nil)
 (defvar helm-ag--extra-options nil)
 (defvar helm-ag--extra-options-history nil)
@@ -263,9 +263,13 @@ They are specified to `--ignore' options."
          (query (read-string "Pattern: " searched-word 'helm-ag-command-history)))
     (setq helm-ag--last-query query)))
 
+(defsubst helm-ag--clear-variables ()
+  (setq helm-ag--last-default-directory nil))
+
 ;;;###autoload
 (defun helm-ag-this-file ()
   (interactive)
+  (helm-ag--clear-variables)
   (let ((filename (file-name-nondirectory (buffer-file-name))))
     (helm-ag--query)
     (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
@@ -313,6 +317,7 @@ They are specified to `--ignore' options."
 ;;;###autoload
 (defun helm-ag (&optional basedir)
   (interactive)
+  (helm-ag--clear-variables)
   (let ((helm-ag-default-directory (or basedir (helm-ag--default-directory))))
     (helm-ag--query)
     (helm-attrset 'search-this-file nil helm-ag-source)
@@ -432,7 +437,7 @@ They are specified to `--ignore' options."
 (defun helm-do-ag (&optional basedir)
   (interactive)
   (require 'helm-mode)
-  (let* ((helm-ag-default-directory basedir)
+  (helm-ag--clear-variables)
          (helm-do-ag--default-target (or basedir (helm-read-file-name
                                                   "Search in file(s): "
                                                   :default default-directory
