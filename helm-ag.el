@@ -373,8 +373,9 @@ They are specified to `--ignore' options."
       cmds)))
 
 (defun helm-ag--do-ag-candidate-process ()
-  (let ((proc (apply 'start-file-process "helm-do-ag" nil
-                     (helm-ag--construct-do-ag-command helm-pattern))))
+  (let* ((default-directory (or helm-ag-default-directory default-directory))
+         (proc (apply 'start-file-process "helm-do-ag" nil
+                      (helm-ag--construct-do-ag-command helm-pattern))))
     (prog1 proc
       (set-process-sentinel
        proc
@@ -431,7 +432,8 @@ They are specified to `--ignore' options."
 (defun helm-do-ag (&optional basedir)
   (interactive)
   (require 'helm-mode)
-  (let* ((helm-do-ag--default-target (or basedir (helm-read-file-name
+  (let* ((helm-ag-default-directory basedir)
+         (helm-do-ag--default-target (or basedir (helm-read-file-name
                                                   "Search in file(s): "
                                                   :default default-directory
                                                   :marked-candidates t :must-match t)))
