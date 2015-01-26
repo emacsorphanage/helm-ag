@@ -438,6 +438,7 @@ They are specified to `--ignore' options."
   (interactive)
   (require 'helm-mode)
   (helm-ag--clear-variables)
+  (let* ((helm-ag-default-directory (or basedir default-directory))
          (helm-do-ag--default-target (or basedir (helm-read-file-name
                                                   "Search in file(s): "
                                                   :default default-directory
