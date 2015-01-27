@@ -67,6 +67,11 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag-fuzzy-match nil
+  "Enable fuzzy match"
+  :type 'boolean
+  :group 'helm-ag)
+
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
@@ -218,14 +223,18 @@ They are specified to `--ignore' options."
 (defun helm-ag--action--find-file-other-window (candidate)
   (helm-ag-find-file-action candidate 'find-file-other-window))
 
+(defvar helm-ag--actions
+  '(("Open file" . helm-ag--action-find-file)
+    ("Open file other window" . helm-ag--action--find-file-other-window)
+    "helm-gtags open file attribute"))
+
 (defvar helm-ag-source
-  '((name . "The Silver Searcher")
-    (init . helm-ag-init)
-    (candidates-in-buffer)
-    (persistent-action . helm-ag-persistent-action)
-    (real-to-display . helm-ag--candidate-transformer)
-    (action . (("Open file" . helm-ag--action-find-file)
-               ("Open file other window" . helm-ag--action--find-file-other-window)))))
+  (helm-build-in-buffer-source "The Silver Searcher"
+    :init 'helm-ag--init
+    :real-to-display 'helm-ag--candidate-transformer
+    :persistent-action 'helm-ag--persistent-action
+    :fuzzy-match helm-ag-fuzzy-match
+    :action helm-ag--actions))
 
 (defvar helm-ag-source-grep
   '((name . "The Silver Searcher")
