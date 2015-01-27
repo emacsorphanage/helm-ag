@@ -225,8 +225,7 @@ They are specified to `--ignore' options."
 
 (defvar helm-ag--actions
   '(("Open file" . helm-ag--action-find-file)
-    ("Open file other window" . helm-ag--action--find-file-other-window)
-    "helm-gtags open file attribute"))
+    ("Open file other window" . helm-ag--action--find-file-other-window)))
 
 (defvar helm-ag-source
   (helm-build-in-buffer-source "The Silver Searcher"
