@@ -82,7 +82,7 @@ They are specified to `--ignore' options."
 (defvar helm-do-ag--default-target nil)
 (defvar helm-do-ag--extensions nil)
 
-(defun helm-ag-save-current-context ()
+(defun helm-ag--save-current-context ()
   (let ((curpoint (with-helm-current-buffer
                     (point))))
     (helm-aif (buffer-file-name helm-current-buffer)
@@ -126,7 +126,7 @@ They are specified to `--ignore' options."
       (setq args (append args (list this-file))))
     (cons command args)))
 
-(defun helm-ag-init ()
+(defun helm-ag--init ()
   (let ((buf-coding buffer-file-coding-system))
     (helm-attrset 'recenter t)
     (with-current-buffer (helm-candidate-buffer 'global)
@@ -142,7 +142,7 @@ They are specified to `--ignore' options."
               (unless (executable-find (car cmds))
                 (error "'ag' is not installed."))
               (error "Failed: '%s'" helm-ag--last-query))))
-        (helm-ag-save-current-context)))))
+        (helm-ag--save-current-context)))))
 
 (defun helm-ag--search-only-one-file-p ()
   (when (and helm-do-ag--default-target (= (length helm-do-ag--default-target) 1))
@@ -150,7 +150,7 @@ They are specified to `--ignore' options."
       (unless (file-directory-p target)
         target))))
 
-(defun helm-ag-find-file-action (candidate find-func)
+(defun helm-ag--find-file-action (candidate find-func)
   (let* ((elems (split-string candidate ":"))
          (search-this-file (or (helm-attr 'search-this-file)
                                (helm-ag--search-only-one-file-p)))
@@ -166,7 +166,7 @@ They are specified to `--ignore' options."
     (goto-char (point-min))
     (forward-line (1- line))))
 
-(defun helm-ag-persistent-action (candidate)
+(defun helm-ag--persistent-action (candidate)
   (let* ((elems (split-string candidate ":"))
          (search-this-file (helm-attr 'search-this-file))
          (filename (or search-this-file (cl-first elems)))
@@ -218,10 +218,10 @@ They are specified to `--ignore' options."
     (helm-ag--candidate-transform-for-files candidate)))
 
 (defun helm-ag--action-find-file (candidate)
-  (helm-ag-find-file-action candidate 'find-file))
+  (helm-ag--find-file-action candidate 'find-file))
 
 (defun helm-ag--action--find-file-other-window (candidate)
-  (helm-ag-find-file-action candidate 'find-file-other-window))
+  (helm-ag--find-file-action candidate 'find-file-other-window))
 
 (defvar helm-ag--actions
   '(("Open file" . helm-ag--action-find-file)
@@ -238,7 +238,7 @@ They are specified to `--ignore' options."
 
 (defvar helm-ag-source-grep
   '((name . "The Silver Searcher")
-    (init . helm-ag-init)
+    (init . helm-ag--init)
     (candidates-in-buffer)
     (type . file-line)
     (candidate-number-limit . 9999)))
@@ -424,8 +424,7 @@ They are specified to `--ignore' options."
   `((name . "The Silver Searcher")
     (candidates-process . helm-ag--do-ag-candidate-process)
     (persistent-action . helm-ag-persistent-action)
-    (action . (("Open file" . helm-ag--action-find-file)
-               ("Open file other window" . helm-ag--action--find-file-other-window)))
+    (action . ,helm-ag--actions)
     (no-matchplugin)
     (nohighlight)
     (requires-pattern . 3)
@@ -454,7 +453,7 @@ They are specified to `--ignore' options."
                                                   :marked-candidates t :must-match t)))
          (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions)))
     (helm-ag--set-do-ag-option)
-    (helm-ag-save-current-context)
+    (helm-ag--save-current-context)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
           :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
           :keymap helm-do-ag-map)))
