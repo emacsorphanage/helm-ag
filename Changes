@@ -1,5 +1,12 @@
 Revision history for helm-ag.el
 
+Revision 0.32 2015/01/29 syohex
+    - helm-do-ag works like helm-do-grep
+    - 'C--' prefix for setting ag option
+    - Support fuzzy matching
+    - Add flag for using ignore pattern emacs grep
+    - Implement searhing parent directory by 'C-l'
+
 Revision 0.31 2014/11/11 syohex
     - Improve for remote execution such as tramp
 
