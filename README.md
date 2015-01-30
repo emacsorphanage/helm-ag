@@ -13,11 +13,9 @@
 
 * Emacs 24 or higher
 * helm 1.5.6 or higher
-* [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) 0.15pre or higher.
+* [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) 0.25 or higher.
 
-Please use older version(0.04) helm-ag, if you use the silver searcher 0.14 or lower.
-You can get older helm-ag from [here](https://github.com/syohex/emacs-helm-ag/tags).
-
+I suppose you can use older version ag however if you want to use all features of helm-ag, please upgrade ag version.
 
 ## Installation
 
