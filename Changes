@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.33 2015/02/01 syohex
+    - Fix persistent action of helm-do-ag(Reported by duerrp)
+
 Revision 0.32 2015/01/29 syohex
     - helm-do-ag works like helm-do-grep
     - 'C--' prefix for setting ag option
