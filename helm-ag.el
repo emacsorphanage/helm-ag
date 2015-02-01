@@ -422,7 +422,7 @@ They are specified to `--ignore' options."
 (defvar helm-source-do-ag
   `((name . "The Silver Searcher")
     (candidates-process . helm-ag--do-ag-candidate-process)
-    (persistent-action . helm-ag-persistent-action)
+    (persistent-action . helm-ag--persistent-action)
     (action . ,helm-ag--actions)
     (no-matchplugin)
     (nohighlight)
