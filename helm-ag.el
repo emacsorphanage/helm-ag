@@ -263,12 +263,14 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--select-source ()
   (if (eq helm-ag-source-type 'file-line)
-      '(helm-ag-source-grep)
-    '(helm-ag-source)))
+      'helm-ag-source-grep
+    'helm-ag-source))
 
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
          (query (read-string "Pattern: " searched-word 'helm-ag--command-history)))
+    (when (string= query "")
+      (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
 
 (defsubst helm-ag--clear-variables ()
@@ -280,9 +282,10 @@ They are specified to `--ignore' options."
   (helm-ag--clear-variables)
   (let ((filename (file-name-nondirectory (buffer-file-name))))
     (helm-ag--query)
-    (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
-    (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources (helm-ag--select-source) :buffer "*helm-ag*")))
+    (let ((source (helm-ag--select-source)))
+      (helm-attrset 'search-this-file (buffer-file-name) (symbol-value source))
+      (helm-attrset 'name (format "Search at %s" filename) (symbol-value source))
+      (helm :sources (list source) :buffer "*helm-ag*"))))
 
 (defsubst helm-ag--has-c-u-preffix-p ()
   (and current-prefix-arg
@@ -296,11 +299,17 @@ They are specified to `--ignore' options."
     default-directory))
 
 (defsubst helm-ag--helm-header (dir)
-  (concat "Search at " dir))
+  (concat "Search at " (abbreviate-file-name dir)))
+
+(defun helm-ag--run-other-window-action ()
+  (interactive)
+  (with-helm-alive-p
+    (helm-quit-and-execute-action 'helm-ag--action--find-file-other-window)))
 
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
     map)
   "Keymap for `helm-ag'.")
@@ -316,9 +325,11 @@ They are specified to `--ignore' options."
       (let ((parent (file-name-directory (directory-file-name default-directory))))
         (helm-run-after-quit
          (lambda ()
-           (let ((default-directory parent))
-             (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
-             (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
+           (let ((default-directory parent)
+                 (source (helm-ag--select-source)))
+             (helm-attrset 'name (helm-ag--helm-header default-directory)
+                           (symbol-value source))
+             (helm :sources (list source) :buffer "*helm-ag*"
                    :keymap helm-ag-map)))))
     (message nil)))
 
@@ -328,10 +339,13 @@ They are specified to `--ignore' options."
   (helm-ag--clear-variables)
   (let ((helm-ag--default-directory (or basedir (helm-ag--default-directory))))
     (helm-ag--query)
-    (helm-attrset 'search-this-file nil helm-ag-source)
-    (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
-    (helm :sources (helm-ag--select-source) :buffer "*helm-ag*"
-          :keymap helm-ag-map)))
+    (let ((source (helm-ag--select-source)))
+      (helm-attrset 'search-this-file nil
+                    (symbol-value source))
+      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
+                    (symbol-value source))
+      (helm :sources (list source) :buffer "*helm-ag*"
+            :keymap helm-ag-map))))
 
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
@@ -401,23 +415,10 @@ They are specified to `--ignore' options."
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
     map)
   "Keymap for `helm-do-ag'.")
-
-(defun helm-ag--do-ag-up-one-level ()
-  (interactive)
-  (if (or (not (helm-ag--root-directory-p))
-          (y-or-n-p "Here may be project root. Continue searcing ? "))
-      (let ((parent (file-name-directory (directory-file-name default-directory)))
-            (initial-input helm-input))
-        (helm-run-after-quit
-         (lambda ()
-           (let ((default-directory parent))
-             (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-                   :input initial-input
-                   :keymap helm-do-ag-map)))))
-    (message nil)))
 
 (defvar helm-source-do-ag
   `((name . "The Silver Searcher")
@@ -428,6 +429,21 @@ They are specified to `--ignore' options."
     (nohighlight)
     (requires-pattern . 3)
     (candidate-number-limit . 9999)))
+
+(defun helm-ag--do-ag-up-one-level ()
+  (interactive)
+  (if (or (not (helm-ag--root-directory-p))
+          (y-or-n-p "Here may be project root. Continue searcing ? "))
+      (let ((parent (file-name-directory (directory-file-name default-directory)))
+            (initial-input helm-input))
+        (helm-run-after-quit
+         (lambda ()
+           (let ((default-directory parent))
+             (helm-attrset 'name (helm-ag--helm-header parent)
+                           helm-source-do-ag)
+             (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+                   :input initial-input :keymap helm-do-ag-map)))))
+    (message nil)))
 
 (defun helm-ag--set-do-ag-option ()
   (when (or (< (prefix-numeric-value current-prefix-arg) 0)
@@ -453,6 +469,8 @@ They are specified to `--ignore' options."
          (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions)))
     (helm-ag--set-do-ag-option)
     (helm-ag--save-current-context)
+    (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
+                  helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
           :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
           :keymap helm-do-ag-map)))
