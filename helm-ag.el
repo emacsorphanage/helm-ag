@@ -269,6 +269,8 @@ They are specified to `--ignore' options."
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
          (query (read-string "Pattern: " searched-word 'helm-ag--command-history)))
+    (when (string= query "")
+      (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
 
 (defsubst helm-ag--clear-variables ()
