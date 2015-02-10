@@ -93,8 +93,11 @@ if this value is non-nil.
 
 ## Keymap
 
+`helm-ag-map` and `helm-do-ag-map` are inherited by `helm-map`.
+
 | Key                  | Action                     |
 |:---------------------|:--------------------------:|
+| `C-c` `o`            | Open other window          |
 | `C-l`                | Search in parent directory |
 
 
