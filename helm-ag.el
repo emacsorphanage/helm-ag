@@ -301,9 +301,15 @@ They are specified to `--ignore' options."
 (defsubst helm-ag--helm-header (dir)
   (concat "Search at " (abbreviate-file-name dir)))
 
+(defun helm-ag--run-other-window-action ()
+  (interactive)
+  (with-helm-alive-p
+    (helm-quit-and-execute-action 'helm-ag--action--find-file-other-window)))
+
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
     map)
   "Keymap for `helm-ag'.")
@@ -409,6 +415,7 @@ They are specified to `--ignore' options."
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
     map)
   "Keymap for `helm-do-ag'.")
