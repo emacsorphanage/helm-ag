@@ -79,6 +79,7 @@ They are specified to `--ignore' options."
 (defvar helm-ag--last-query nil)
 (defvar helm-ag--extra-options nil)
 (defvar helm-ag--extra-options-history nil)
+(defvar helm-ag--original-window nil)
 (defvar helm-do-ag--default-target nil)
 (defvar helm-do-ag--extensions nil)
 
@@ -306,11 +307,95 @@ They are specified to `--ignore' options."
   (with-helm-alive-p
     (helm-quit-and-execute-action 'helm-ag--action--find-file-other-window)))
 
+(defsubst helm-ag--kill-edit-buffer ()
+  (kill-buffer (get-buffer "*helm-ag-edit*")))
+
+(defun helm-ag--edit-complete ()
+  (interactive)
+  (goto-char (point-min))
+  (let ((read-only-files 0))
+    (while (re-search-forward "^\\([^:]+\\):\\([1-9][0-9]*\\):\\(.*\\)$" nil t)
+      (let ((file (match-string-no-properties 1))
+            (line (string-to-number (match-string-no-properties 2)))
+            (body (match-string-no-properties 3)))
+        (with-current-buffer (find-file-noselect file)
+          (if buffer-read-only
+              (cl-incf read-only-files)
+            (goto-char (point-min))
+            (forward-line (1- line))
+            (delete-region (line-beginning-position) (line-end-position))
+            (insert body)
+            (save-buffer)))))
+    (select-window helm-ag--original-window)
+    (helm-ag--kill-edit-buffer)
+    (if (not (zerop read-only-files))
+        (message "%d files are read-only and not editable." read-only-files)
+      (message "Success helm-ag-edit"))))
+
+(defun helm-ag--edit-cancel ()
+  (interactive)
+  (select-window helm-ag--original-window)
+  (helm-ag--kill-edit-buffer)
+  (message "Edit canceled"))
+
+(defvar helm-ag-edit-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-x C-s") 'helm-ag--edit-complete)
+    (define-key map (kbd "C-c C-g") 'helm-ag--edit-cancel)
+    map))
+
+(defun helm-ag--edit (_candidate)
+  (with-current-buffer (get-buffer-create "*helm-ag-edit*")
+    (erase-buffer)
+    (let (buf-content helm-name)
+      (with-current-buffer (get-buffer "*helm-ag*")
+        (goto-char (point-min))
+        (setq helm-name (helm-current-line-contents))
+        (forward-line 1)
+        (let ((body-start (point))
+              marked-lines)
+          (mapc (lambda (ov)
+                  (when (eq 'helm-visible-mark (overlay-get ov 'face))
+                    (push (buffer-substring-no-properties
+                           (overlay-start ov) (overlay-end ov)) marked-lines)))
+                (overlays-in body-start (point-max)))
+          (if (not marked-lines)
+              (setq buf-content (buffer-substring-no-properties
+                                 body-start (point-max)))
+            (setq buf-content (mapconcat 'identity marked-lines "\n")))))
+      (insert buf-content)
+      (add-text-properties (point-min) (point-max)
+                           '(read-only t rear-nonsticky t front-sticky t))
+      (let ((inhibit-read-only t))
+        (setq header-line-format
+              (concat "[C-x C-s] Complete, [C-c C-g] Cancel: " helm-name))
+        (goto-char (point-min))
+        (while (re-search-forward "^\\(\\(?:[^:]+:\\)\\{1,2\\}\\)\\(.*\\)$" nil t)
+          (let ((file-line-begin (match-beginning 1))
+                (file-line-end (match-end 1))
+                (body-begin (match-beginning 2))
+                (body-end (match-end 2)))
+            (add-text-properties file-line-begin file-line-end
+                                 '(face font-lock-function-name-face
+                                        intangible t))
+            (remove-text-properties body-begin body-end '(read-only t))
+            (set-text-properties body-end (1+ body-end)
+                                 '(read-only t rear-nonsticky t)))))))
+  (other-window 1)
+  (switch-to-buffer (get-buffer "*helm-ag-edit*"))
+  (goto-char (point-min))
+  (use-local-map helm-ag-edit-map))
+
+(defun helm-ag-edit ()
+  (interactive)
+  (helm-quit-and-execute-action 'helm-ag--edit))
+
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
+    (define-key map (kbd "C-c C-e") 'helm-ag-edit)
     map)
   "Keymap for `helm-ag'.")
 
@@ -336,6 +421,7 @@ They are specified to `--ignore' options."
 ;;;###autoload
 (defun helm-ag (&optional basedir)
   (interactive)
+  (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let ((helm-ag--default-directory (or basedir (helm-ag--default-directory))))
     (helm-ag--query)
@@ -417,6 +503,7 @@ They are specified to `--ignore' options."
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
+    (define-key map (kbd "C-c C-e") 'helm-ag-edit)
     map)
   "Keymap for `helm-do-ag'.")
 
@@ -460,6 +547,7 @@ They are specified to `--ignore' options."
 (defun helm-do-ag (&optional basedir)
   (interactive)
   (require 'helm-mode)
+  (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
          (helm-do-ag--default-target (or basedir (helm-read-file-name
