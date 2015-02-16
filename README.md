@@ -95,13 +95,22 @@ if this value is non-nil.
 
 `helm-ag-map` and `helm-do-ag-map` are inherited by `helm-map`.
 
-| Key                  | Action                     |
-|:---------------------|:--------------------------:|
-| `C-c` `o`            | Open other window          |
-| `C-l`                | Search in parent directory |
+| Key       | Action                     |
+|:----------|:--------------------------:|
+| `C-c o`   | Open other window          |
+| `C-l`     | Search in parent directory |
+| `C-c C-e` | Switch to edit mode        |
 
 
-### Sample Configuration
+### Edit mode keymap
+
+| Key       | Action           |
+|:----------|:----------------:|
+| `C-x C-s` | Commit changes   |
+| `C-c C-g` | Cancel           |
+
+
+## Sample Configuration
 
 ```lisp
 (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
