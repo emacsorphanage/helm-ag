@@ -72,6 +72,11 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag-edit-save t
+  "Save buffers you edit at completed."
+  :type 'boolean
+  :group 'helm-ag)
+
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
@@ -325,7 +330,8 @@ They are specified to `--ignore' options."
             (forward-line (1- line))
             (delete-region (line-beginning-position) (line-end-position))
             (insert body)
-            (save-buffer)))))
+            (when helm-ag-edit-save
+              (save-buffer))))))
     (select-window helm-ag--original-window)
     (helm-ag--kill-edit-buffer)
     (if (not (zerop read-only-files))

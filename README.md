@@ -90,6 +90,10 @@ They are specified to `--ignore' options."
 Always set extra command line option of `ag` in `helm-do-ag`
 if this value is non-nil.
 
+#### `helm-ag-edit-save`(Default: `'t`)
+
+Save buffers you edit at editing completed.
+
 
 ## Keymap
 
