@@ -90,18 +90,31 @@ They are specified to `--ignore' options."
 Always set extra command line option of `ag` in `helm-do-ag`
 if this value is non-nil.
 
+#### `helm-ag-edit-save`(Default: `'t`)
+
+Save buffers you edit at editing completed.
+
 
 ## Keymap
 
 `helm-ag-map` and `helm-do-ag-map` are inherited by `helm-map`.
 
-| Key                  | Action                     |
-|:---------------------|:--------------------------:|
-| `C-c` `o`            | Open other window          |
-| `C-l`                | Search in parent directory |
+| Key       | Action                     |
+|:----------|:--------------------------:|
+| `C-c o`   | Open other window          |
+| `C-l`     | Search in parent directory |
+| `C-c C-e` | Switch to edit mode        |
 
 
-### Sample Configuration
+### Edit mode keymap
+
+| Key       | Action           |
+|:----------|:----------------:|
+| `C-c C-c` | Commit changes   |
+| `C-c C-k` | Abort            |
+
+
+## Sample Configuration
 
 ```lisp
 (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
