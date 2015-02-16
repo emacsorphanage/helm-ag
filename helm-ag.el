@@ -315,7 +315,7 @@ They are specified to `--ignore' options."
 (defsubst helm-ag--kill-edit-buffer ()
   (kill-buffer (get-buffer "*helm-ag-edit*")))
 
-(defun helm-ag--edit-complete ()
+(defun helm-ag--edit-commit ()
   (interactive)
   (goto-char (point-min))
   (let ((read-only-files 0))
@@ -338,16 +338,17 @@ They are specified to `--ignore' options."
         (message "%d files are read-only and not editable." read-only-files)
       (message "Success helm-ag-edit"))))
 
-(defun helm-ag--edit-cancel ()
+(defun helm-ag--edit-abort ()
   (interactive)
-  (select-window helm-ag--original-window)
-  (helm-ag--kill-edit-buffer)
-  (message "Edit canceled"))
+  (when (y-or-n-p "Discard changes ?")
+    (select-window helm-ag--original-window)
+    (helm-ag--kill-edit-buffer)
+    (message "Abort edit")))
 
 (defvar helm-ag-edit-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-x C-s") 'helm-ag--edit-complete)
-    (define-key map (kbd "C-c C-g") 'helm-ag--edit-cancel)
+    (define-key map (kbd "C-c C-c") 'helm-ag--edit-commit)
+    (define-key map (kbd "C-c C-k") 'helm-ag--edit-abort)
     map))
 
 (defun helm-ag--edit (_candidate)
@@ -370,8 +371,7 @@ They are specified to `--ignore' options."
       (add-text-properties (point-min) (point-max)
                            '(read-only t rear-nonsticky t front-sticky t))
       (let ((inhibit-read-only t))
-        (setq header-line-format
-              (concat "[C-x C-s] Complete, [C-c C-g] Cancel: " helm-name))
+        (setq header-line-format "[C-c C-c] Commit, [C-c C-k] Abort")
         (goto-char (point-min))
         (while (re-search-forward "^\\(\\(?:[^:]+:\\)\\{1,2\\}\\)\\(.*\\)$" nil t)
           (let ((file-line-begin (match-beginning 1))

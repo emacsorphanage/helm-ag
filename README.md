@@ -110,8 +110,8 @@ Save buffers you edit at editing completed.
 
 | Key       | Action           |
 |:----------|:----------------:|
-| `C-x C-s` | Commit changes   |
-| `C-c C-g` | Cancel           |
+| `C-c C-c` | Commit changes   |
+| `C-c C-k` | Abort            |
 
 
 ## Sample Configuration
