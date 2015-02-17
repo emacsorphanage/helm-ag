@@ -298,7 +298,7 @@ They are specified to `--ignore' options."
        (or (equal current-prefix-arg '(4))
            (equal current-prefix-arg '(-4)))))
 
-(defun helm-ag--default-directory ()
+(defun helm-ag--get-default-directory ()
   (if (helm-ag--has-c-u-preffix-p)
       (file-name-as-directory
        (read-directory-name "Search directory: " nil nil t))
@@ -425,7 +425,7 @@ They are specified to `--ignore' options."
   (interactive)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
-  (let ((helm-ag--default-directory (or basedir (helm-ag--default-directory))))
+  (let ((helm-ag--default-directory (or basedir (helm-ag--get-default-directory))))
     (helm-ag--query)
     (let ((source (helm-ag--select-source)))
       (helm-attrset 'search-this-file nil
