@@ -298,7 +298,7 @@ They are specified to `--ignore' options."
        (or (equal current-prefix-arg '(4))
            (equal current-prefix-arg '(-4)))))
 
-(defun helm-ag--default-directory ()
+(defun helm-ag--get-default-directory ()
   (if (helm-ag--has-c-u-preffix-p)
       (file-name-as-directory
        (read-directory-name "Search directory: " nil nil t))
@@ -318,7 +318,8 @@ They are specified to `--ignore' options."
 (defun helm-ag--edit-commit ()
   (interactive)
   (goto-char (point-min))
-  (let ((read-only-files 0))
+  (let ((read-only-files 0)
+        (default-directory helm-ag--default-directory))
     (while (re-search-forward "^\\([^:]+\\):\\([1-9][0-9]*\\):\\(.*\\)$" nil t)
       (let ((file (match-string-no-properties 1))
             (line (string-to-number (match-string-no-properties 2)))
@@ -354,6 +355,7 @@ They are specified to `--ignore' options."
 (defun helm-ag--edit (_candidate)
   (with-current-buffer (get-buffer-create "*helm-ag-edit*")
     (erase-buffer)
+    (set (make-local-variable 'helm-ag--default-directory) helm-ag--default-directory)
     (let (buf-content)
       (with-current-buffer (get-buffer "*helm-ag*")
         (goto-char (point-min))
@@ -425,7 +427,7 @@ They are specified to `--ignore' options."
   (interactive)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
-  (let ((helm-ag--default-directory (or basedir (helm-ag--default-directory))))
+  (let ((helm-ag--default-directory (or basedir (helm-ag--get-default-directory))))
     (helm-ag--query)
     (let ((source (helm-ag--select-source)))
       (helm-attrset 'search-this-file nil
