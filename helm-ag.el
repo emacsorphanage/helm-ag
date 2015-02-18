@@ -337,7 +337,7 @@ They are specified to `--ignore' options."
     (helm-ag--kill-edit-buffer)
     (if (not (zerop read-only-files))
         (message "%d files are read-only and not editable." read-only-files)
-      (message "Success helm-ag-edit"))))
+      (message "Success update"))))
 
 (defun helm-ag--edit-abort ()
   (interactive)
