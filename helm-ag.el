@@ -337,7 +337,7 @@ They are specified to `--ignore' options."
     (helm-ag--kill-edit-buffer)
     (if (not (zerop read-only-files))
         (message "%d files are read-only and not editable." read-only-files)
-      (message "Success helm-ag-edit"))))
+      (message "Success update"))))
 
 (defun helm-ag--edit-abort ()
   (interactive)
@@ -372,7 +372,9 @@ They are specified to `--ignore' options."
       (add-text-properties (point-min) (point-max)
                            '(read-only t rear-nonsticky t front-sticky t))
       (let ((inhibit-read-only t))
-        (setq header-line-format "[C-c C-c] Commit, [C-c C-k] Abort")
+        (setq header-line-format
+              (format "[%s] C-c C-c: Commit, C-c C-k: Abort"
+                      (abbreviate-file-name helm-ag--default-directory)))
         (goto-char (point-min))
         (while (re-search-forward "^\\(\\(?:[^:]+:\\)\\{1,2\\}\\)\\(.*\\)$" nil t)
           (let ((file-line-begin (match-beginning 1))
