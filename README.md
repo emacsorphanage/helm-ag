@@ -137,7 +137,7 @@ You can use `helm-ag` with `projectile` by following command.
 [ag.el](https://github.com/Wilfred/ag.el) provides `M-x grep` interface.
 Also it can work without helm.
 
-[travis-badge]: https://travis-ci.org/syohex/emacs-helm-ag.png
+[travis-badge]: https://travis-ci.org/syohex/emacs-helm-ag.svg
 [travis-link]: https://travis-ci.org/syohex/emacs-helm-ag
 [melpa-link]: http://melpa.org/#/helm-ag
 [melpa-stable-link]: http://stable.melpa.org/#/helm-ag
