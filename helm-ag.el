@@ -396,12 +396,30 @@ They are specified to `--ignore' options."
   (interactive)
   (helm-quit-and-execute-action 'helm-ag--edit))
 
+(defconst helm-ag--help-message
+  "\n* Helm Ag\n
+
+\n** Specific commands for Helm Ag:\n
+\\<helm-ag-map>
+\\[helm-ag--run-other-window-action]\t\t-> Open result in other buffer
+\\[helm-ag--up-one-level]\t\t-> Search in parent directory.
+\\[helm-ag-edit]\t\t-> Edit search results.
+\\[helm-ag-help]\t\t-> Show this help.
+\n** Helm Ag Map\n
+\\{helm-map}")
+
+(defun helm-ag-help ()
+  (interactive)
+  (let ((helm-help-message helm-ag--help-message))
+    (helm-help)))
+
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
     (define-key map (kbd "C-c C-e") 'helm-ag-edit)
+    (define-key map (kbd "C-c ?") 'helm-ag-help)
     map)
   "Keymap for `helm-ag'.")
 
@@ -504,12 +522,30 @@ They are specified to `--ignore' options."
          (when (string= event "finished\n")
            (helm-ag--do-ag-propertize)))))))
 
+(defconst helm-do-ag--help-message
+  "\n* Helm Do Ag\n
+
+\n** Specific commands for Helm Ag:\n
+\\<helm-do-ag-map>
+\\[helm-ag--run-other-window-action]\t\t-> Open result in other buffer
+\\[helm-ag--do-ag-up-one-level]\t\t-> Search in parent directory.
+\\[helm-ag-edit]\t\t-> Edit search results.
+\\[helm-ag--do-ag-help]\t\t-> Show this help.
+\n** Helm Ag Map\n
+\\{helm-map}")
+
+(defun helm-ag--do-ag-help ()
+  (interactive)
+  (let ((helm-help-message helm-do-ag--help-message))
+    (helm-help)))
+
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
     (define-key map (kbd "C-c C-e") 'helm-ag-edit)
+    (define-key map (kbd "C-c ?") 'helm-ag--do-ag-help)
     map)
   "Keymap for `helm-do-ag'.")
 
