@@ -1,5 +1,13 @@
 Revision history for helm-ag.el
 
+Revision 0.34 2015/02/23 syohex
+    - Improve helm header name
+    - Error occurs when input string is empty
+    - Add open other window command
+    - Implement editing search result feature
+    - Improve displaying message
+    - Implement help command
+
 Revision 0.33 2015/02/01 syohex
     - Fix persistent action of helm-do-ag(Reported by duerrp)
 
