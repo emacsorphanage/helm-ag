@@ -56,6 +56,11 @@
                  (const :tag "Helm file-line style" file-line))
   :group 'helm-ag)
 
+(defcustom helm-ag-ignore-patterns nil
+  "Ignore patterns for `ag'. This parameters are specified as --ignore"
+  :type '(repeat string)
+  :group 'helm-ag)
+
 (defcustom helm-ag-use-grep-ignore-list nil
   "Use `grep-find-ignored-files' and `grep-find-ignored-directories' as ignore pattern.
 They are specified to `--ignore' options."
@@ -105,11 +110,14 @@ They are specified to `--ignore' options."
       (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
     ""))
 
+(defun helm-ag--construct-ignore-option (pattern)
+  (concat "--ignore=" pattern))
+
 (defun helm-ag--grep-ignore-list-to-options ()
   (require 'grep)
   (cl-loop for ignore in (append grep-find-ignored-files
                                  grep-find-ignored-directories)
-           collect (concat "--ignore=" ignore)))
+           collect (helm-ag--construct-ignore-option ignore)))
 
 (defun helm-ag--parse-query (query)
   (let ((inputs (ignore-errors (split-string-and-unquote query))))
@@ -125,6 +133,9 @@ They are specified to `--ignore' options."
     (when helm-ag-command-option
       (let ((ag-options (split-string helm-ag-command-option nil t)))
         (setq args (append args ag-options))))
+    (when helm-ag-ignore-patterns
+      (setq args (append args (mapcar 'helm-ag--construct-ignore-option
+                                      helm-ag-ignore-patterns))))
     (when helm-ag-use-grep-ignore-list
       (setq args (append args (helm-ag--grep-ignore-list-to-options))))
     (setq args (append args (helm-ag--parse-query helm-ag--last-query)))
