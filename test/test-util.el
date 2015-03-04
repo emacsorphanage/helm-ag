@@ -60,6 +60,15 @@
                       "-G\\.md$" "foo bar")))
       (should (equal got expected)))))
 
+(ert-deftest construct-command-with-ignore-patterns ()
+  "helm-ag--construct--command with ignore options"
+  (let ((helm-ag-base-command "ag --nocolor --nogroup")
+        (helm-ag-ignore-patterns '("*.md" "*.el"))
+        (helm-ag--last-query "foo"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("ag" "--nocolor" "--nogroup" "--ignore=*.md" "--ignore=*.el" "foo")))
+      (should (equal got expected)))))
+
 (ert-deftest construct-do-ag-command ()
   "helm-ag--construct-do-ag-command"
   (let ((helm-ag-base-command "ag --nocolor --nogroup"))
@@ -74,7 +83,7 @@
       (should (equal got expected)))))
 
 (ert-deftest construct-do-ag-command-with-extra-option ()
-  "helm-ag--construct-do-ag-command"
+  "helm-ag--construct-do-ag-command with extra options"
   (let ((helm-ag-base-command "ag --nocolor --nogroup")
         (helm-ag--extra-options "-G\\.md$"))
     (let ((got (helm-ag--construct-do-ag-command "somepattern"))
