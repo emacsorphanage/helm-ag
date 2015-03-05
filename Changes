@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.35 2015/03/05 syohex
+    - Add ignore pattern parameter for 3rd party such as helm-projectile
+
 Revision 0.34 2015/02/23 syohex
     - Improve helm header name
     - Error occurs when input string is empty
