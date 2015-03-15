@@ -90,6 +90,7 @@ They are specified to `--ignore' options."
 (defvar helm-ag--extra-options nil)
 (defvar helm-ag--extra-options-history nil)
 (defvar helm-ag--original-window nil)
+(defvar helm-ag--search-this-file-p nil)
 (defvar helm-do-ag--default-target nil)
 (defvar helm-do-ag--extensions nil)
 
@@ -169,7 +170,8 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--find-file-action (candidate find-func)
   (let* ((elems (split-string candidate ":"))
-         (search-this-file (or (helm-attr 'search-this-file)
+         (search-this-file (or (ignore-errors (helm-attr 'search-this-file) nil)
+                               helm-ag--search-this-file-p
                                (helm-ag--search-only-one-file-p)))
          (filename (or search-this-file (cl-first elems)))
          (line (string-to-number (if search-this-file
@@ -366,7 +368,7 @@ They are specified to `--ignore' options."
 (defun helm-ag--edit (_candidate)
   (with-current-buffer (get-buffer-create "*helm-ag-edit*")
     (erase-buffer)
-    (set (make-local-variable 'helm-ag--default-directory) helm-ag--default-directory)
+    (setq-local helm-ag--default-directory helm-ag--default-directory)
     (let (buf-content)
       (with-current-buffer (get-buffer "*helm-ag*")
         (goto-char (point-min))
@@ -424,12 +426,64 @@ They are specified to `--ignore' options."
   (let ((helm-help-message helm-ag--help-message))
     (helm-help)))
 
+(defun helm-ag-mode-jump ()
+  (interactive)
+  (let ((line (buffer-substring-no-properties
+               (line-beginning-position) (line-end-position))))
+   (helm-ag--find-file-action line 'find-file)))
+
+(defun helm-ag-mode-jump-other-window ()
+  (interactive)
+  (let ((line (buffer-substring-no-properties
+               (line-beginning-position) (line-end-position))))
+   (helm-ag--find-file-action line 'find-file-other-window)))
+
+(defvar helm-ag-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") 'helm-ag-mode-jump)
+    (define-key map (kbd "C-o") 'helm-ag-mode-jump-other-window)
+    map))
+
+;;;###autoload
+(define-derived-mode helm-ag-mode special-mode "helm-ag"
+  "Major mode to provide actions in helm grep saved buffer.
+
+Special commands:
+\\{helm-ag-mode-map}")
+
+(defun helm-ag--save-results (_unused)
+  (let ((buf "*hagrep*")
+        search-this-file-p)
+    (with-current-buffer (get-buffer-create buf)
+      (setq buffer-read-only t)
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "-*- mode: helm-ag -*-\n\n"
+                (format "Ag Results for `%s':\n\n" helm-ag--last-query))
+        (save-excursion
+          (insert (with-current-buffer helm-buffer
+                    (goto-char (point-min))
+                    (forward-line 1)
+                    (setq search-this-file-p (helm-attr 'search-this-file))
+                    (buffer-substring (point) (point-max))))))
+      (setq-local helm-ag--search-this-file-p search-this-file-p)
+      (setq-local helm-ag--default-directory helm-ag--default-directory)
+      (helm-ag-mode)
+      (pop-to-buffer buf))
+    (message "Helm Grep Results saved in `%s' buffer" buf)))
+
+(defun helm-ag--run-save-buffer ()
+  (interactive)
+  (with-helm-alive-p
+    (helm-quit-and-execute-action 'helm-ag--save-results)))
+
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
     (define-key map (kbd "C-c C-e") 'helm-ag-edit)
+    (define-key map (kbd "C-x C-s") 'helm-ag--run-save-buffer)
     (define-key map (kbd "C-c ?") 'helm-ag-help)
     map)
   "Keymap for `helm-ag'.")
