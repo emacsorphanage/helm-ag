@@ -24,11 +24,17 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'grep)
+  (defvar helm-help-message))
+
 (require 'cl-lib)
 (require 'helm)
 (require 'helm-utils)
 
 (declare-function helm-read-file-name "helm-mode")
+(declare-function helm-grep-get-file-extensions "helm-grep")
+(declare-function helm-help "helm-help")
 
 (defgroup helm-ag nil
   "the silver searcher with helm interface"
@@ -654,6 +660,7 @@ Special commands:
 (defun helm-do-ag (&optional basedir)
   (interactive)
   (require 'helm-mode)
+  (require 'helm-grep)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
