@@ -458,7 +458,7 @@ Special commands:
 \\{helm-ag-mode-map}")
 
 (defun helm-ag--save-results (_unused)
-  (let ((buf "*hagrep*")
+  (let ((buf "*helm ag results*")
         search-this-file-p)
     (with-current-buffer (get-buffer-create buf)
       (setq buffer-read-only t)
