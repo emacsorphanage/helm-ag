@@ -168,11 +168,8 @@ They are specified to `--ignore' options."
       (unless (file-directory-p target)
         target))))
 
-(defun helm-ag--find-file-action (candidate find-func)
+(defun helm-ag--find-file-action (candidate find-func search-this-file)
   (let* ((elems (split-string candidate ":"))
-         (search-this-file (or (ignore-errors (helm-attr 'search-this-file) nil)
-                               helm-ag--search-this-file-p
-                               (helm-ag--search-only-one-file-p)))
          (filename (or search-this-file (cl-first elems)))
          (line (string-to-number (if search-this-file
                                      (cl-first elems)
@@ -236,11 +233,16 @@ They are specified to `--ignore' options."
       (helm-ag--candidate-transform-for-this-file candidate)
     (helm-ag--candidate-transform-for-files candidate)))
 
+(defun helm-ag--search-this-file-p ()
+  (if (eq (helm-get-current-source) 'helm-source-do-ag)
+      (helm-ag--search-only-one-file-p)
+    (helm-attr 'search-this-file)))
+
 (defun helm-ag--action-find-file (candidate)
-  (helm-ag--find-file-action candidate 'find-file))
+  (helm-ag--find-file-action candidate 'find-file (helm-ag--search-this-file-p)))
 
 (defun helm-ag--action--find-file-other-window (candidate)
-  (helm-ag--find-file-action candidate 'find-file-other-window))
+  (helm-ag--find-file-action candidate 'find-file-other-window (helm-ag--search-this-file-p)))
 
 (defvar helm-ag--actions
   '(("Open file" . helm-ag--action-find-file)
@@ -428,15 +430,13 @@ They are specified to `--ignore' options."
 
 (defun helm-ag-mode-jump ()
   (interactive)
-  (let ((line (buffer-substring-no-properties
-               (line-beginning-position) (line-end-position))))
-   (helm-ag--find-file-action line 'find-file)))
+  (let ((line (helm-current-line-contents)))
+    (helm-ag--find-file-action line 'find-file helm-ag--search-this-file-p)))
 
 (defun helm-ag-mode-jump-other-window ()
   (interactive)
-  (let ((line (buffer-substring-no-properties
-               (line-beginning-position) (line-end-position))))
-   (helm-ag--find-file-action line 'find-file-other-window)))
+  (let ((line (helm-current-line-contents)))
+    (helm-ag--find-file-action line 'find-file-other-window helm-ag--search-this-file-p)))
 
 (defvar helm-ag-mode-map
   (let ((map (make-sparse-keymap)))
