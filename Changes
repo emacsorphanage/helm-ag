@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.36 2015/03/16 syohex
+    - Add save results into buffer feature like 'helm-grep-run-save-buffer
+
 Revision 0.35 2015/03/05 syohex
     - Add ignore pattern parameter for 3rd party such as helm-projectile
 
