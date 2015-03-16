@@ -104,6 +104,8 @@ Save buffers you edit at editing completed.
 | `C-c o`   | Open other window          |
 | `C-l`     | Search in parent directory |
 | `C-c C-e` | Switch to edit mode        |
+| `C-x C-s` | Save ag results to buffer  |
+| `C-c ?`   | Show help message          |
 
 
 ### Edit mode keymap
