@@ -58,6 +58,36 @@ Clear context stack
 You can see file content temporarily by persistent action(`C-j`).
 
 
+## Search Tips of `helm-ag`
+
+#### Passing command line options and pattern
+
+```
+Pattern: -Gmd$ search_pattern
+```
+
+Command line options is `-Gmd$` and search pattern is `search_pattern`.
+`helm-ag` treats words which starts with `-` as command line option.
+
+#### Pattern contains space
+
+```
+Pattern: foo bar baz
+```
+
+Search pattern is `foo bar baz`. You need not to wrap pattern with quotes.
+
+
+#### Pattern starts with `-`
+
+```
+Pattern: -- --count
+```
+
+Search pattern is `--count`.
+`helm-ag` treats words after `--` as search pattern.
+
+
 ## Customize
 
 #### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
