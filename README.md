@@ -136,7 +136,7 @@ Save buffers you edit at editing completed.
 `helm-ag-map` and `helm-do-ag-map` are inherited by `helm-map`.
 
 | Key       | Action                     |
-|:----------|:--------------------------:|
+|:----------|:---------------------------|
 | `C-c o`   | Open other window          |
 | `C-l`     | Search in parent directory |
 | `C-c C-e` | Switch to edit mode        |
@@ -147,7 +147,7 @@ Save buffers you edit at editing completed.
 ### Edit mode keymap
 
 | Key       | Action           |
-|:----------|:----------------:|
+|:----------|:-----------------|
 | `C-c C-c` | Commit changes   |
 | `C-c C-k` | Abort            |
 
