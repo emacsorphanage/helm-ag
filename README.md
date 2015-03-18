@@ -122,9 +122,10 @@ Save buffers you edit at editing completed.
 ## Sample Configuration
 
 ```lisp
-(setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
-(setq helm-ag-command-option "--all-text")
-(setq helm-ag-insert-at-point 'symbol)
+(custom-set-variables
+ '(helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
+ '(helm-ag-command-option "--all-text")
+ '(helm-ag-insert-at-point 'symbol))
 ```
 
 ### For [projectile](https://github.com/bbatsov/projectile/) users
