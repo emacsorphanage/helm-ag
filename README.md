@@ -19,7 +19,11 @@ I suppose you can use older version ag however if you want to use all features o
 
 ## Installation
 
-You can install `helm-ag.el` from [MELPA](https://github.com/milkypostman/melpa.git) with package.el (`M-x package-install helm-ag`).
+`helm-ag` is available on [MELPA][http://melpa.org/] or [MELPA Stable](http://stable.melpa.org/)
+
+You can install `helm-ag` with the following command.
+
+<kbd>M-x package-install [RET] helm-ag [RET]</kbd>
 
 
 ## Basic Usage
