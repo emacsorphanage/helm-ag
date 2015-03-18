@@ -126,12 +126,27 @@ They are specified to `--ignore' options."
                                  grep-find-ignored-directories)
            collect (helm-ag--construct-ignore-option ignore)))
 
-(defun helm-ag--parse-query (query)
-  (let ((inputs (ignore-errors (split-string-and-unquote query))))
-    (if (or (null inputs) (= (length inputs) 1))
-        (list query)
-      (setq helm-ag--last-query (car (last inputs)))
-      (append (butlast inputs) (last inputs)))))
+(defun helm-ag--parse-query (input)
+  (with-temp-buffer
+    (insert input)
+    (let (end options)
+      (goto-char (point-min))
+      (when (re-search-forward "\\s-*--\\s-+" nil t)
+        (setq end (match-beginning 0))
+        (replace-match ""))
+      (goto-char (point-min))
+      (while (re-search-forward "\\s-*\\(-\\S-+\\)\\s-*" end t)
+        (push (match-string-no-properties 1) options)
+        (when end
+          (cl-decf end (- (match-end 0) (match-beginning 0))))
+        (replace-match ""))
+      (when end
+        (push "--" options))
+      (let ((query (buffer-string)))
+        (setq helm-ag--last-query query)
+        (if (not options)
+            (list query)
+          (nconc (nreverse options) (list query)))))))
 
 (defun helm-ag--construct-command (this-file)
   (let* ((commands (split-string helm-ag-base-command nil t))
