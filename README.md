@@ -55,8 +55,7 @@ Clear context stack
 
 ## Persistent action
 
-You can see file content temporarily by persistent action(`C-z`)
-at `helm-ag` and `helm-ag-this-file`.
+You can see file content temporarily by persistent action(`C-j`).
 
 
 ## Customize
