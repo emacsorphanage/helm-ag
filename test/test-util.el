@@ -54,10 +54,24 @@
   "helm-ag--construct--command with options in input"
   (let ((helm-ag-base-command "ag --nocolor --nogroup")
         (helm-ag-command-option "--all-text --hidden -D")
-        (helm-ag--last-query "-G\\.md$ \"foo bar\""))
+        (helm-ag--last-query "-G\\.md$ foo bar"))
     (let ((got (helm-ag--construct-command nil))
           (expected '("ag" "--nocolor" "--nogroup" "--all-text" "--hidden" "-D"
                       "-G\\.md$" "foo bar")))
+      (should (equal got expected))))
+
+  (let ((helm-ag-base-command "ag")
+        (helm-ag-command-option "")
+        (helm-ag--last-query "-- --count"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("ag" "--" "--count")))
+      (should (equal got expected))))
+
+  (let ((helm-ag-base-command "ag")
+        (helm-ag-command-option "")
+        (helm-ag--last-query "--count -G.md$ -- --count foo bar"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("ag" "--count" "-G.md$" "--" "--count foo bar")))
       (should (equal got expected)))))
 
 (ert-deftest construct-command-with-ignore-patterns ()
