@@ -69,6 +69,13 @@
 
   (let ((helm-ag-base-command "ag")
         (helm-ag-command-option "")
+        (helm-ag--last-query "helm-ag"))
+    (let ((got (helm-ag--construct-command nil))
+          (expected '("ag" "helm-ag")))
+      (should (equal got expected))))
+
+  (let ((helm-ag-base-command "ag")
+        (helm-ag-command-option "")
         (helm-ag--last-query "--count -G.md$ -- --count foo bar"))
     (let ((got (helm-ag--construct-command nil))
           (expected '("ag" "--count" "-G.md$" "--" "--count foo bar")))
