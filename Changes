@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.37 2015/03/19 syohex
+    - Fix case when search pattern has spaces
+
 Revision 0.36 2015/03/16 syohex
     - Add save results into buffer feature like 'helm-grep-run-save-buffer
 
