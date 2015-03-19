@@ -690,6 +690,27 @@ Special commands:
           :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
           :keymap helm-do-ag-map)))
 
+(defun helm-ag--project-root ()
+  (cl-loop for dir in '(".git/" ".hg/" ".svn/")
+           when (locate-dominating-file default-directory dir)
+           return it))
+
+;;;###autoload
+(defun helm-ag-project-root ()
+  (interactive)
+  (let ((rootdir (helm-ag--project-root)))
+    (unless rootdir
+      (error "Here is not repository"))
+    (helm-ag rootdir)))
+
+;;;###autoload
+(defun helm-do-ag-project-root ()
+  (interactive)
+  (let ((rootdir (helm-ag--project-root)))
+    (unless rootdir
+      (error "Here is not repository"))
+    (helm-do-ag rootdir)))
+
 (provide 'helm-ag)
 
 ;;; helm-ag.el ends here

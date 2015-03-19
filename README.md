@@ -47,6 +47,18 @@ of `ag` with minus prefix(`C--`).
 
 ![helm-do-ag](image/helm-do-ag.gif)
 
+
+#### `helm-ag-project-root`
+
+Call `helm-ag` at project root. `helm-ag` seems directory as project root where
+there is `.git` or `.hg` or `.svn`.
+
+
+#### `helm-do-ag-project-root`
+
+Call `helm-do-ag` at project root.
+
+
 #### `helm-ag-pop-stack`
 
 Move to point before jump
