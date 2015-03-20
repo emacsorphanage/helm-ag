@@ -234,13 +234,13 @@ They are specified to `--ignore' options."
     candidate))
 
 (defun helm-ag--candidate-transform-for-this-file (candidate)
-  (when (string-match "\\`\\([^:]+\\):\\(.+\\)" candidate)
+  (when (string-match "\\`\\([^:]+\\):\\(.*\\)" candidate)
     (format "%s:%s"
             (propertize (match-string 1 candidate) 'face 'helm-grep-lineno)
             (helm-ag--highlight-candidate (match-string 2 candidate)))))
 
 (defun helm-ag--candidate-transform-for-files (candidate)
-  (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.+\\)" candidate)
+  (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.*\\)" candidate)
     (format "%s:%s:%s"
             (propertize (match-string 1 candidate) 'face 'helm-moccur-buffer)
             (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
