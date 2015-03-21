@@ -240,8 +240,7 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
-        (last-pos 0)
-        (regexp (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)))
+        (last-pos 0))
     (when helm-ag--valid-regexp-for-emacs
       (while (and (< last-pos limit)
                   (string-match helm-ag--elisp-regexp-query candidate last-pos))
