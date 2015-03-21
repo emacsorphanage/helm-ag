@@ -173,6 +173,22 @@ Save buffers you edit at editing completed.
  '(helm-ag-insert-at-point 'symbol))
 ```
 
+## helm-ag.el with [the platinum searcher](https://github.com/monochromegane/the_platinum_searcher)
+
+`helm-ag.el` can work the platinum searcher instead of the silver searcher.
+It is difficult to install the silver search on some platform such as Windows,
+while it is easy to install the platinum searcher because it is written in
+go language and its author provides binaries for some platforms.
+
+
+Please add following configuration if you use `helm-ag` with the platinum searcher.
+
+```
+(custom-set-variables
+  '(helm-ag-base-command "pt --nocolor --nogroup"))
+```
+
+
 ### For [projectile](https://github.com/bbatsov/projectile/) users
 
 You can use `helm-ag` with `projectile` by following command.
