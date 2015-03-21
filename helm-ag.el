@@ -232,7 +232,7 @@ They are specified to `--ignore' options."
       (backward-char 1)
       (cond ((looking-back "\\\\\\\\"))
             ((looking-back "\\\\")
-             (delete-backward-char 1))
+             (delete-char -1))
             (t
              (insert "\\")))
       (forward-char 1))
