@@ -93,6 +93,8 @@ They are specified to `--ignore' options."
 (defvar helm-ag--default-directory nil)
 (defvar helm-ag--last-default-directory nil)
 (defvar helm-ag--last-query nil)
+(defvar helm-ag--elisp-regexp-query nil)
+(defvar helm-ag--valid-regexp-for-emacs nil)
 (defvar helm-ag--extra-options nil)
 (defvar helm-ag--extra-options-history nil)
 (defvar helm-ag--original-window nil)
@@ -221,26 +223,44 @@ They are specified to `--ignore' options."
         t)
     (invalid-regexp nil)))
 
+(defun helm-ag--pcre-to-elisp-regexp (pcre)
+  ;; This is very simple conversion
+  (with-temp-buffer
+    (insert pcre)
+    (goto-char (point-min))
+    (while (re-search-forward "[(){}|]" nil t)
+      (backward-char 1)
+      (cond ((looking-back "\\\\\\\\"))
+            ((looking-back "\\\\")
+             (delete-backward-char 1))
+            (t
+             (insert "\\")))
+      (forward-char 1))
+    (buffer-string)))
+
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
-        (last-pos 0))
-    (when (helm-ag--validate-regexp helm-ag--last-query)
+        (last-pos 0)
+        (regexp (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)))
+    (when helm-ag--valid-regexp-for-emacs
       (while (and (< last-pos limit)
-                  (string-match helm-ag--last-query candidate last-pos))
-        (put-text-property (match-beginning 0) (match-end 0)
-                           'face 'helm-match
-                           candidate)
-        (setq last-pos (1+ (match-end 0)))))
+                  (string-match helm-ag--elisp-regexp-query candidate last-pos))
+        (let ((start (match-beginning 0))
+              (end (match-end 0)))
+          (if (= start end)
+              (cl-incf last-pos)
+            (put-text-property start end 'face 'helm-match candidate)
+            (setq last-pos (1+ (match-end 0)))))))
     candidate))
 
 (defun helm-ag--candidate-transform-for-this-file (candidate)
-  (when (string-match "\\`\\([^:]+\\):\\(.+\\)" candidate)
+  (when (string-match "\\`\\([^:]+\\):\\(.*\\)" candidate)
     (format "%s:%s"
             (propertize (match-string 1 candidate) 'face 'helm-grep-lineno)
             (helm-ag--highlight-candidate (match-string 2 candidate)))))
 
 (defun helm-ag--candidate-transform-for-files (candidate)
-  (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.+\\)" candidate)
+  (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.*\\)" candidate)
     (format "%s:%s:%s"
             (propertize (match-string 1 candidate) 'face 'helm-moccur-buffer)
             (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
@@ -310,7 +330,10 @@ They are specified to `--ignore' options."
          (query (read-string "Pattern: " searched-word 'helm-ag--command-history)))
     (when (string= query "")
       (error "Input is empty!!"))
-    (setq helm-ag--last-query query)))
+    (setq helm-ag--last-query query
+          helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
+    (setq helm-ag--valid-regexp-for-emacs
+          (helm-ag--validate-regexp helm-ag--elisp-regexp-query))))
 
 (defsubst helm-ag--clear-variables ()
   (setq helm-ag--last-default-directory nil))

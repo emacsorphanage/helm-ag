@@ -129,4 +129,20 @@
     (should (helm-ag--candidate-transform-for-files "10:5:hoge"))
     (should-not (helm-ag--candidate-transform-for-files "10:hoge"))))
 
+(ert-deftest pcre-to-emacs-lisp-regexp ()
+  "Simple convertion from PCRE to Emacs lisp regexp"
+  (let ((got (helm-ag--pcre-to-elisp-regexp "(foo|bar)")))
+    (should (string= got "\\(foo\\|bar\\)")))
+  (let ((got (helm-ag--pcre-to-elisp-regexp "foo{1,2}")))
+    (should (string= got "foo\\{1,2\\}")))
+
+  (let ((got (helm-ag--pcre-to-elisp-regexp "\\(foo\\|bar\\)")))
+    (should (string= got "(foo|bar)")))
+
+  (let ((got (helm-ag--pcre-to-elisp-regexp "foo\\{1,2\\}")))
+    (should (string= got "foo{1,2}")))
+
+  (let ((got (helm-ag--pcre-to-elisp-regexp "\\\\(foo\\\\|bar\\\\)")))
+    (should (string= got "\\\\(foo\\\\|bar\\\\)"))))
+
 ;;; test-util.el ends here
