@@ -232,7 +232,7 @@ They are specified to `--ignore' options."
       (backward-char 1)
       (cond ((looking-back "\\\\\\\\"))
             ((looking-back "\\\\")
-             (delete-backward-char 1))
+             (delete-char -1))
             (t
              (insert "\\")))
       (forward-char 1))
@@ -240,8 +240,7 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
-        (last-pos 0)
-        (regexp (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)))
+        (last-pos 0))
     (when helm-ag--valid-regexp-for-emacs
       (while (and (< last-pos limit)
                   (string-match helm-ag--elisp-regexp-query candidate last-pos))
@@ -566,27 +565,28 @@ Special commands:
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
     (goto-char (point-min))
-    (when (helm-ag--validate-regexp helm-input)
-      (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
-               while (not (eobp))
-               do
-               (progn
-                 (let ((start (point))
-                       (bound (line-end-position))
-                       file-end line-end)
-                   (when (or one-file-p (search-forward ":" bound t))
-                     (setq file-end (1- (point)))
-                     (when (search-forward ":" bound t)
-                       (setq line-end (1- (point)))
-                       (unless one-file-p
-                         (set-text-properties start file-end '(face helm-moccur-buffer)))
-                       (set-text-properties (1+ file-end) line-end
-                                            '(face helm-grep-lineno))
+    (let ((regexp (helm-ag--pcre-to-elisp-regexp helm-input)))
+      (when (helm-ag--validate-regexp regexp)
+        (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
+                 while (not (eobp))
+                 do
+                 (progn
+                   (let ((start (point))
+                         (bound (line-end-position))
+                         file-end line-end)
+                     (when (or one-file-p (search-forward ":" bound t))
+                       (setq file-end (1- (point)))
+                       (when (search-forward ":" bound t)
+                         (setq line-end (1- (point)))
+                         (unless one-file-p
+                           (set-text-properties start file-end '(face helm-moccur-buffer)))
+                         (set-text-properties (1+ file-end) line-end
+                                              '(face helm-grep-lineno))
 
-                       (when (re-search-forward helm-input bound t)
-                         (set-text-properties (match-beginning 0) (match-end 0)
-                                              '(face helm-match))))))
-                 (forward-line 1))))
+                         (when (re-search-forward regexp bound t)
+                           (set-text-properties (match-beginning 0) (match-end 0)
+                                                '(face helm-match))))))
+                   (forward-line 1)))))
     (goto-char (point-min))
     (helm-display-mode-line (helm-get-current-source))))
 
