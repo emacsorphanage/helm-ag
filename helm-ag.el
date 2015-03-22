@@ -692,6 +692,14 @@ Special commands:
   (when (helm-ag--has-c-u-preffix-p)
     (helm-grep-get-file-extensions helm-do-ag--default-target)))
 
+(defsubst helm-do-ag--is-target-one-directory-p (targets)
+  (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
+
+(defsubst helm-do-ag--helm ()
+  (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+        :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
+        :keymap helm-do-ag-map))
+
 ;;;###autoload
 (defun helm-do-ag (&optional basedir)
   (interactive)
@@ -700,18 +708,24 @@ Special commands:
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
-         (helm-do-ag--default-target (or basedir (helm-read-file-name
-                                                  "Search in file(s): "
-                                                  :default default-directory
-                                                  :marked-candidates t :must-match t)))
-         (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions)))
+         (helm-do-ag--default-target (unless basedir
+                                       (helm-read-file-name
+                                        "Search in file(s): "
+                                        :default default-directory
+                                        :marked-candidates t :must-match t)))
+         (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions))
+         (one-directory-p (helm-do-ag--is-target-one-directory-p
+                           helm-do-ag--default-target)))
     (helm-ag--set-do-ag-option)
     (helm-ag--save-current-context)
     (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
                   helm-source-do-ag)
-    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-          :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
-          :keymap helm-do-ag-map)))
+    (if (not one-directory-p)
+        (helm-do-ag--helm)
+      (let* ((helm-ag--default-directory
+              (file-name-as-directory (car helm-do-ag--default-target)))
+             (helm-do-ag--default-target nil))
+        (helm-do-ag--helm)))))
 
 (defun helm-ag--project-root ()
   (cl-loop for dir in '(".git/" ".hg/" ".svn/")
