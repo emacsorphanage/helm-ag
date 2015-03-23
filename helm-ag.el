@@ -541,6 +541,7 @@ Special commands:
          (lambda ()
            (let ((default-directory parent)
                  (source (helm-ag--select-source)))
+             (setq helm-ag--last-default-directory default-directory)
              (helm-attrset 'name (helm-ag--helm-header default-directory)
                            (symbol-value source))
              (helm :sources (list source) :buffer "*helm-ag*"
@@ -675,6 +676,7 @@ Special commands:
         (helm-run-after-quit
          (lambda ()
            (let ((default-directory parent))
+             (setq helm-ag--last-default-directory default-directory)
              (helm-attrset 'name (helm-ag--helm-header parent)
                            helm-source-do-ag)
              (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
