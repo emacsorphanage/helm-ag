@@ -1,5 +1,14 @@
 Revision history for helm-ag.el
 
+Revision 0.38 2015/03/28 syohex
+    - Add commands for searching from project root directory
+    - Fix zero width matching case(caution of infinite loop)
+    - Improve performance
+      - remove redundant validation
+    - Improve highlighting
+      - implement simple converter which convert from PCRE to Emacs Lisp regexp
+    - Fix persistent action issue(#86)
+
 Revision 0.37 2015/03/19 syohex
     - Fix case when search pattern has spaces
 
