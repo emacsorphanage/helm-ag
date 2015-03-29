@@ -403,8 +403,9 @@ They are specified to `--ignore' options."
 
 (defvar helm-ag-edit-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c") 'helm-ag--edit-commit)
-    (define-key map (kbd "C-c C-k") 'helm-ag--edit-abort)
+    ;; Renamed to not conflict with compilation-minor-mode
+    (define-key map (kbd "C-c C-s") 'helm-ag--edit-commit)
+    (define-key map (kbd "C-c C-q") 'helm-ag--edit-abort)
     map))
 
 (defun helm-ag--edit (_candidate)
@@ -424,13 +425,27 @@ They are specified to `--ignore' options."
                                  body-start (point-max)))
             (setq buf-content (concat (mapconcat 'identity marked-lines "\n") "\n")))))
       (insert buf-content)
+
+      ;; Turn on compilation minor mode. This is really nice because it allows you
+      ;; to do next-error and prev-error, and hit <ret> to jump to a buffer.
+      ;; This is exactly what helm-ag--run-save-buffer allowed you to do, except
+      ;; compilation minor mode is better than grep mode.
+      ;; With this change, helm-ag doesn't need a separate "save" and "edit" function,
+      ;; because now we can do both.
+      (compilation-minor-mode)
+      ;; Now disable compilation minor mode. The desired functions will still be defined.
+      ;; Not sure why this works. If you don't do it, fundamental mode doesn't work anymore
+      ;; (normal input keys are undefined) so you can't edit the buffer.
+      (compilation-minor-mode)
+
       (add-text-properties (point-min) (point-max)
                            '(read-only t rear-nonsticky t front-sticky t))
       (let ((inhibit-read-only t))
         (setq header-line-format
-              (format "[%s] C-c C-c: Commit, C-c C-k: Abort"
+              (format "[%s] C-c C-s: Commit, C-c C-q: Abort"
                       (abbreviate-file-name helm-ag--default-directory)))
         (goto-char (point-min))
+
         (while (re-search-forward "^\\(\\(?:[^:]+:\\)\\{1,2\\}\\)\\(.*\\)$" nil t)
           (let ((file-line-begin (match-beginning 1))
                 (file-line-end (match-end 1))
@@ -491,39 +506,12 @@ They are specified to `--ignore' options."
 Special commands:
 \\{helm-ag-mode-map}")
 
-(defun helm-ag--save-results (_unused)
-  (let ((buf "*helm ag results*")
-        search-this-file-p)
-    (with-current-buffer (get-buffer-create buf)
-      (setq buffer-read-only t)
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert "-*- mode: helm-ag -*-\n\n"
-                (format "Ag Results for `%s':\n\n" helm-ag--last-query))
-        (save-excursion
-          (insert (with-current-buffer helm-buffer
-                    (goto-char (point-min))
-                    (forward-line 1)
-                    (setq search-this-file-p (helm-attr 'search-this-file))
-                    (buffer-substring (point) (point-max))))))
-      (setq-local helm-ag--search-this-file-p search-this-file-p)
-      (setq-local helm-ag--default-directory helm-ag--default-directory)
-      (helm-ag-mode)
-      (pop-to-buffer buf))
-    (message "Helm Grep Results saved in `%s' buffer" buf)))
-
-(defun helm-ag--run-save-buffer ()
-  (interactive)
-  (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-ag--save-results)))
-
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
     (define-key map (kbd "C-l") 'helm-ag--up-one-level)
     (define-key map (kbd "C-c C-e") 'helm-ag-edit)
-    (define-key map (kbd "C-x C-s") 'helm-ag--run-save-buffer)
     (define-key map (kbd "C-c ?") 'helm-ag-help)
     map)
   "Keymap for `helm-ag'.")
