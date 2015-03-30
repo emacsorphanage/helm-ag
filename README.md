@@ -163,6 +163,9 @@ Save buffers you edit at editing completed.
 | `C-c C-c` | Commit changes   |
 | `C-c C-k` | Abort            |
 
+You can use `next-error` and `previous-error` for seeing file content which
+current line indicates.
+
 
 ## Sample Configuration
 
