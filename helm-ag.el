@@ -512,7 +512,8 @@ Special commands:
       (setq-local helm-ag--search-this-file-p search-this-file-p)
       (setq-local helm-ag--default-directory helm-ag--default-directory)
       (helm-ag-mode)
-      (pop-to-buffer buf))
+      (pop-to-buffer buf)
+      (compilation-minor-mode))
     (message "Helm Grep Results saved in `%s' buffer" buf)))
 
 (defun helm-ag--run-save-buffer ()
