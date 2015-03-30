@@ -31,6 +31,7 @@
 (require 'cl-lib)
 (require 'helm)
 (require 'helm-utils)
+(require 'compile)
 
 (declare-function helm-read-file-name "helm-mode")
 (declare-function helm-grep-get-file-extensions "helm-grep")
@@ -445,6 +446,8 @@ They are specified to `--ignore' options."
   (other-window 1)
   (switch-to-buffer (get-buffer "*helm-ag-edit*"))
   (goto-char (point-min))
+  (setq next-error-function 'compilation-next-error-function)
+  (setq-local compilation-locs (make-hash-table :test 'equal :weakness 'value))
   (use-local-map helm-ag-edit-map))
 
 (defun helm-ag-edit ()
