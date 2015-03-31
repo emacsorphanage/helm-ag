@@ -515,7 +515,7 @@ Special commands:
         (setq-local helm-ag--default-directory helm-ag--default-directory)
         (helm-ag-mode)
         (pop-to-buffer buf))
-      (message "Helm Grep Results saved in `%s' buffer" buf))))
+      (message "Helm Ag Results saved in `%s' buffer" buf))))
 
 (defun helm-ag--run-save-buffer ()
   (interactive)
