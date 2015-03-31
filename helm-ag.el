@@ -513,7 +513,8 @@ Special commands:
       (setq-local helm-ag--search-this-file-p search-this-file-p)
       (setq-local helm-ag--default-directory helm-ag--default-directory)
       (helm-ag-mode)
-      (pop-to-buffer buf))
+      (pop-to-buffer buf)
+      (compilation-minor-mode))
     (message "Helm Grep Results saved in `%s' buffer" buf)))
 
 (defun helm-ag--run-save-buffer ()
@@ -727,7 +728,8 @@ Special commands:
     (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
                   helm-source-do-ag)
     (if (not one-directory-p)
-        (helm-do-ag--helm)
+        (let ((default-directory helm-ag--default-directory))
+          (helm-do-ag--helm))
       (let* ((helm-ag--default-directory
               (file-name-as-directory (car helm-do-ag--default-target)))
              (helm-do-ag--default-target nil))
