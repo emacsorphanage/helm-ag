@@ -496,26 +496,28 @@ Special commands:
 \\{helm-ag-mode-map}")
 
 (defun helm-ag--save-results (_unused)
-  (let ((default-directory helm-ag--default-directory))
-    (let ((buf "*helm ag results*")
-          search-this-file-p)
-      (with-current-buffer (get-buffer-create buf)
-        (setq buffer-read-only t)
-        (let ((inhibit-read-only t))
-          (erase-buffer)
-          (insert "-*- mode: helm-ag -*-\n\n"
-                  (format "Ag Results for `%s':\n\n" helm-ag--last-query))
-          (save-excursion
-            (insert (with-current-buffer helm-buffer
-                      (goto-char (point-min))
-                      (forward-line 1)
-                      (setq search-this-file-p (helm-attr 'search-this-file))
-                      (buffer-substring (point) (point-max))))))
-        (setq-local helm-ag--search-this-file-p search-this-file-p)
-        (setq-local helm-ag--default-directory helm-ag--default-directory)
-        (helm-ag-mode)
-        (pop-to-buffer buf))
-      (message "Helm Ag Results saved in `%s' buffer" buf))))
+  (let ((default-directory helm-ag--default-directory)
+        (buf "*helm ag results*")
+        search-this-file-p)
+    (when (buffer-live-p (get-buffer buf))
+      (kill-buffer buf))
+    (with-current-buffer (get-buffer-create buf)
+      (setq buffer-read-only t)
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "-*- mode: helm-ag -*-\n\n"
+                (format "Ag Results for `%s':\n\n" helm-ag--last-query))
+        (save-excursion
+          (insert (with-current-buffer helm-buffer
+                    (goto-char (point-min))
+                    (forward-line 1)
+                    (setq search-this-file-p (helm-attr 'search-this-file))
+                    (buffer-substring (point) (point-max))))))
+      (setq-local helm-ag--search-this-file-p search-this-file-p)
+      (setq-local helm-ag--default-directory helm-ag--default-directory)
+      (helm-ag-mode)
+      (pop-to-buffer buf))
+    (message "Helm Ag Results saved in `%s' buffer" buf)))
 
 (defun helm-ag--run-save-buffer ()
   (interactive)
