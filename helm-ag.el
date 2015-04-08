@@ -239,6 +239,20 @@ They are specified to `--ignore' options."
       (forward-char 1))
     (buffer-string)))
 
+(defun helm-ag--elisp-regexp-to-pcre (regexp)
+  (with-temp-buffer
+    (insert regexp)
+    (goto-char (point-min))
+    (while (re-search-forward "[(){}|]" nil t)
+      (backward-char 1)
+      (cond ((looking-back "\\\\\\\\"))
+            ((looking-back "\\\\")
+             (delete-char -1))
+            (t
+             (insert "\\")))
+      (forward-char 1))
+    (buffer-string)))
+
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
         (last-pos 0))
