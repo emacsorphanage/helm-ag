@@ -113,7 +113,7 @@ Base command of `ag`.
 
 Command line option of base command.
 
-#### `helm-ag-insert-at-point`(Default: `'nil`)
+#### `helm-ag-insert-at-point`(Default: `nil`)
 
 Insert thing at point as default search pattern, if this value is `non nil`.
 You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
@@ -128,19 +128,24 @@ If this value is `'file-line`, `helm-ag` displays candidate as helm `file-line` 
 
 ![helm-ag-file-line](image/helm-ag-file-line.png)
 
-#### `helm-ag-use-grep-ignore-list`(Default: `'nil`)
+#### `helm-ag-use-grep-ignore-list`(Default: `nil`)
 
 Use `grep-find-ignored-files` and `grep-find-ignored-directories` as ignore pattern.
 They are specified to `--ignore' options."
 
-#### `helm-ag-always-set-extra-option`(Default: `'nil`)
+#### `helm-ag-always-set-extra-option`(Default: `nil`)
 
 Always set extra command line option of `ag` in `helm-do-ag`
 if this value is non-nil.
 
-#### `helm-ag-edit-save`(Default: `'t`)
+#### `helm-ag-edit-save`(Default: `t`)
 
 Save buffers you edit at editing completed.
+
+#### `helm-ag-use-emacs-lisp-regexp`(Default: `nil`)
+
+Use Emacs Lisp regexp instead of PCRE as pattern.
+NOTE: this is very simple convertion.
 
 
 ## Keymap
