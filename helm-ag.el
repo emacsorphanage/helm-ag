@@ -89,6 +89,11 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag-use-emacs-lisp-regexp nil
+  "[Experimental] Use Emacs Lisp regexp instead of PCRE."
+  :type 'boolean
+  :group 'helm-ag)
+
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
@@ -239,6 +244,20 @@ They are specified to `--ignore' options."
       (forward-char 1))
     (buffer-string)))
 
+(defun helm-ag--elisp-regexp-to-pcre (regexp)
+  (with-temp-buffer
+    (insert regexp)
+    (goto-char (point-min))
+    (while (re-search-forward "[(){}|]" nil t)
+      (backward-char 1)
+      (cond ((looking-back "\\\\\\\\"))
+            ((looking-back "\\\\")
+             (delete-char -1))
+            (t
+             (insert "\\")))
+      (forward-char 1))
+    (buffer-string)))
+
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
         (last-pos 0))
@@ -330,6 +349,8 @@ They are specified to `--ignore' options."
          (query (read-string "Pattern: " searched-word 'helm-ag--command-history)))
     (when (string= query "")
       (error "Input is empty!!"))
+    (when helm-ag-use-emacs-lisp-regexp
+      (setq query (helm-ag--elisp-regexp-to-pcre query)))
     (setq helm-ag--last-query query
           helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
     (setq helm-ag--valid-regexp-for-emacs

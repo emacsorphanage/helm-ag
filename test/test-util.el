@@ -145,4 +145,20 @@
   (let ((got (helm-ag--pcre-to-elisp-regexp "\\\\(foo\\\\|bar\\\\)")))
     (should (string= got "\\\\(foo\\\\|bar\\\\)"))))
 
+(ert-deftest emacs-lisp-regexp-to-pcre ()
+  "Simple convertion from Emacs lisp regexp to PCRE"
+  (let ((got (helm-ag--elisp-regexp-to-pcre "\\(foo\\|bar\\)")))
+    (should (string= got "(foo|bar)")))
+  (let ((got (helm-ag--elisp-regexp-to-pcre "foo\\{1,2\\}")))
+    (should (string= got "foo{1,2}")))
+
+  (let ((got (helm-ag--elisp-regexp-to-pcre "(foo|bar)")))
+    (should (string= got "\\(foo\\|bar\\)")))
+
+  (let ((got (helm-ag--elisp-regexp-to-pcre "foo{1,2}")))
+    (should (string= got "foo\\{1,2\\}")))
+
+  (let ((got (helm-ag--elisp-regexp-to-pcre "\\\\(foo\\\\|bar\\\\)")))
+    (should (string= got "\\\\(foo\\\\|bar\\\\)"))))
+
 ;;; test-util.el ends here
