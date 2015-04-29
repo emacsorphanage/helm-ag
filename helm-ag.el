@@ -393,7 +393,9 @@ They are specified to `--ignore' options."
     default-directory))
 
 (defsubst helm-ag--helm-header (dir)
-  (concat "Search at " (abbreviate-file-name dir)))
+  (if helm-ag--buffer-search
+      "Search Buffers"
+    (concat "Search at " (abbreviate-file-name dir))))
 
 (defun helm-ag--run-other-window-action ()
   (interactive)
