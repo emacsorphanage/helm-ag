@@ -107,6 +107,7 @@ They are specified to `--ignore' options."
 (defvar helm-ag--search-this-file-p nil)
 (defvar helm-do-ag--default-target nil)
 (defvar helm-do-ag--extensions nil)
+(defvar helm-ag--buffer-search nil)
 
 (defun helm-ag--save-current-context ()
   (let ((curpoint (with-helm-current-buffer
@@ -153,6 +154,11 @@ They are specified to `--ignore' options."
             (list query)
           (nconc (nreverse options) (list query)))))))
 
+(defsubst helm-ag--file-visited-buffers ()
+  (cl-loop for buf in (buffer-list)
+           when (buffer-file-name buf)
+           collect (buffer-file-name buf)))
+
 (defun helm-ag--construct-command (this-file)
   (let* ((commands (split-string helm-ag-base-command nil t))
          (command (car commands))
@@ -168,6 +174,8 @@ They are specified to `--ignore' options."
     (setq args (append args (helm-ag--parse-query helm-ag--last-query)))
     (when this-file
       (setq args (append args (list this-file))))
+    (when helm-ag--buffer-search
+      (setq args (append args (helm-ag--file-visited-buffers))))
     (cons command args)))
 
 (defun helm-ag--init ()
@@ -280,10 +288,13 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--candidate-transform-for-files (candidate)
   (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.*\\)" candidate)
-    (format "%s:%s:%s"
-            (propertize (match-string 1 candidate) 'face 'helm-moccur-buffer)
-            (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
-            (helm-ag--highlight-candidate (match-string 3 candidate)))))
+    (let ((file (if helm-ag--buffer-search
+                    (buffer-name (get-file-buffer (match-string 1 candidate)))
+                  (match-string 1 candidate))))
+      (format "%s:%s:%s"
+              (propertize file 'face 'helm-moccur-buffer)
+              (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
+              (helm-ag--highlight-candidate (match-string 3 candidate))))))
 
 (defun helm-ag--candidate-transformer (candidate)
   (if (helm-attr 'search-this-file)
@@ -777,6 +788,12 @@ Special commands:
     (unless rootdir
       (error "Here is not repository"))
     (helm-do-ag rootdir)))
+
+;;;###autoload
+(defun helm-ag-buffers ()
+  (interactive)
+  (let ((helm-ag--buffer-search t))
+    (helm-ag)))
 
 (provide 'helm-ag)
 
