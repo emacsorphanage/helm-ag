@@ -653,6 +653,8 @@ Special commands:
     (when helm-do-ag--extensions
       (setq cmds (append cmds (helm-ag--construct-extension-options))))
     (setq cmds (append cmds (list "--" pattern)))
+    (when helm-ag--buffer-search
+      (setq cmds (append cmds (helm-ag--file-visited-buffers))))
     (if helm-do-ag--default-target
         (append cmds (helm-ag--construct-targets helm-do-ag--default-target))
       cmds)))
@@ -751,7 +753,7 @@ Special commands:
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
-         (helm-do-ag--default-target (unless basedir
+         (helm-do-ag--default-target (when (and (not basedir) (not helm-ag--buffer-search))
                                        (helm-read-file-name
                                         "Search in file(s): "
                                         :default default-directory
@@ -796,6 +798,12 @@ Special commands:
   (interactive)
   (let ((helm-ag--buffer-search t))
     (helm-ag)))
+
+;;;###autoload
+(defun helm-do-ag-buffers ()
+  (interactive)
+  (let ((helm-ag--buffer-search t))
+    (helm-do-ag)))
 
 (provide 'helm-ag)
 
