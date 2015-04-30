@@ -311,7 +311,8 @@ They are specified to `--ignore' options."
 
 (defvar helm-ag--actions
   '(("Open file" . helm-ag--action-find-file)
-    ("Open file other window" . helm-ag--action--find-file-other-window)))
+    ("Open file other window" . helm-ag--action--find-file-other-window)
+    ("Save results in buffer" . helm-ag--action-save-buffer)))
 
 (defvar helm-ag-source
   (helm-build-in-buffer-source "The Silver Searcher"
@@ -549,6 +550,9 @@ Special commands:
       (helm-ag-mode)
       (pop-to-buffer buf))
     (message "Helm Ag Results saved in `%s' buffer" buf)))
+
+(defun helm-ag--action-save-buffer (_unused)
+  (helm-ag--save-results _unused))
 
 (defun helm-ag--run-save-buffer ()
   (interactive)
