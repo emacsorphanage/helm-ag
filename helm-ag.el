@@ -288,13 +288,10 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--candidate-transform-for-files (candidate)
   (when (string-match "\\`\\([^:]+\\):\\([^:]+\\):\\(.*\\)" candidate)
-    (let ((file (if helm-ag--buffer-search
-                    (buffer-name (get-file-buffer (match-string 1 candidate)))
-                  (match-string 1 candidate))))
-      (format "%s:%s:%s"
-              (propertize file 'face 'helm-moccur-buffer)
-              (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
-              (helm-ag--highlight-candidate (match-string 3 candidate))))))
+    (format "%s:%s:%s"
+            (propertize (match-string 1 candidate) 'face 'helm-moccur-buffer)
+            (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
+            (helm-ag--highlight-candidate (match-string 3 candidate)))))
 
 (defun helm-ag--candidate-transformer (candidate)
   (if (helm-attr 'search-this-file)
