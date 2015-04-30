@@ -59,6 +59,16 @@ there is `.git` or `.hg` or `.svn`.
 Call `helm-do-ag` at project root.
 
 
+#### `helm-ag-buffers`
+
+Search buffers by `helm-ag`
+
+
+#### `helm-do-ag-project-root`
+
+Search buffers by `helm-do-ag`
+
+
 #### `helm-ag-pop-stack`
 
 Move to point before jump
