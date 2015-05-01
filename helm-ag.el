@@ -353,9 +353,14 @@ They are specified to `--ignore' options."
       'helm-ag-source-grep
     'helm-ag-source))
 
+(defun helm-ag--marked-input ()
+  (if (and mark-active transient-mark-mode)
+      (buffer-substring-no-properties (region-beginning) (region-end))))
+
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
-         (query (read-string "Pattern: " searched-word 'helm-ag--command-history)))
+         (marked-word (helm-ag--marked-input))
+         (query (read-string "Pattern: " (or marked-word searched-word) 'helm-ag--command-history)))
     (when (string= query "")
       (error "Input is empty!!"))
     (when helm-ag-use-emacs-lisp-regexp
