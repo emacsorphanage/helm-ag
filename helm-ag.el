@@ -244,8 +244,8 @@ They are specified to `--ignore' options."
     (goto-char (point-min))
     (while (re-search-forward "[(){}|]" nil t)
       (backward-char 1)
-      (cond ((looking-back "\\\\\\\\"))
-            ((looking-back "\\\\")
+      (cond ((looking-back "\\\\\\\\" nil))
+            ((looking-back "\\\\" nil)
              (delete-char -1))
             (t
              (insert "\\")))
@@ -258,8 +258,8 @@ They are specified to `--ignore' options."
     (goto-char (point-min))
     (while (re-search-forward "[(){}|]" nil t)
       (backward-char 1)
-      (cond ((looking-back "\\\\\\\\"))
-            ((looking-back "\\\\")
+      (cond ((looking-back "\\\\\\\\" nil))
+            ((looking-back "\\\\" nil)
              (delete-char -1))
             (t
              (insert "\\")))
