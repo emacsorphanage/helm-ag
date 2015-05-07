@@ -353,9 +353,9 @@ They are specified to `--ignore' options."
       'helm-ag-source-grep
     'helm-ag-source))
 
-(defun helm-ag--marked-input ()
-  (if (and mark-active transient-mark-mode)
-      (buffer-substring-no-properties (region-beginning) (region-end))))
+(defsubst helm-ag--marked-input ()
+  (when (use-region-p)
+    (buffer-substring-no-properties (region-beginning) (region-end))))
 
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
