@@ -556,8 +556,8 @@ Special commands:
       (pop-to-buffer buf))
     (message "Helm Ag Results saved in `%s' buffer" buf)))
 
-(defun helm-ag--action-save-buffer (_unused)
-  (helm-ag--save-results _unused))
+(defun helm-ag--action-save-buffer (arg)
+  (helm-ag--save-results arg))
 
 (defun helm-ag--run-save-buffer ()
   (interactive)
