@@ -196,9 +196,9 @@ current line indicates.
 `helm-ag.el` can work the platinum searcher or ack instead of the silver searcher.
 It is difficult to install the silver search on some platform such as Windows,
 while it is easy to install the platinum searcher because it is written in
-go language and its author provides binaries for some platforms. And ack is
-written in Perl.
+go language and its author provides binaries for some platforms. And ack is written in Perl.
 
+NOTE: Please use pt 1.7.7 or higher version if you use the platinum searcher.
 
 Please add following configuration if you use `helm-ag` with the platinum searcher.
 
