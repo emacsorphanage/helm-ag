@@ -41,7 +41,13 @@
   "the silver searcher with helm interface"
   :group 'helm)
 
-(defcustom helm-ag-base-command "ag --nocolor --nogroup"
+(defsubst helm-ag--windows-p ()
+  (memq system-type '(ms-dos windows-nt)))
+
+(defcustom helm-ag-base-command
+  (if (helm-ag--windows-p)
+      "ag --nocolor --nogroup --line-numbers"
+    "ag --nocolor --nogroup")
   "Base command of `ag'"
   :type 'string
   :group 'helm-ag)
@@ -743,9 +749,6 @@ Special commands:
   (when (helm-ag--has-c-u-preffix-p)
     (helm-grep-get-file-extensions helm-do-ag--default-target)))
 
-(defsubst helm-ag--windows-p ()
-  (memq system-type '(ms-dos windows-nt)))
-
 (defsubst helm-do-ag--is-target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
@@ -762,11 +765,13 @@ Special commands:
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
-         (helm-do-ag--default-target (when (and (not basedir) (not helm-ag--buffer-search))
-                                       (helm-read-file-name
-                                        "Search in file(s): "
-                                        :default default-directory
-                                        :marked-candidates t :must-match t)))
+         (helm-do-ag--default-target (if (and (helm-ag--windows-p) basedir)
+                                         (list basedir)
+                                       (when (and (not basedir) (not helm-ag--buffer-search))
+                                         (helm-read-file-name
+                                          "Search in file(s): "
+                                          :default default-directory
+                                          :marked-candidates t :must-match t))))
          (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions))
          (one-directory-p (helm-do-ag--is-target-one-directory-p
                            helm-do-ag--default-target)))
