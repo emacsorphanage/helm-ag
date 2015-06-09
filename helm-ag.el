@@ -41,7 +41,13 @@
   "the silver searcher with helm interface"
   :group 'helm)
 
-(defcustom helm-ag-base-command "ag --nocolor --nogroup"
+(defsubst helm-ag--windows-p ()
+  (memq system-type '(ms-dos windows-nt)))
+
+(defcustom helm-ag-base-command
+  (if (helm-ag--windows-p)
+      "ag --nocolor --nogroup --line-numbers"
+    "ag --nocolor --nogroup")
   "Base command of `ag'"
   :type 'string
   :group 'helm-ag)
@@ -742,9 +748,6 @@ Special commands:
 (defun helm-ag--do-ag-searched-extensions ()
   (when (helm-ag--has-c-u-preffix-p)
     (helm-grep-get-file-extensions helm-do-ag--default-target)))
-
-(defsubst helm-ag--windows-p ()
-  (memq system-type '(ms-dos windows-nt)))
 
 (defsubst helm-do-ag--is-target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
