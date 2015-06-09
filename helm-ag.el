@@ -762,11 +762,13 @@ Special commands:
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
-         (helm-do-ag--default-target (when (and (not basedir) (not helm-ag--buffer-search))
-                                       (helm-read-file-name
-                                        "Search in file(s): "
-                                        :default default-directory
-                                        :marked-candidates t :must-match t)))
+         (helm-do-ag--default-target (if (and (helm-ag--windows-p) basedir)
+                                         (list basedir)
+                                       (when (and (not basedir) (not helm-ag--buffer-search))
+                                         (helm-read-file-name
+                                          "Search in file(s): "
+                                          :default default-directory
+                                          :marked-candidates t :must-match t))))
          (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions))
          (one-directory-p (helm-do-ag--is-target-one-directory-p
                            helm-do-ag--default-target)))
