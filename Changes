@@ -1,5 +1,12 @@
 Revision history for helm-ag.el
 
+Revision 0.39 2015/06/10 syohex
+    - Fix for Windows(#112, #114)
+    - Implement search buffers command with ag(#106)
+    - Implement simple convert PCRE <=> Emacs Lisp(#97)
+    - Fix default-directory in edit buffer issue(#93, #94)
+    - Support next-error, previous-error in edit buffer(#90)
+
 Revision 0.38 2015/03/28 syohex
     - Add commands for searching from project root directory
     - Fix zero width matching case(caution of infinite loop)
