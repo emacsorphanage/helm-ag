@@ -588,7 +588,8 @@ Special commands:
 (defun helm-ag--up-one-level ()
   (interactive)
   (if (or (not (helm-ag--root-directory-p))
-          (y-or-n-p "Here may be project root. Continue searcing ? "))
+          (y-or-n-p "Current directory might be the project root. \
+Continue searching the parent directory? "))
       (let ((parent (file-name-directory (directory-file-name default-directory))))
         (helm-run-after-quit
          (lambda ()
@@ -725,7 +726,8 @@ Special commands:
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
   (if (or (not (helm-ag--root-directory-p))
-          (y-or-n-p "Here may be project root. Continue searcing ? "))
+          (y-or-n-p "Current directory might be the project root. \
+Continue searching the parent directory? "))
       (let ((parent (file-name-directory (directory-file-name default-directory)))
             (initial-input helm-input))
         (helm-run-after-quit
