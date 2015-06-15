@@ -798,7 +798,7 @@ Continue searching the parent directory? "))
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
-      (error "Here is not repository"))
+      (error "Could not find the project root. Create a git, hg, or svn repository there first. "))
     (helm-ag rootdir)))
 
 ;;;###autoload
@@ -806,7 +806,7 @@ Continue searching the parent directory? "))
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
-      (error "Here is not repository"))
+      (error "Could not find the project root. Create a git, hg, or svn repository there first. "))
     (helm-do-ag rootdir)))
 
 ;;;###autoload
