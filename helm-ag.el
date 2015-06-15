@@ -588,7 +588,8 @@ Special commands:
 (defun helm-ag--up-one-level ()
   (interactive)
   (if (or (not (helm-ag--root-directory-p))
-          (y-or-n-p "Here may be project root. Continue searcing ? "))
+          (y-or-n-p "Current directory might be the project root. \
+Continue searching the parent directory? "))
       (let ((parent (file-name-directory (directory-file-name default-directory))))
         (helm-run-after-quit
          (lambda ()
@@ -725,7 +726,8 @@ Special commands:
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
   (if (or (not (helm-ag--root-directory-p))
-          (y-or-n-p "Here may be project root. Continue searcing ? "))
+          (y-or-n-p "Current directory might be the project root. \
+Continue searching the parent directory? "))
       (let ((parent (file-name-directory (directory-file-name default-directory)))
             (initial-input helm-input))
         (helm-run-after-quit
@@ -796,7 +798,7 @@ Special commands:
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
-      (error "Here is not repository"))
+      (error "Could not find the project root. Create a git, hg, or svn repository there first. "))
     (helm-ag rootdir)))
 
 ;;;###autoload
@@ -804,7 +806,7 @@ Special commands:
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
-      (error "Here is not repository"))
+      (error "Could not find the project root. Create a git, hg, or svn repository there first. "))
     (helm-do-ag rootdir)))
 
 ;;;###autoload
