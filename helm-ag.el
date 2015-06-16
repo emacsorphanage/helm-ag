@@ -704,11 +704,8 @@ Continue searching the parent directory? "))
 
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c o") 'helm-ag--run-other-window-action)
+    (set-keymap-parent map helm-ag-map)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
-    (define-key map (kbd "C-c C-e") 'helm-ag-edit)
-    (define-key map (kbd "C-x C-s") 'helm-ag--run-save-buffer)
     (define-key map (kbd "C-c ?") 'helm-ag--do-ag-help)
     map)
   "Keymap for `helm-do-ag'.")
