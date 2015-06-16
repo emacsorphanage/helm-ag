@@ -757,25 +757,34 @@ Continue searching the parent directory? "))
         :keymap helm-do-ag-map))
 
 ;;;###autoload
-(defun helm-do-ag (&optional basedir)
+(defun helm-do-ag-this-file ()
+  (interactive)
+  (helm-aif (buffer-file-name)
+      (helm-do-ag default-directory it)
+    (error "Error: This buffer is not visited file.")))
+
+;;;###autoload
+(defun helm-do-ag (&optional basedir this-file)
   (interactive)
   (require 'helm-mode)
   (require 'helm-grep)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
-         (helm-do-ag--default-target (if (and (helm-ag--windows-p) basedir)
-                                         (list basedir)
-                                       (when (and (not basedir) (not helm-ag--buffer-search))
-                                         (helm-read-file-name
-                                          "Search in file(s): "
-                                          :default default-directory
-                                          :marked-candidates t :must-match t))))
+         (helm-do-ag--default-target (cond (this-file (list this-file))
+                                           ((and (helm-ag--windows-p) basedir) (list basedir))
+                                           (t
+                                            (when (and (not basedir) (not helm-ag--buffer-search))
+                                              (helm-read-file-name
+                                               "Search in file(s): "
+                                               :default default-directory
+                                               :marked-candidates t :must-match t)))))
          (helm-do-ag--extensions (helm-ag--do-ag-searched-extensions))
          (one-directory-p (helm-do-ag--is-target-one-directory-p
                            helm-do-ag--default-target)))
     (helm-ag--set-do-ag-option)
     (helm-ag--save-current-context)
+    (helm-attrset 'search-this-file this-file helm-source-do-ag)
     (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
                   helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
