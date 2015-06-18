@@ -168,6 +168,7 @@ NOTE: this is very simple convertion.
 | `C-l`     | Search in parent directory |
 | `C-c C-e` | Switch to edit mode        |
 | `C-x C-s` | Save ag results to buffer  |
+| `C-c C-f` | Enable helm-follow-mode    |
 | `C-c ?`   | Show help message          |
 
 
