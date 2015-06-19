@@ -30,6 +30,7 @@
 
 (require 'cl-lib)
 (require 'helm)
+(require 'helm-grep)
 (require 'helm-utils)
 (require 'compile)
 
@@ -767,7 +768,6 @@ Continue searching the parent directory? "))
 (defun helm-do-ag (&optional basedir this-file)
   (interactive)
   (require 'helm-mode)
-  (require 'helm-grep)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
