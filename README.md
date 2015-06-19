@@ -47,6 +47,9 @@ of `ag` with minus prefix(`C--`).
 
 ![helm-do-ag](image/helm-do-ag.gif)
 
+#### `helm-do-ag-this-file`
+
+Same as `helm-do-ag` except to search only current file
 
 #### `helm-ag-project-root`
 
