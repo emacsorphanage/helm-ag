@@ -209,33 +209,25 @@ They are specified to `--ignore' options."
       (unless (file-directory-p target)
         target))))
 
-(defun helm-ag--find-file-action (candidate find-func search-this-file)
+(defun helm-ag--find-file-action (candidate find-func this-file &optional persistent)
   (let* ((elems (split-string candidate ":"))
-         (filename (or search-this-file (cl-first elems)))
-         (line (string-to-number (if search-this-file
-                                     (cl-first elems)
-                                   (cl-second elems))))
+         (filename (or this-file (cl-first elems)))
+         (line (if this-file
+                   (cl-first elems)
+                 (cl-second elems)))
          (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
                                 default-directory)))
-    (setq helm-ag--last-default-directory default-directory)
+    (unless persistent
+      (setq helm-ag--last-default-directory default-directory))
     (funcall find-func filename)
     (goto-char (point-min))
-    (forward-line (1- line))))
+    (when line
+      (forward-line (1- (string-to-number line))))))
 
 (defun helm-ag--persistent-action (candidate)
-  (let* ((elems (split-string candidate ":"))
-         (search-this-file (helm-attr 'search-this-file))
-         (filename (or search-this-file (cl-first elems)))
-         (line (string-to-number (if search-this-file
-                                     (cl-first elems)
-                                   (cl-second elems))))
-         (default-directory (or helm-ag--default-directory
-                                helm-ag--last-default-directory)))
-    (find-file filename)
-    (goto-char (point-min))
-    (forward-line (1- line))
-    (helm-highlight-current-line)))
+  (helm-ag--find-file-action candidate 'find-file (helm-attr 'search-this-file) t)
+  (helm-highlight-current-line))
 
 (defun helm-ag--validate-regexp (regexp)
   (condition-case nil
@@ -301,9 +293,10 @@ They are specified to `--ignore' options."
             (helm-ag--highlight-candidate (match-string 3 candidate)))))
 
 (defun helm-ag--candidate-transformer (candidate)
-  (if (helm-attr 'search-this-file)
-      (helm-ag--candidate-transform-for-this-file candidate)
-    (helm-ag--candidate-transform-for-files candidate)))
+  (or (if (helm-attr 'search-this-file)
+          (helm-ag--candidate-transform-for-this-file candidate)
+        (helm-ag--candidate-transform-for-files candidate))
+      candidate))
 
 (defun helm-ag--search-this-file-p ()
   (if (eq (helm-get-current-source) 'helm-source-do-ag)
