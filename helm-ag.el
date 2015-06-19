@@ -166,6 +166,10 @@ They are specified to `--ignore' options."
            when (buffer-file-name buf)
            collect (buffer-file-name buf)))
 
+(defun helm-ag--construct-targets (targets)
+  (cl-loop for target in targets
+           collect (file-relative-name target)))
+
 (defun helm-ag--construct-command (this-file)
   (let* ((commands (split-string helm-ag-base-command nil t))
          (command (car commands))
@@ -183,6 +187,8 @@ They are specified to `--ignore' options."
       (setq args (append args (list this-file))))
     (when helm-ag--buffer-search
       (setq args (append args (helm-ag--file-visited-buffers))))
+    (when helm-do-ag--default-target
+      (setq args (append args (helm-ag--construct-targets helm-do-ag--default-target))))
     (cons command args)))
 
 (defun helm-ag--init ()
@@ -384,16 +390,17 @@ They are specified to `--ignore' options."
       (helm-attrset 'name (format "Search at %s" filename) (symbol-value source))
       (helm :sources (list source) :buffer "*helm-ag*"))))
 
-(defsubst helm-ag--has-c-u-preffix-p ()
-  (and current-prefix-arg
-       (or (equal current-prefix-arg '(4))
-           (equal current-prefix-arg '(-4)))))
-
 (defun helm-ag--get-default-directory ()
-  (if (helm-ag--has-c-u-preffix-p)
-      (file-name-as-directory
-       (read-directory-name "Search directory: " nil nil t))
-    default-directory))
+  (let ((prefix-val (and current-prefix-arg (abs (prefix-numeric-value current-prefix-arg)))))
+    (cond ((not prefix-val) default-directory)
+          ((= prefix-val 4)
+           (file-name-as-directory
+            (read-directory-name "Search directory: " nil nil t)))
+          ((= prefix-val 16)
+           (let ((dirs (list (read-directory-name "Search directory: " nil nil t))))
+             (while (y-or-n-p "More directories ?")
+               (push (read-directory-name "Search directory: " nil nil t) dirs))
+             (reverse dirs))))))
 
 (defsubst helm-ag--helm-header (dir)
   (if helm-ag--buffer-search
@@ -601,15 +608,21 @@ Continue searching the parent directory? "))
   (interactive)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
-  (let ((helm-ag--default-directory (or basedir (helm-ag--get-default-directory))))
-    (helm-ag--query)
-    (let ((source (helm-ag--select-source)))
-      (helm-attrset 'search-this-file nil
-                    (symbol-value source))
-      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
-                    (symbol-value source))
-      (helm :sources (list source) :buffer "*helm-ag*"
-            :keymap helm-ag-map))))
+  (let ((dir (helm-ag--get-default-directory))
+        targets)
+    (when (listp dir)
+      (setq basedir default-directory
+            targets dir))
+    (let ((helm-ag--default-directory (or basedir dir))
+          (helm-do-ag--default-target targets))
+      (helm-ag--query)
+      (let ((source (helm-ag--select-source)))
+        (helm-attrset 'search-this-file nil
+                      (symbol-value source))
+        (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
+                      (symbol-value source))
+        (helm :sources (list source) :buffer "*helm-ag*"
+              :keymap helm-ag-map)))))
 
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
@@ -646,10 +659,6 @@ Continue searching the parent directory? "))
            (concat "-G" (replace-regexp-in-string
                          "\\*" ""
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
-
-(defun helm-ag--construct-targets (targets)
-  (cl-loop for target in targets
-           collect (file-relative-name target)))
 
 (defun helm-ag--construct-do-ag-command (pattern)
   (let ((cmds (split-string helm-ag-base-command nil t)))
@@ -739,7 +748,7 @@ Continue searching the parent directory? "))
       (setq helm-ag--extra-options option))))
 
 (defun helm-ag--do-ag-searched-extensions ()
-  (when (helm-ag--has-c-u-preffix-p)
+  (when (and current-prefix-arg (= (abs (prefix-numeric-value current-prefix-arg)) 4))
     (helm-grep-get-file-extensions helm-do-ag--default-target)))
 
 (defsubst helm-do-ag--is-target-one-directory-p (targets)
