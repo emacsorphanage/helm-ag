@@ -668,7 +668,8 @@ Continue searching the parent directory? "))
       (setq cmds (append cmds (split-string helm-ag--extra-options))))
     (when helm-do-ag--extensions
       (setq cmds (append cmds (helm-ag--construct-extension-options))))
-    (setq cmds (append cmds (list "--" pattern)))
+    (setq cmds (append cmds (list "--"
+                                  (string-join (split-string pattern " ") ".*"))))
     (when helm-ag--buffer-search
       (setq cmds (append cmds (helm-ag--file-visited-buffers))))
     (if helm-ag--default-target
