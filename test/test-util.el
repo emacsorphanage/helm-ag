@@ -97,6 +97,10 @@
           (expected '("ag" "--nocolor" "--nogroup" "--" "somepattern")))
       (should (equal got expected)))
 
+    (let ((got (helm-ag--construct-do-ag-command "pat1 pat2"))
+          (expected '("ag" "--nocolor" "--nogroup" "--" "pat1.*pat2")))
+      (should (equal got expected)))
+
     (let* ((helm-ag-command-option "--ignore-case --all-text")
            (got (helm-ag--construct-do-ag-command "somepattern"))
            (expected '("ag" "--nocolor" "--nogroup" "--ignore-case" "--all-text"
