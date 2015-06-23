@@ -624,10 +624,13 @@ Continue searching the parent directory? "))
         (helm :sources (list source) :buffer "*helm-ag*"
               :keymap helm-ag-map)))))
 
+(defsubst helm-ag--join-patterns (input)
+  (mapconcat 'identity (split-string input) ".*"))
+
 (defun helm-ag--do-ag-propertize ()
   (with-helm-window
     (goto-char (point-min))
-    (let ((regexp (helm-ag--pcre-to-elisp-regexp helm-input)))
+    (let ((regexp (helm-ag--pcre-to-elisp-regexp (helm-ag--join-patterns helm-input))))
       (when (helm-ag--validate-regexp regexp)
         (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
                  while (not (eobp))
@@ -668,7 +671,7 @@ Continue searching the parent directory? "))
       (setq cmds (append cmds (split-string helm-ag--extra-options))))
     (when helm-do-ag--extensions
       (setq cmds (append cmds (helm-ag--construct-extension-options))))
-    (setq cmds (append cmds (list "--" (mapconcat 'identity (split-string pattern " ") ".*"))))
+    (setq cmds (append cmds (list "--" (helm-ag--join-patterns pattern))))
     (when helm-ag--buffer-search
       (setq cmds (append cmds (helm-ag--file-visited-buffers))))
     (if helm-ag--default-target
