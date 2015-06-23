@@ -147,7 +147,13 @@
     (should (string= got "foo{1,2}")))
 
   (let ((got (helm-ag--pcre-to-elisp-regexp "\\\\(foo\\\\|bar\\\\)")))
-    (should (string= got "\\\\(foo\\\\|bar\\\\)"))))
+    (should (string= got "\\\\(foo\\\\|bar\\\\)")))
+
+  (let ((got (helm-ag--pcre-to-elisp-regexp "\\S\\s\\S")))
+    (should (string= got "\\S-\\s-\\S-")))
+
+  (let ((got (helm-ag--pcre-to-elisp-regexp "\\\\S\\\\s")))
+    (should (string= got "\\\\S\\\\s"))))
 
 (ert-deftest emacs-lisp-regexp-to-pcre ()
   "Simple convertion from Emacs lisp regexp to PCRE"

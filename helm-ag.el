@@ -252,6 +252,7 @@ They are specified to `--ignore' options."
   (with-temp-buffer
     (insert pcre)
     (goto-char (point-min))
+    ;; convert (, ), {, }, |
     (while (re-search-forward "[(){}|]" nil t)
       (backward-char 1)
       (cond ((looking-back "\\\\\\\\" nil))
@@ -260,6 +261,11 @@ They are specified to `--ignore' options."
             (t
              (insert "\\")))
       (forward-char 1))
+    ;; convert \s and \S -> \s- \S-
+    (goto-char (point-min))
+    (while (re-search-forward "\\(\\\\s\\)" nil t)
+      (unless (looking-back "\\\\\\\\s" nil)
+        (insert "-")))
     (buffer-string)))
 
 (defun helm-ag--elisp-regexp-to-pcre (regexp)
