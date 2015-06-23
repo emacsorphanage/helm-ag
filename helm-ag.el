@@ -156,7 +156,12 @@ They are specified to `--ignore' options."
           (cl-decf end (- (match-end 0) (match-beginning 0))))
         (replace-match ""))
       (let ((query (buffer-string)))
-        (setq helm-ag--last-query query)
+        (when helm-ag-use-emacs-lisp-regexp
+          (setq query (helm-ag--elisp-regexp-to-pcre query)))
+        (setq helm-ag--last-query query
+              helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
+        (setq helm-ag--valid-regexp-for-emacs
+              (helm-ag--validate-regexp helm-ag--elisp-regexp-query))
         (if (not options)
             (list query)
           (nconc (nreverse options) (list query)))))))
@@ -369,12 +374,7 @@ They are specified to `--ignore' options."
          (query (read-string "Pattern: " (or marked-word searched-word) 'helm-ag--command-history)))
     (when (string= query "")
       (error "Input is empty!!"))
-    (when helm-ag-use-emacs-lisp-regexp
-      (setq query (helm-ag--elisp-regexp-to-pcre query)))
-    (setq helm-ag--last-query query
-          helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
-    (setq helm-ag--valid-regexp-for-emacs
-          (helm-ag--validate-regexp helm-ag--elisp-regexp-query))))
+    (setq helm-ag--last-query query)))
 
 (defsubst helm-ag--clear-variables ()
   (setq helm-ag--last-default-directory nil))
