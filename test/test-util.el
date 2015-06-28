@@ -24,6 +24,17 @@
 (require 'ert)
 (require 'helm-ag)
 
+(ert-deftest parse-query ()
+  "Parsing input which may contains option"
+  (let ((got (helm-ag--parse-query "foo bar")))
+    (should (equal got '("foo bar"))))
+
+  (let ((got (helm-ag--parse-query "--nogroup --column foo bar")))
+    (should (equal got '("--nogroup" "--column" "foo bar"))))
+
+  (let ((got (helm-ag--parse-query "--column helm-ag ()")))
+    (should (equal got '("--column" "helm-ag ()")))))
+
 (ert-deftest construct-command ()
   "helm-ag--construct--command"
   (let ((helm-ag-base-command "ag --nocolor --nogroup")
