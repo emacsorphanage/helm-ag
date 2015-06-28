@@ -150,7 +150,7 @@ They are specified to `--ignore' options."
       (when (re-search-forward "\\s-*--\\s-+" nil t)
         (setq end (match-end 0)))
       (goto-char (point-min))
-      (while (re-search-forward "\\s-*\\(-\\S-+\\)\\s-+" end t)
+      (while (re-search-forward "\\(?:^\\|\\s-+\\)\\(-\\S-+\\)\\s-+" end t)
         (push (match-string-no-properties 1) options)
         (when end
           (cl-decf end (- (match-end 0) (match-beginning 0))))
