@@ -204,11 +204,11 @@ go language and its author provides binaries for some platforms. And ack is writ
 
 NOTE: Please use pt 1.7.7 or higher version if you use the platinum searcher.
 
-Please add following configuration if you use `helm-ag` with the platinum searcher.
+Please add following configuration if you use `helm-ag` with the platinum searcher. I recommend you to set `-e` option which enables regexp searching.
 
 ```lisp
 (custom-set-variables
-  '(helm-ag-base-command "pt --nocolor --nogroup"))
+  '(helm-ag-base-command "pt -e --nocolor --nogroup"))
 ```
 
 or using `ack`
