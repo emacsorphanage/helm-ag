@@ -160,6 +160,10 @@ Save buffers you edit at editing completed.
 Use Emacs Lisp regexp instead of PCRE as pattern.
 NOTE: this is very simple convertion.
 
+#### `helm-ag-use-agignore`(Default: `nil`)
+
+Use `.agignore` file at project root if this variable is non nil.
+
 
 ## Keymap
 
