@@ -1,5 +1,15 @@
 Revision history for helm-ag.el
 
+Revision 0.40 2015/06/30 syohex
+    - Improve for using the platinum searcher
+    - Better converting PCRE to Emacs Lisp Regexp(#133)
+    - Fix case when pattern contains '-'(#132)
+    - Constructing better regexp for helm-do-ag(#130, #135)
+    - Select multiple searched directories feature(#127)
+    - Support '-g' option when ag displays only file names(#126)
+    - Implement helm-do-ag-this-file(#123)
+    - Better English(#120 Kevin Liu)
+
 Revision 0.39 2015/06/10 syohex
     - Fix for Windows(#112, #114)
     - Implement search buffers command with ag(#106)
