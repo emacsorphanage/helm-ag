@@ -101,6 +101,11 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag-use-agignore nil
+  "Use .agignore where is at project root if it exists."
+  :type 'boolean
+  :group 'helm-ag)
+
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
@@ -176,6 +181,13 @@ They are specified to `--ignore' options."
   (cl-loop for target in targets
            collect (file-relative-name target)))
 
+(defun helm-ag--root-agignore ()
+  (let ((root (helm-ag--project-root)))
+    (when root
+      (let ((default-directory root))
+        (when (file-exists-p ".agignore")
+          (expand-file-name (concat default-directory ".agignore")))))))
+
 (defun helm-ag--construct-command (this-file)
   (let* ((commands (split-string helm-ag-base-command nil t))
          (command (car commands))
@@ -183,6 +195,9 @@ They are specified to `--ignore' options."
     (when helm-ag-command-option
       (let ((ag-options (split-string helm-ag-command-option nil t)))
         (setq args (append args ag-options))))
+    (when helm-ag-use-agignore
+      (helm-aif (helm-ag--root-agignore)
+          (setq args (append args (list "-p" it)))))
     (when helm-ag-ignore-patterns
       (setq args (append args (mapcar 'helm-ag--construct-ignore-option
                                       helm-ag-ignore-patterns))))
@@ -696,6 +711,9 @@ Continue searching the parent directory? "))
       (setq cmds (append cmds (split-string helm-ag-command-option nil t))))
     (when helm-ag--extra-options
       (setq cmds (append cmds (split-string helm-ag--extra-options))))
+    (when helm-ag-use-agignore
+      (helm-aif (helm-ag--root-agignore)
+          (setq cmds (append cmds (list "-p" it)))))
     (when helm-do-ag--extensions
       (setq cmds (append cmds (helm-ag--construct-extension-options))))
     (setq cmds (append cmds (list "--" (helm-ag--join-patterns pattern))))
