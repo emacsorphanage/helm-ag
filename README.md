@@ -67,7 +67,7 @@ Call `helm-do-ag` at project root.
 Search buffers by `helm-ag`
 
 
-#### `helm-do-ag-project-root`
+#### `helm-do-ag-buffers`
 
 Search buffers by `helm-do-ag`
 
