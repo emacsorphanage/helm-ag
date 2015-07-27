@@ -18,7 +18,7 @@
 * helm 1.5.6 or higher
 * [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) 0.25 or higher.
 
-I suppose you can use older version ag however if you want to use all features of helm-ag, please upgrade ag version.
+You may be able to use older version ag however I recommend you to use newer ag for using all features of `helm-ag`.
 
 ## Installation
 
