@@ -123,9 +123,26 @@ They are specified to `--ignore' options."
 (defvar helm-ag--ignore-case nil)
 (defvar helm-do-ag--extensions nil)
 
-(defsubst helm-ag--ignore-case-p (cmds)
-  (cl-loop for opt in '("-i" "--ignore-case")
+(defsubst helm-ag--has-anzu--case-fold-search (input)
+  (let ((case-fold-search nil))
+    (not (string-match-p "[A-Z]" input))))
+
+(defsubst helm-ag--has-options (cmds options)
+  (cl-loop for opt in options
            thereis (member opt cmds)))
+
+(defsubst helm-ag--has-case-sensitive-option (cmds)
+  (helm-ag--has-options cmds '("-s" "--case-sensitive")))
+
+(defsubst helm-ag--has-case-ignore-option (cmds)
+  (helm-ag--has-options cmds '("-i" "--ignore-case")))
+
+(defun helm-ag--ignore-case-p (cmds input)
+  (cond ((helm-ag--has-case-sensitive-option cmds) nil)
+        ((helm-ag--has-case-ignore-option cmds) t)
+        (t
+         (let ((case-fold-search nil))
+           (not (string-match-p "[A-Z]" input))))))
 
 (defun helm-ag--save-current-context ()
   (let ((curpoint (with-helm-current-buffer
@@ -226,7 +243,7 @@ They are specified to `--ignore' options."
              (cmds (helm-ag--construct-command (helm-attr 'search-this-file)))
              (coding-system-for-read buf-coding)
              (coding-system-for-write buf-coding))
-        (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmds))
+        (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmds helm-ag--last-query))
         (let ((ret (apply 'process-file (car cmds) nil t nil (cdr cmds))))
           (if (zerop (length (buffer-string)))
               (error "No output: '%s'" helm-ag--last-query)
@@ -735,7 +752,7 @@ Continue searching the parent directory? "))
   (let* ((default-directory (or helm-ag--default-directory default-directory))
          (cmd-args (helm-ag--construct-do-ag-command helm-pattern))
          (proc (apply 'start-file-process "helm-do-ag" nil cmd-args)))
-    (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args))
+    (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern))
     (prog1 proc
       (set-process-sentinel
        proc
