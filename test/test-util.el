@@ -192,4 +192,13 @@
   (let ((got (helm-ag--elisp-regexp-to-pcre "\\\\(foo\\\\|bar\\\\)")))
     (should (string= got "\\\\(foo\\\\|bar\\\\)"))))
 
+(ert-deftest judge-ignore-case ()
+  "Judge ignore case searching or not "
+  (should (helm-ag--ignore-case-p nil "aa"))
+  (should (not (helm-ag--ignore-case-p nil "AA")))
+  (should (helm-ag--ignore-case-p '("-i") "AA"))
+  (should (helm-ag--ignore-case-p '("--ignore-case") "Apple"))
+  (should (not (helm-ag--ignore-case-p '("-s") "apple")))
+  (should (not (helm-ag--ignore-case-p '("--case-sensitive") "apple"))))
+
 ;;; test-util.el ends here
