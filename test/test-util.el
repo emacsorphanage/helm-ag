@@ -104,6 +104,7 @@
 (ert-deftest construct-do-ag-command ()
   "helm-ag--construct-do-ag-command"
   (let ((helm-ag-base-command "ag --nocolor --nogroup"))
+    (helm-ag--do-ag-set-command)
     (let ((got (helm-ag--construct-do-ag-command "somepattern"))
           (expected '("ag" "--nocolor" "--nogroup" "--" "somepattern")))
       (should (equal got expected)))
@@ -122,16 +123,18 @@
            (expected '("ag" "--nocolor" "--nogroup" "--" "pat1.*pat2")))
       (should (equal got expected)))
 
-    (let* ((helm-ag-command-option "--ignore-case --all-text")
-           (got (helm-ag--construct-do-ag-command "somepattern"))
-           (expected '("ag" "--nocolor" "--nogroup" "--ignore-case" "--all-text"
-                       "--" "somepattern")))
-      (should (equal got expected)))))
+    (let ((helm-ag-command-option "--ignore-case --all-text"))
+      (helm-ag--do-ag-set-command)
+      (let* ((got (helm-ag--construct-do-ag-command "somepattern"))
+             (expected '("ag" "--nocolor" "--nogroup" "--ignore-case" "--all-text"
+                         "--" "somepattern")))
+        (should (equal got expected))))))
 
 (ert-deftest construct-do-ag-command-with-extra-option ()
   "helm-ag--construct-do-ag-command with extra options"
   (let ((helm-ag-base-command "ag --nocolor --nogroup")
         (helm-ag--extra-options "-G\\.md$"))
+    (helm-ag--do-ag-set-command)
     (let ((got (helm-ag--construct-do-ag-command "somepattern"))
           (expected '("ag" "--nocolor" "--nogroup" "-G\\.md$" "--" "somepattern")))
       (should (equal got expected)))))
