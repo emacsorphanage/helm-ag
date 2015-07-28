@@ -123,26 +123,17 @@ They are specified to `--ignore' options."
 (defvar helm-ag--ignore-case nil)
 (defvar helm-do-ag--extensions nil)
 
-(defsubst helm-ag--has-anzu--case-fold-search (input)
-  (let ((case-fold-search nil))
-    (not (string-match-p "[A-Z]" input))))
-
-(defsubst helm-ag--has-options (cmds options)
-  (cl-loop for opt in options
-           thereis (member opt cmds)))
-
-(defsubst helm-ag--has-case-sensitive-option (cmds)
-  (helm-ag--has-options cmds '("-s" "--case-sensitive")))
-
-(defsubst helm-ag--has-case-ignore-option (cmds)
-  (helm-ag--has-options cmds '("-i" "--ignore-case")))
-
 (defun helm-ag--ignore-case-p (cmds input)
-  (cond ((helm-ag--has-case-sensitive-option cmds) nil)
-        ((helm-ag--has-case-ignore-option cmds) t)
-        (t
-         (let ((case-fold-search nil))
-           (not (string-match-p "[A-Z]" input))))))
+  (cl-loop for cmd in cmds
+           when (member cmd '("-i" "--ignore-case"))
+           return t
+
+           when (member cmd '("-s" "--case-sensitive"))
+           return nil
+
+           finally
+           return (let ((case-fold-search nil))
+                    (not (string-match-p "[A-Z]" input)))))
 
 (defun helm-ag--save-current-context ()
   (let ((curpoint (with-helm-current-buffer
