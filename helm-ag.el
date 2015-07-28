@@ -743,7 +743,8 @@ Continue searching the parent directory? "))
   (let* ((default-directory (or helm-ag--default-directory default-directory))
          (cmd-args (helm-ag--construct-do-ag-command helm-pattern))
          (proc (apply 'start-file-process "helm-do-ag" nil cmd-args)))
-    (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern))
+    (setq helm-ag--last-query helm-pattern
+          helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern))
     (prog1 proc
       (set-process-sentinel
        proc
