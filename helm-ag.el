@@ -122,6 +122,7 @@ They are specified to `--ignore' options."
 (defvar helm-ag--command-feature nil)
 (defvar helm-ag--ignore-case nil)
 (defvar helm-do-ag--extensions nil)
+(defvar helm-do-ag--commands nil)
 
 (defun helm-ag--ignore-case-p (cmds input)
   (cl-loop for cmd in cmds
@@ -722,22 +723,29 @@ Continue searching the parent directory? "))
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
 
 (defun helm-ag--construct-do-ag-command (pattern)
-  (let ((cmds (split-string helm-ag-base-command nil t)))
+  (append (car helm-do-ag--commands)
+          (list "--" (helm-ag--join-patterns pattern))
+          (cdr helm-do-ag--commands)))
+
+(defun helm-ag--do-ag-set-command ()
+  (let ((cmd-opts (split-string helm-ag-base-command nil t)))
     (when helm-ag-command-option
-      (setq cmds (append cmds (split-string helm-ag-command-option nil t))))
+      (setq cmd-opts (append cmd-opts (split-string helm-ag-command-option nil t))))
     (when helm-ag--extra-options
-      (setq cmds (append cmds (split-string helm-ag--extra-options))))
+      (setq cmd-opts (append cmd-opts (split-string helm-ag--extra-options))))
     (when helm-ag-use-agignore
       (helm-aif (helm-ag--root-agignore)
-          (setq cmds (append cmds (list "-p" it)))))
+          (setq cmd-opts (append cmd-opts (list "-p" it)))))
     (when helm-do-ag--extensions
-      (setq cmds (append cmds (helm-ag--construct-extension-options))))
-    (setq cmds (append cmds (list "--" (helm-ag--join-patterns pattern))))
-    (when helm-ag--buffer-search
-      (setq cmds (append cmds (helm-ag--file-visited-buffers))))
-    (if helm-ag--default-target
-        (append cmds (helm-ag--construct-targets helm-ag--default-target))
-      cmds)))
+      (setq cmd-opts (append cmd-opts (helm-ag--construct-extension-options))))
+    (let (targets)
+      (when helm-ag--buffer-search
+        (setq targets (helm-ag--file-visited-buffers)))
+      (setq helm-do-ag--commands
+            (cons cmd-opts
+                  (if helm-ag--default-target
+                      (append targets (helm-ag--construct-targets helm-ag--default-target))
+                    targets))))))
 
 (defun helm-ag--do-ag-candidate-process ()
   (let* ((default-directory (or helm-ag--default-directory
@@ -867,6 +875,7 @@ Continue searching the parent directory? "))
     (helm-attrset 'search-this-file this-file helm-source-do-ag)
     (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
                   helm-source-do-ag)
+    (helm-ag--do-ag-set-command)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
         (helm-do-ag--helm)
       (let* ((helm-ag--default-directory
