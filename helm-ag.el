@@ -189,11 +189,12 @@ They are specified to `--ignore' options."
 (defsubst helm-ag--file-visited-buffers ()
   (cl-loop for buf in (buffer-list)
            when (buffer-file-name buf)
-           collect (buffer-file-name buf)))
+           collect it))
 
 (defun helm-ag--construct-targets (targets)
-  (cl-loop for target in targets
-           collect (file-relative-name target)))
+  (let ((default-directory helm-ag--default-directory))
+    (cl-loop for target in targets
+             collect (file-relative-name target))))
 
 (defun helm-ag--root-agignore ()
   (let ((root (helm-ag--project-root)))
@@ -839,6 +840,7 @@ Continue searching the parent directory? "))
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
 (defsubst helm-do-ag--helm ()
+  (helm-ag--do-ag-set-command)
   (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
         :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
         :keymap helm-do-ag-map))
@@ -875,7 +877,6 @@ Continue searching the parent directory? "))
     (helm-attrset 'search-this-file this-file helm-source-do-ag)
     (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
                   helm-source-do-ag)
-    (helm-ag--do-ag-set-command)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
         (helm-do-ag--helm)
       (let* ((helm-ag--default-directory
