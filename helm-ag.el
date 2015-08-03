@@ -749,7 +749,8 @@ Continue searching the parent directory? "))
                     targets))))))
 
 (defun helm-ag--do-ag-candidate-process ()
-  (let* ((default-directory (or helm-ag--default-directory
+  (let* ((non-essential nil)
+         (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
                                 default-directory))
          (cmd-args (helm-ag--construct-do-ag-command helm-pattern))
@@ -792,14 +793,13 @@ Continue searching the parent directory? "))
   "Keymap for `helm-do-ag'.")
 
 (defvar helm-source-do-ag
-  `((name . "The Silver Searcher")
-    (candidates-process . helm-ag--do-ag-candidate-process)
-    (persistent-action . helm-ag--persistent-action)
-    (action . ,helm-ag--actions)
-    (no-matchplugin)
-    (nohighlight)
-    (requires-pattern . 3)
-    (candidate-number-limit . 9999)))
+  (helm-build-async-source "The Silver Searcher"
+    :candidates-process 'helm-ag--do-ag-candidate-process
+    :persistent-action  'helm-ag--persistent-action
+    :action helm-ag--actions
+    :nohighlight t
+    :requires-pattern 3
+    :candidate-number-limit 9999))
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
@@ -839,7 +839,7 @@ Continue searching the parent directory? "))
 (defsubst helm-do-ag--is-target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
-(defsubst helm-do-ag--helm ()
+(defun helm-do-ag--helm ()
   (helm-ag--do-ag-set-command)
   (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
         :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
