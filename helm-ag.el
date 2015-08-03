@@ -749,7 +749,8 @@ Continue searching the parent directory? "))
                     targets))))))
 
 (defun helm-ag--do-ag-candidate-process ()
-  (let* ((default-directory (or helm-ag--default-directory
+  (let* ((non-essential nil)
+         (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
                                 default-directory))
          (cmd-args (helm-ag--construct-do-ag-command helm-pattern))
