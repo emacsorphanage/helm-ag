@@ -839,7 +839,7 @@ Continue searching the parent directory? "))
 (defsubst helm-do-ag--is-target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
-(defsubst helm-do-ag--helm ()
+(defun helm-do-ag--helm ()
   (helm-ag--do-ag-set-command)
   (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
         :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
