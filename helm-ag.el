@@ -792,14 +792,13 @@ Continue searching the parent directory? "))
   "Keymap for `helm-do-ag'.")
 
 (defvar helm-source-do-ag
-  `((name . "The Silver Searcher")
-    (candidates-process . helm-ag--do-ag-candidate-process)
-    (persistent-action . helm-ag--persistent-action)
-    (action . ,helm-ag--actions)
-    (no-matchplugin)
-    (nohighlight)
-    (requires-pattern . 3)
-    (candidate-number-limit . 9999)))
+  (helm-build-async-source "The Silver Searcher"
+    :candidates-process 'helm-ag--do-ag-candidate-process
+    :persistent-action  'helm-ag--persistent-action
+    :action helm-ag--actions
+    :nohighlight t
+    :requires-pattern 3
+    :candidate-number-limit 9999))
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
