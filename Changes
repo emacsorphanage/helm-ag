@@ -1,5 +1,13 @@
 Revision history for helm-ag.el
 
+Revision 0.41 2015.08/04 syohex
+    - Fix for Windows(#151)
+    - Fix for tramp(#149)
+    - Improve for helm-resume(#146, #148)
+    - Fix current-prefix-arg handling for helm-projectile-ag(#145)
+    - Better highlighting(#140, #141, #142)
+    - Fix document(#138 Joe Hillenbrand)
+
 Revision 0.40 2015/06/30 syohex
     - Improve for using the platinum searcher
     - Better converting PCRE to Emacs Lisp Regexp(#133)
