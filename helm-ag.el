@@ -45,6 +45,9 @@
 (defsubst helm-ag--windows-p ()
   (memq system-type '(ms-dos windows-nt)))
 
+(defsubst helm-ag--has-drive-letter-p (path)
+  (string-match-p "\\`[a-zA-Z]:" path))
+
 (defcustom helm-ag-base-command
   (if (helm-ag--windows-p)
       "ag --nocolor --nogroup --line-numbers"
@@ -252,12 +255,20 @@ They are specified to `--ignore' options."
       (unless (file-directory-p target)
         target))))
 
+(defun helm-ag--extract-file-and-line (cand)
+  (if (and (helm-ag--windows-p) (helm-ag--has-drive-letter-p cand))
+      (when (string-match "\\(\\`[a-zA-Z]:[^:]+\\):\\([^:]+\\)" cand)
+        (cons (match-string-no-properties 1 cand)
+              (match-string-no-properties 2 cand)))
+    (let ((elems (split-string cand ":")))
+      (cons (cl-first elems) (cl-second elems)))))
+
 (defun helm-ag--find-file-action (candidate find-func this-file &optional persistent)
-  (let* ((elems (split-string candidate ":"))
-         (filename (or this-file (cl-first elems)))
+  (let* ((file-line (helm-ag--extract-file-and-line candidate))
+         (filename (or this-file (car file-line)))
          (line (if this-file
-                   (cl-first elems)
-                 (cl-second elems)))
+                   (car file-line)
+                 (cdr file-line)))
          (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
                                 default-directory)))
