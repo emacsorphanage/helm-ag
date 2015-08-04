@@ -847,14 +847,21 @@ Continue searching the parent directory? "))
   (when (and current-prefix-arg (= (abs (prefix-numeric-value current-prefix-arg)) 4))
     (helm-grep-get-file-extensions helm-ag--default-target)))
 
-(defsubst helm-do-ag--is-target-one-directory-p (targets)
+(defsubst helm-do-ag--target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
 (defun helm-do-ag--helm ()
-  (helm-ag--do-ag-set-command)
-  (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-        :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
-        :keymap helm-do-ag-map))
+  (let ((search-dir (if (not (helm-ag--windows-p))
+                        helm-ag--default-directory
+                      (if (helm-do-ag--target-one-directory-p helm-ag--default-target)
+                          (car helm-ag--default-target)
+                        helm-ag--default-directory))))
+    (helm-attrset 'name (helm-ag--helm-header search-dir)
+                  helm-source-do-ag)
+    (helm-ag--do-ag-set-command)
+    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+          :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
+          :keymap helm-do-ag-map)))
 
 ;;;###autoload
 (defun helm-do-ag-this-file ()
@@ -880,14 +887,12 @@ Continue searching the parent directory? "))
                                             :marked-candidates t :must-match t)))))
          (helm-do-ag--extensions (when (and helm-ag--default-target (not basedir))
                                    (helm-ag--do-ag-searched-extensions)))
-         (one-directory-p (helm-do-ag--is-target-one-directory-p
+         (one-directory-p (helm-do-ag--target-one-directory-p
                            helm-ag--default-target)))
     (helm-ag--set-do-ag-option)
     (helm-ag--set-command-feature)
     (helm-ag--save-current-context)
     (helm-attrset 'search-this-file this-file helm-source-do-ag)
-    (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
-                  helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
         (helm-do-ag--helm)
       (let* ((helm-ag--default-directory
