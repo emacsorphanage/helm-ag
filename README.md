@@ -135,12 +135,6 @@ You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc
 
 Enable fuzzy matching.
 
-#### `helm-ag-source-type`(Default: `'one-line`)
-
-If this value is `'file-line`, `helm-ag` displays candidate as helm `file-line` style.
-
-![helm-ag-file-line](image/helm-ag-file-line.png)
-
 #### `helm-ag-use-grep-ignore-list`(Default: `nil`)
 
 Use `grep-find-ignored-files` and `grep-find-ignored-directories` as ignore pattern.
@@ -163,6 +157,10 @@ NOTE: this is very simple convertion.
 #### `helm-ag-use-agignore`(Default: `nil`)
 
 Use `.agignore` file at project root if this variable is non nil.
+
+#### NOTE
+
+`helm` removes `file-line` type feature from 1.6.9. So `helm-ag-source-type` is no longer available.
 
 
 ## Keymap
