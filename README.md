@@ -221,16 +221,6 @@ or using `ack`
 ```
 
 
-### For [projectile](https://github.com/bbatsov/projectile/) users
-
-You can use `helm-ag` with `projectile` by following command.
-
-```lisp
-(defun projectile-helm-ag ()
-  (interactive)
-  (helm-ag (projectile-project-root)))
-```
-
 ## Alternatives
 
 [ag.el](https://github.com/Wilfred/ag.el) provides `M-x grep` interface.
