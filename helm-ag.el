@@ -381,7 +381,8 @@ They are specified to `--ignore' options."
     :real-to-display 'helm-ag--candidate-transformer
     :persistent-action 'helm-ag--persistent-action
     :fuzzy-match helm-ag-fuzzy-match
-    :action helm-ag--actions))
+    :action helm-ag--actions
+    :candidate-number-limit 9999))
 
 (defvar helm-ag-source-grep
   '((name . "The Silver Searcher")
