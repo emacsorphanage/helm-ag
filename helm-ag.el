@@ -5,7 +5,7 @@
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-helm-ag
 ;; Version: 0.41
-;; Package-Requires: ((helm "1.5.6") (cl-lib "0.5"))
+;; Package-Requires: ((helm "1.6.9") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -65,12 +65,6 @@
   "Insert thing at point as search pattern.
    You can set value same as `thing-at-point'"
   :type 'symbol
-  :group 'helm-ag)
-
-(defcustom helm-ag-source-type 'one-line
-  "Style of candidates"
-  :type '(choice (const :tag "Show file:line number:content in one line" one-line)
-                 (const :tag "Helm file-line style" file-line))
   :group 'helm-ag)
 
 (defcustom helm-ag-ignore-patterns nil
@@ -384,13 +378,6 @@ They are specified to `--ignore' options."
     :action helm-ag--actions
     :candidate-number-limit 9999))
 
-(defvar helm-ag-source-grep
-  '((name . "The Silver Searcher")
-    (init . helm-ag--init)
-    (candidates-in-buffer)
-    (type . file-line)
-    (candidate-number-limit . 9999)))
-
 ;;;###autoload
 (defun helm-ag-pop-stack ()
   (interactive)
@@ -409,11 +396,6 @@ They are specified to `--ignore' options."
 (defun helm-ag-clear-stack ()
   (interactive)
   (setq helm-ag--context-stack nil))
-
-(defun helm-ag--select-source ()
-  (if (eq helm-ag-source-type 'file-line)
-      'helm-ag-source-grep
-    'helm-ag-source))
 
 (defsubst helm-ag--marked-input ()
   (when (use-region-p)
@@ -436,10 +418,9 @@ They are specified to `--ignore' options."
   (helm-ag--clear-variables)
   (let ((filename (file-name-nondirectory (buffer-file-name))))
     (helm-ag--query)
-    (let ((source (helm-ag--select-source)))
-      (helm-attrset 'search-this-file (buffer-file-name) (symbol-value source))
-      (helm-attrset 'name (format "Search at %s" filename) (symbol-value source))
-      (helm :sources (list source) :buffer "*helm-ag*"))))
+    (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
+    (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
+    (helm :sources '(helm-ag-source source) :buffer "*helm-ag*")))
 
 (defun helm-ag--get-default-directory ()
   (let ((prefix-val (and current-prefix-arg (abs (prefix-numeric-value current-prefix-arg)))))
@@ -645,13 +626,10 @@ Continue searching the parent directory? "))
       (let ((parent (file-name-directory (directory-file-name default-directory))))
         (helm-run-after-quit
          (lambda ()
-           (let ((default-directory parent)
-                 (source (helm-ag--select-source)))
+           (let ((default-directory parent))
              (setq helm-ag--last-default-directory default-directory)
-             (helm-attrset 'name (helm-ag--helm-header default-directory)
-                           (symbol-value source))
-             (helm :sources (list source) :buffer "*helm-ag*"
-                   :keymap helm-ag-map)))))
+             (helm-attrset 'name (helm-ag--helm-header default-directory) 'helm-ag-source)
+             (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))))
     (message nil)))
 
 ;;;###autoload
@@ -667,13 +645,9 @@ Continue searching the parent directory? "))
     (let ((helm-ag--default-directory (or basedir dir))
           (helm-ag--default-target targets))
       (helm-ag--query)
-      (let ((source (helm-ag--select-source)))
-        (helm-attrset 'search-this-file nil
-                      (symbol-value source))
-        (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
-                      (symbol-value source))
-        (helm :sources (list source) :buffer "*helm-ag*"
-              :keymap helm-ag-map)))))
+      (helm-attrset 'search-this-file nil helm-ag-source)
+      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
+      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))))
 
 (defun helm-ag--join-patterns (input)
   (let ((patterns (split-string input)))
