@@ -158,6 +158,10 @@ NOTE: this is very simple convertion.
 
 Use `.agignore` file at project root if this variable is non nil.
 
+#### `helm-ag-use-temp-buffer`(Default: `nil`)
+
+Use temporary buffer and not open file for persistent action.
+
 #### NOTE
 
 `helm` removes `file-line` type feature from 1.6.9. So `helm-ag-source-type` is no longer available.
