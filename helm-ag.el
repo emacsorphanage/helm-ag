@@ -103,6 +103,11 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag-use-temp-buffer nil
+  "Use temporary buffer for persistent action."
+  :type 'boolean
+  :group 'helm-ag)
+
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
@@ -273,9 +278,21 @@ They are specified to `--ignore' options."
     (when line
       (forward-line (1- (string-to-number line))))))
 
+(defun helm-ag--open-file-with-temp-buffer (filename)
+  (switch-to-buffer (get-buffer-create " *helm-ag persistent*"))
+  (fundamental-mode)
+  (erase-buffer)
+  (insert-file-contents filename)
+  (let ((buffer-file-name filename))
+    (set-auto-mode)
+    (font-lock-ensure)))
+
 (defun helm-ag--persistent-action (candidate)
-  (helm-ag--find-file-action candidate 'find-file (helm-attr 'search-this-file) t)
-  (helm-highlight-current-line))
+  (let ((find-func (if helm-ag-use-temp-buffer
+                       'helm-ag--open-file-with-temp-buffer
+                     'find-file)))
+    (helm-ag--find-file-action candidate find-func (helm-attr 'search-this-file) t)
+    (helm-highlight-current-line)))
 
 (defun helm-ag--validate-regexp (regexp)
   (condition-case nil
