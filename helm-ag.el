@@ -797,6 +797,7 @@ Continue searching the parent directory? "))
 
 (defvar helm-source-do-ag
   (helm-build-async-source "The Silver Searcher"
+    :init 'helm-ag--do-ag-set-command
     :candidates-process 'helm-ag--do-ag-candidate-process
     :persistent-action  'helm-ag--persistent-action
     :action helm-ag--actions
@@ -850,7 +851,6 @@ Continue searching the parent directory? "))
                         helm-ag--default-directory))))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
-    (helm-ag--do-ag-set-command)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
           :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
           :keymap helm-do-ag-map)))
