@@ -204,4 +204,13 @@
   (should (not (helm-ag--ignore-case-p '("-s") "apple")))
   (should (not (helm-ag--ignore-case-p '("--case-sensitive") "apple"))))
 
+(ert-deftest split-string ()
+  "Own split-string function for handling escaped space"
+  (should (equal (helm-ag--split-string "aa") '("aa")))
+  (should (equal (helm-ag--split-string "  aa") '("aa")))
+  (should (equal (helm-ag--split-string "aa bb cc") '("aa" "bb" "cc")))
+  (should (equal (helm-ag--split-string "aa       bb         cc") '("aa" "bb" "cc")))
+  (should (equal (helm-ag--split-string "aa\\ bb cc") '("aa bb" "cc")))
+  (should (equal (helm-ag--split-string "aa\\\\ bb cc") '("aa\\\\" "bb" "cc"))))
+
 ;;; test-util.el ends here
