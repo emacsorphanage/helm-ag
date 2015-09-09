@@ -1,12 +1,16 @@
 Revision history for helm-ag.el
 
-Revision 0.42 2015.08/19 syohex
+Revision 0.43 2015/09/10 syohex
+    - Improve for using helm-ag as source(#160)
+    - Improve handling pattern contains space(#163)
+
+Revision 0.42 2015/08/19 syohex
     - Support not opening file in persistent action(#156)
     - Remove "'file-line" type feature(#154)
       helm removed it and we can use it
     - set candidates limit. I mistook to remove it. (#153)
 
-Revision 0.41 2015.08/04 syohex
+Revision 0.41 2015/08/04 syohex
     - Fix for Windows(#151)
     - Fix for tramp(#149)
     - Improve for helm-resume(#146, #148)
