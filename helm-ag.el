@@ -898,7 +898,7 @@ Continue searching the parent directory? "))
                                             "Search in file(s): "
                                             :default default-directory
                                             :marked-candidates t :must-match t)))))
-         (helm-do-ag--extensions (when (and helm-ag--default-target (not basedir))
+         (helm-do-ag--extensions (when helm-ag--default-target
                                    (helm-ag--do-ag-searched-extensions)))
          (one-directory-p (helm-do-ag--target-one-directory-p
                            helm-ag--default-target)))
