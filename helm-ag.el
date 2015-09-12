@@ -751,7 +751,7 @@ Continue searching the parent directory? "))
   (if helm-do-ag--allow-filename-filter
       (let (files patterns)
         (mapc (lambda (item)
-                (if (string-match-p "\\`\!" item)
+                (if (string-match-p "\\`\!." item)
                     (push (substring item 1) files)
                   (push item patterns)))
               (split-string pattern " "))
