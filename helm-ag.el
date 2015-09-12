@@ -125,6 +125,7 @@ They are specified to `--ignore' options."
 (defvar helm-ag--ignore-case nil)
 (defvar helm-do-ag--extensions nil)
 (defvar helm-do-ag--commands nil)
+(defvar helm-do-ag--allow-filename-filter nil)
 
 (defun helm-ag--ignore-case-p (cmds input)
   (cl-loop for cmd in cmds
@@ -746,10 +747,28 @@ Continue searching the parent directory? "))
                          "\\*" ""
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
 
-(defun helm-ag--construct-do-ag-command (pattern)
-  (append (car helm-do-ag--commands)
-          (list "--" (helm-ag--join-patterns pattern))
-          (cdr helm-do-ag--commands)))
+(defun helm-ag--parse-helm-do-ag-pattern (pattern)
+  (if helm-do-ag--allow-filename-filter
+      (let (files patterns)
+        (mapc (lambda (item)
+                (if (string-match-p "\\`\!" item)
+                    (push (substring item 1) files)
+                  (push item patterns)))
+              (split-string pattern " "))
+        (cons
+         (when files
+           (concat "-G" (mapconcat #'identity files "|")))
+         (mapconcat #'identity patterns " ")))
+    (cons nil pattern)))
+
+(defun helm-ag--construct-do-ag-command (input)
+  (let* ((files-pattern (helm-ag--parse-helm-do-ag-pattern input))
+         (files (car files-pattern))
+         (pattern (cdr files-pattern)))
+    (append (car helm-do-ag--commands)
+            (when files (list files))
+            (list "--" (helm-ag--join-patterns pattern))
+            (cdr helm-do-ag--commands))))
 
 (defun helm-ag--do-ag-set-command ()
   (let ((cmd-opts (split-string helm-ag-base-command nil t)))
