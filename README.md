@@ -201,7 +201,7 @@ current line indicates.
  '(helm-ag-insert-at-point 'symbol))
 ```
 
-## helm-ag.el with [the platinum searcher](https://github.com/monochromegane/the_platinum_searcher) or [ack](http://beyondgrep.com/)
+## helm-ag.el with [the platinum searcher](https://github.com/monochromegane/the_platinum_searcher) or [ack](http://beyondgrep.com/) or [sift](https://github.com/svent/sift)
 
 `helm-ag.el` can work the platinum searcher or ack instead of the silver searcher.
 It is difficult to install the silver search on some platform such as Windows,
@@ -214,14 +214,21 @@ Please add following configuration if you use `helm-ag` with the platinum search
 
 ```lisp
 (custom-set-variables
-  '(helm-ag-base-command "pt -e --nocolor --nogroup"))
+ '(helm-ag-base-command "pt -e --nocolor --nogroup"))
 ```
 
 or using `ack`
 
 ```lisp
 (custom-set-variables
-  '(helm-ag-base-command "ack --nocolor --nogroup"))
+ '(helm-ag-base-command "ack --nocolor --nogroup"))
+```
+
+or using `shift`
+
+```lisp
+(custom-set-variables
+ '(helm-ag-base-command "sift --no-color -n"))
 ```
 
 
