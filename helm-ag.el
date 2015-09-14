@@ -752,10 +752,10 @@ Continue searching the parent directory? "))
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
 
 (defun helm-ag--construct-do-ag-command (pattern)
-  (let* ((opt-query (helm-ag--parse-options-and-query pattern)))
+  (let ((opt-query (helm-ag--parse-options-and-query pattern)))
     (unless (string= (cdr opt-query) "")
       (append (car helm-do-ag--commands)
-              (car opt-query)
+              (cl-remove-if (lambda (x) (string= "--" x)) (car opt-query))
               (list "--" (helm-ag--join-patterns (cdr opt-query)))
               (cdr helm-do-ag--commands)))))
 
