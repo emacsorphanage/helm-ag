@@ -164,7 +164,7 @@ They are specified to `--ignore' options."
                                  grep-find-ignored-directories)
            collect (helm-ag--construct-ignore-option ignore)))
 
-(defun helm-ag--parse-query (input)
+(defun helm-ag--parse-options-and-query (input)
   (with-temp-buffer
     (insert input)
     (let (end options)
@@ -172,21 +172,26 @@ They are specified to `--ignore' options."
       (when (re-search-forward "\\s-*--\\s-+" nil t)
         (setq end (match-end 0)))
       (goto-char (point-min))
-      (while (re-search-forward "\\(?:^\\|\\s-+\\)\\(-\\S-+\\)\\s-+" end t)
+      (while (re-search-forward "\\(?:^\\|\\s-+\\)\\(-\\S-+\\)\\(?:\\s-+\\|$\\)" end t)
         (push (match-string-no-properties 1) options)
         (when end
           (cl-decf end (- (match-end 0) (match-beginning 0))))
         (replace-match ""))
-      (let ((query (buffer-string)))
-        (when helm-ag-use-emacs-lisp-regexp
-          (setq query (helm-ag--elisp-regexp-to-pcre query)))
-        (setq helm-ag--last-query query
-              helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
-        (setq helm-ag--valid-regexp-for-emacs
-              (helm-ag--validate-regexp helm-ag--elisp-regexp-query))
-        (if (not options)
-            (list query)
-          (nconc (nreverse options) (list query)))))))
+      (cons options (buffer-string)))))
+
+(defun helm-ag--parse-query (input)
+  (let* ((parsed (helm-ag--parse-options-and-query input))
+         (options (car parsed))
+         (query (cdr parsed)))
+    (when helm-ag-use-emacs-lisp-regexp
+      (setq query (helm-ag--elisp-regexp-to-pcre query)))
+    (setq helm-ag--last-query query
+          helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
+    (setq helm-ag--valid-regexp-for-emacs
+          (helm-ag--validate-regexp helm-ag--elisp-regexp-query))
+    (if (not options)
+        (list query)
+      (nconc (nreverse options) (list query)))))
 
 (defsubst helm-ag--file-visited-buffers ()
   (cl-loop for buf in (buffer-list)
@@ -747,9 +752,12 @@ Continue searching the parent directory? "))
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
 
 (defun helm-ag--construct-do-ag-command (pattern)
-  (append (car helm-do-ag--commands)
-          (list "--" (helm-ag--join-patterns pattern))
-          (cdr helm-do-ag--commands)))
+  (let ((opt-query (helm-ag--parse-options-and-query pattern)))
+    (unless (string= (cdr opt-query) "")
+      (append (car helm-do-ag--commands)
+              (cl-remove-if (lambda (x) (string= "--" x)) (car opt-query))
+              (list "--" (helm-ag--join-patterns (cdr opt-query)))
+              (cdr helm-do-ag--commands)))))
 
 (defun helm-ag--do-ag-set-command ()
   (let ((cmd-opts (split-string helm-ag-base-command nil t)))
@@ -776,19 +784,20 @@ Continue searching the parent directory? "))
          (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
                                 default-directory))
-         (cmd-args (helm-ag--construct-do-ag-command helm-pattern))
-         (proc (apply 'start-file-process "helm-do-ag" nil cmd-args)))
-    (setq helm-ag--last-query helm-pattern
-          helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
-          helm-ag--last-default-directory default-directory)
-    (prog1 proc
-      (set-process-sentinel
-       proc
-       (lambda (process event)
-         (helm-process-deferred-sentinel-hook
-          process event (helm-default-directory))
-         (when (string= event "finished\n")
-           (helm-ag--do-ag-propertize)))))))
+         (cmd-args (helm-ag--construct-do-ag-command helm-pattern)))
+    (when cmd-args
+      (let ((proc (apply 'start-file-process "helm-do-ag" nil cmd-args)))
+        (setq helm-ag--last-query helm-pattern
+              helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
+              helm-ag--last-default-directory default-directory)
+        (prog1 proc
+          (set-process-sentinel
+           proc
+           (lambda (process event)
+             (helm-process-deferred-sentinel-hook
+              process event (helm-default-directory))
+             (when (string= event "finished\n")
+               (helm-ag--do-ag-propertize)))))))))
 
 (defconst helm-do-ag--help-message
   "\n* Helm Do Ag\n
