@@ -899,7 +899,10 @@ Continue searching the parent directory? "))
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
   (let* ((helm-ag--default-directory (or basedir default-directory))
-         (helm-ag--default-target (cond (this-file (list this-file))
+         (helm-ag--default-target (cond (this-file (cond ((listp this-file)
+                                                          this-file)
+                                                         (t
+                                                          (list this-file))))
                                         ((and (helm-ag--windows-p) basedir) (list basedir))
                                         (t
                                          (when (and (not basedir) (not helm-ag--buffer-search))
