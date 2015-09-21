@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.45 2015/09/20 syohex
+    - Fix helm-ag-this-file issue(#170)
+    - Improve helm-do-ag arguments(#169)
+
 Revision 0.44 2015/09/19 syohex
     - Fix prefix argument issue of helm-do-ag(#165 Thanks syl20bnr)
     - Accept command line option in helm-do-ag(#167)
