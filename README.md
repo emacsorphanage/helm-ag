@@ -191,6 +191,14 @@ Use temporary buffer and not open file for persistent action.
 You can use `next-error` and `previous-error` for seeing file content which
 current line indicates.
 
+### Saved buffer keymap
+
+| Key   | Action                                      |
+|:------|:--------------------------------------------|
+| `RET` | Jump to current line posion                 |
+| `C-o` | Jump to current line posion in other window |
+| `g`   | Update result                               |
+
 
 ## Sample Configuration
 
