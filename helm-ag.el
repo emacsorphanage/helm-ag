@@ -50,7 +50,7 @@
 
 (defcustom helm-ag-base-command
   (if (helm-ag--windows-p)
-      "ag --nocolor --nogroup --line-numbers"
+      "ag --vimgrep"
     "ag --nocolor --nogroup")
   "Base command of `ag'"
   :type 'string
