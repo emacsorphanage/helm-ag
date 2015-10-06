@@ -187,6 +187,8 @@ Use temporary buffer and not open file for persistent action.
 |:----------|:-----------------|
 | `C-c C-c` | Commit changes   |
 | `C-c C-k` | Abort            |
+| `C-c C-d` | Mark delete line |
+| `C-c C-u` | Unmark           |
 
 You can use `next-error` and `previous-error` for seeing file content which
 current line indicates.

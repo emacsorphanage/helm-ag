@@ -108,6 +108,11 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defface helm-ag-edit-deleted-line
+  '((t (:inherit font-lock-comment-face :strike-through t)))
+  "Face of deleted line in edit mode."
+  :group 'helm-ag)
+
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
@@ -475,20 +480,29 @@ They are specified to `--ignore' options."
   (interactive)
   (goto-char (point-min))
   (let ((read-only-files 0)
-        (default-directory helm-ag--default-directory))
+        (default-directory helm-ag--default-directory)
+        (line-deletes (make-hash-table :test #'equal)))
     (while (re-search-forward "^\\([^:]+\\):\\([1-9][0-9]*\\):\\(.*\\)$" nil t)
-      (let ((file (match-string-no-properties 1))
-            (line (string-to-number (match-string-no-properties 2)))
-            (body (match-string-no-properties 3)))
+      (let* ((file (match-string-no-properties 1))
+             (line (string-to-number (match-string-no-properties 2)))
+             (body (match-string-no-properties 3))
+             (ovs (overlays-at (line-beginning-position))))
         (with-current-buffer (find-file-noselect file)
           (if buffer-read-only
               (cl-incf read-only-files)
             (goto-char (point-min))
-            (forward-line (1- line))
-            (delete-region (line-beginning-position) (line-end-position))
-            (insert body)
-            (when helm-ag-edit-save
-              (save-buffer))))))
+            (let ((deleted-lines (gethash file line-deletes 0))
+                  (deleted (and ovs (overlay-get (car ovs) 'helm-ag-deleted))))
+              (forward-line (- line 1 deleted-lines))
+              (delete-region (line-beginning-position) (line-end-position))
+              (if (not deleted)
+                  (insert body)
+                (let ((beg (point)))
+                  (forward-line 1)
+                  (delete-region beg (point))
+                  (puthash file (1+ deleted-lines) line-deletes)))
+              (when helm-ag-edit-save
+                (save-buffer)))))))
     (select-window helm-ag--original-window)
     (helm-ag--kill-edit-buffer)
     (if (not (zerop read-only-files))
@@ -502,10 +516,26 @@ They are specified to `--ignore' options."
     (helm-ag--kill-edit-buffer)
     (message "Abort edit")))
 
+(defun helm-ag--mark-line-deleted ()
+  (interactive)
+  (let* ((beg (line-beginning-position))
+         (end (line-end-position))
+         (ov (make-overlay beg end)))
+    (overlay-put ov 'face 'helm-ag-edit-deleted-line)
+    (overlay-put ov 'helm-ag-deleted t)))
+
+(defun helm-ag--unmark ()
+  (interactive)
+  (dolist (ov (overlays-in (line-beginning-position) (line-end-position)))
+    (when (overlay-get ov 'helm-ag-deleted)
+      (delete-overlay ov))))
+
 (defvar helm-ag-edit-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") 'helm-ag--edit-commit)
     (define-key map (kbd "C-c C-k") 'helm-ag--edit-abort)
+    (define-key map (kbd "C-c C-d") 'helm-ag--mark-line-deleted)
+    (define-key map (kbd "C-c C-u") 'helm-ag--unmark)
     map))
 
 (defun helm-ag--edit (_candidate)
