@@ -1,6 +1,6 @@
 # helm-ag.el
 
- [![travis badge][travis-badge]][travis-link] [![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
+[![travis badge][travis-badge]][travis-link] [![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
 
 
 ## Introduction
@@ -43,7 +43,7 @@ Same as `helm-ag` except to search only current file
 #### `helm-do-ag`
 
 Search with `ag` like `helm-do-grep`. You can specify extra command line option
-of `ag` with minus prefix(`C--`).
+of `ag` with minus prefix(`M--` or `C--`).
 
 ![helm-do-ag](image/helm-do-ag.gif)
 
@@ -120,7 +120,7 @@ Search pattern is `--count`.
 
 #### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
 
-Base command of `ag`. Windows users should `--vimgrep` option for using `helm-do-ag`.
+Base command of `ag`. Windows users should set `--vimgrep` option for using `helm-do-ag`.
 
 #### `helm-ag-command-option`(Default: `nil`)
 
