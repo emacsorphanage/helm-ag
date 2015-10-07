@@ -120,7 +120,7 @@ Search pattern is `--count`.
 
 #### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
 
-Base command of `ag`.
+Base command of `ag`. Windows users should `--vimgrep` option for using `helm-do-ag`.
 
 #### `helm-ag-command-option`(Default: `nil`)
 
