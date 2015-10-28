@@ -293,7 +293,7 @@ They are specified to `--ignore' options."
   (insert-file-contents filename)
   (let ((buffer-file-name filename))
     (set-auto-mode)
-    (font-lock-fontify-buffer)))
+    (font-lock-fontify-region (point-min) (point-max))))
 
 (defun helm-ag--persistent-action (candidate)
   (let ((find-func (if helm-ag-use-temp-buffer
