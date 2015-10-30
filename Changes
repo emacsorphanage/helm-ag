@@ -1,5 +1,10 @@
 Revision history for helm-ag.el
 
+Revision 0.47 2015/10/30 syohex
+    - Fix byte-compile warning(#183)
+    - Fix for issue when path contains ':'(#182)
+    - Implement deleting line feature(#178)
+
 Revision 0.46 2015/10/05 syohex
     - Fix ag option for Windows platform(#176)
     - Fix for older Emacs(#177)
