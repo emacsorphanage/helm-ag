@@ -22,7 +22,7 @@ You may be able to use older version ag however I recommend you to use newer ag 
 
 ## Installation
 
-`helm-ag` is available on [MELPA](http://melpa.org/) and [MELPA stable](http://stable.melpa.org/)
+`helm-ag` is available on [MELPA](https://melpa.org/) and [MELPA stable](https://stable.melpa.org/)
 
 You can install `helm-ag` with the following command.
 
