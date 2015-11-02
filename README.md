@@ -152,7 +152,7 @@ Save buffers you edit at editing completed.
 #### `helm-ag-use-emacs-lisp-regexp`(Default: `nil`)
 
 Use Emacs Lisp regexp instead of PCRE as pattern.
-NOTE: this is very simple convertion.
+NOTE: this is very simple conversion.
 
 #### `helm-ag-use-agignore`(Default: `nil`)
 
