@@ -97,13 +97,15 @@ Pattern: -Gmd$ search_pattern
 Command line options is `-Gmd$` and search pattern is `search_pattern`.
 `helm-ag` treats words which starts with `-` as command line option.
 
-#### Pattern contains space
+#### Pattern contains space(`helm-do-ag`)
 
 ```
-Pattern: foo bar baz
+Pattern: foo\ bar\ baz
 ```
 
-Search pattern is `foo bar baz`. You need not to wrap pattern with quotes.
+Search pattern is `foo\ bar\ baz`. You need to escape spaces with backslash.
+
+In `helm-ag`, you need not to escape spaces.
 
 
 #### Pattern starts with `-`
