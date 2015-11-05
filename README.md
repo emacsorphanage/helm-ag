@@ -243,6 +243,13 @@ or using `shift`
  '(helm-ag-base-command "sift --no-color -n"))
 ```
 
+#### NOTE: For pt users
+
+Case using `ag` or `ack`, `helm-do-ag` convert pattern from `foo bar` to `"(?=.*" foo ".*)(?=.*" bar ".*)"`
+which patterns matches line which contains both `foo` and `bar`. But case using `pt`, `helm-do-ag`
+does not convert because Golang `regexp`(`pt` is written in Golang) does not support look-a-head pattern.
+So using `pt` behaviors is different from `ag` when you use such pattern. I suppose there is same problem
+if you use search programs which are written in Golang.
 
 ## Alternatives
 
