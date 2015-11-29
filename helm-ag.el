@@ -734,14 +734,22 @@ Continue searching the parent directory? "))
       (push (buffer-substring-no-properties prev (point)) patterns)
       (reverse (cl-loop for p in patterns unless (string= p "") collect p)))))
 
+(defsubst helm-ag--convert-invert-pattern (pattern)
+  (if (and (not helm-ag--command-feature)
+           (string-prefix-p "!" pattern) (> (length pattern) 1))
+      (concat "^(?!.*" (substring pattern 1) ").+$")
+    pattern))
+
 (defun helm-ag--join-patterns (input)
   (let ((patterns (helm-ag--split-string input)))
     (if (= (length patterns) 1)
-        (car patterns)
+        (helm-ag--convert-invert-pattern (car patterns))
       (cl-case helm-ag--command-feature
         (pt input)
         (pt-regexp (mapconcat 'identity patterns ".*"))
-        (otherwise (mapconcat (lambda (s) (concat "(?=.*" s ".*)")) patterns ""))))))
+        (otherwise (cl-loop for s in patterns
+                            for p = (helm-ag--convert-invert-pattern s)
+                            concat (concat "(?=.*" p ".*)")))))))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
   (if helm-ag--command-feature
