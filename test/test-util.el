@@ -213,4 +213,23 @@
   (should (equal (helm-ag--split-string "aa\\ bb cc") '("aa bb" "cc")))
   (should (equal (helm-ag--split-string "aa\\\\ bb cc") '("aa\\\\" "bb" "cc"))))
 
+(ert-deftest join-pattern ()
+  "Convert pattern like normal helm command in helm-do-ag"
+  (let ((helm-ag--command-feature 'pt))
+    (should (equal (helm-ag--join-patterns "foo") "foo"))
+    (should (equal (helm-ag--join-patterns "foo bar") "foo bar")))
+
+  (let ((helm-ag--command-feature 'pt-regexp))
+    (should (equal (helm-ag--join-patterns "foo") "foo"))
+    (should (equal (helm-ag--join-patterns "foo bar") "foo.*bar")))
+
+  (let ((helm-ag--command-feature nil))
+    (should (equal (helm-ag--join-patterns "foo") "foo"))
+    (should (equal (helm-ag--join-patterns "!") "!"))
+    (should (equal (helm-ag--join-patterns "!foo") "^(?!.*foo).+$"))
+
+    (should (equal (helm-ag--join-patterns "foo bar") "(?=.*foo.*)(?=.*bar.*)"))
+    (should (equal (helm-ag--join-patterns "foo !") "(?=.*foo.*)(?=.*!.*)"))
+    (should (equal (helm-ag--join-patterns "foo !bar") "(?=.*foo.*)(?=.*^(?!.*bar).+$.*)"))))
+
 ;;; test-util.el ends here
