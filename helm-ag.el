@@ -641,7 +641,9 @@ Special commands:
                    (forward-line 1)
                    (buffer-substring (point) (point-max))))
          (default-directory helm-ag--default-directory)
-         (buf "*helm ag results*"))
+         (buf (read-string
+               "Results buffer name: "
+               (format "*helm ag results for '%s'*" helm-ag--last-query))))
     (when (buffer-live-p (get-buffer buf))
       (kill-buffer buf))
     (with-current-buffer (get-buffer-create buf)
