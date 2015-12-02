@@ -230,6 +230,6 @@
 
     (should (equal (helm-ag--join-patterns "foo bar") "(?=.*foo.*)(?=.*bar.*)"))
     (should (equal (helm-ag--join-patterns "foo !") "(?=.*foo.*)(?=.*!.*)"))
-    (should (equal (helm-ag--join-patterns "foo !bar") "(?=.*foo.*)(?=.*^(?!.*bar).+$.*)"))))
+    (should (equal (helm-ag--join-patterns "foo !bar") "(?=.*foo.*)(?=^(?!.*bar).+$)"))))
 
 ;;; test-util.el ends here

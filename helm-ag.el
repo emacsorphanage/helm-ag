@@ -741,21 +741,23 @@ Continue searching the parent directory? "))
       (reverse (cl-loop for p in patterns unless (string= p "") collect p)))))
 
 (defsubst helm-ag--convert-invert-pattern (pattern)
-  (if (and (not helm-ag--command-feature)
-           (string-prefix-p "!" pattern) (> (length pattern) 1))
-      (concat "^(?!.*" (substring pattern 1) ").+$")
-    pattern))
+  (when (and (not helm-ag--command-feature)
+             (string-prefix-p "!" pattern) (> (length pattern) 1))
+    (concat "^(?!.*" (substring pattern 1) ").+$")))
 
 (defun helm-ag--join-patterns (input)
   (let ((patterns (helm-ag--split-string input)))
     (if (= (length patterns) 1)
-        (helm-ag--convert-invert-pattern (car patterns))
+        (or (helm-ag--convert-invert-pattern (car patterns))
+            (car patterns))
       (cl-case helm-ag--command-feature
         (pt input)
         (pt-regexp (mapconcat 'identity patterns ".*"))
         (otherwise (cl-loop for s in patterns
-                            for p = (helm-ag--convert-invert-pattern s)
-                            concat (concat "(?=.*" p ".*)")))))))
+                            if (helm-ag--convert-invert-pattern s)
+                            concat (concat "(?=" it ")")
+                            else
+                            concat (concat "(?=.*" s ".*)")))))))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
   (if helm-ag--command-feature
