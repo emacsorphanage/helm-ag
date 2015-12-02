@@ -634,14 +634,17 @@ Special commands:
   (setq-local helm-ag--search-this-file-p search-this-file-p)
   (setq-local helm-ag--default-directory default-directory))
 
-(defun helm-ag--save-results (_unused)
+(defun helm-ag--save-results (use-other-buf)
   (let* ((search-this-file-p nil)
          (result (with-current-buffer helm-buffer
                    (goto-char (point-min))
                    (forward-line 1)
                    (buffer-substring (point) (point-max))))
          (default-directory helm-ag--default-directory)
-         (buf "*helm ag results*"))
+         (buf (if use-other-buf
+                  (read-string "Results buffer name: "
+                               (format "*helm ag results for '%s'*" helm-ag--last-query))
+                "*helm ag results*")))
     (when (buffer-live-p (get-buffer buf))
       (kill-buffer buf))
     (with-current-buffer (get-buffer-create buf)
@@ -660,13 +663,16 @@ Special commands:
     (helm-ag--put-result-in-save-buffer result helm-ag--search-this-file-p)
     (message "Update Results")))
 
-(defun helm-ag--action-save-buffer (arg)
-  (helm-ag--save-results arg))
+(defun helm-ag--action-save-buffer (_arg)
+  (helm-ag--save-results nil))
 
 (defun helm-ag--run-save-buffer ()
   (interactive)
-  (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-ag--save-results)))
+  (let ((use-other-buf-p current-prefix-arg))
+    (with-helm-alive-p
+      (helm-exit-and-execute-action
+       (lambda (_arg)
+         (helm-ag--save-results use-other-buf-p))))))
 
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
