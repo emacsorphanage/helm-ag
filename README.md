@@ -4,7 +4,14 @@
 
 
 ## Introduction
+
 `helm-ag.el` provides interfaces of [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) with helm.
+
+
+## Features
+
+- Support multiple search tools(ag, [the platinum searcher][pt-link], [ack][ack-link] etc)
+- Edit search result like [wgrep](https://github.com/mhayashi1120/Emacs-wgrep)
 
 
 ## Screenshot
@@ -213,7 +220,7 @@ current line indicates.
  '(helm-ag-insert-at-point 'symbol))
 ```
 
-## helm-ag.el with [the platinum searcher](https://github.com/monochromegane/the_platinum_searcher) or [ack](http://beyondgrep.com/) or [sift](https://github.com/svent/sift)
+## helm-ag.el with [the platinum searcher][pt-link] or [ack][ack-link] or [sift](https://github.com/svent/sift)
 
 `helm-ag.el` can work the platinum searcher or ack instead of the silver searcher.
 It is difficult to install the silver search on some platform such as Windows,
@@ -262,3 +269,5 @@ Also it can work without helm.
 [melpa-stable-link]: https://stable.melpa.org/#/helm-ag
 [melpa-badge]: https://melpa.org/packages/helm-ag-badge.svg
 [melpa-stable-badge]: https://stable.melpa.org/packages/helm-ag-badge.svg
+[ack-link]: http://beyondgrep.com/
+[pt-link]: https://github.com/monochromegane/the_platinum_searcher
