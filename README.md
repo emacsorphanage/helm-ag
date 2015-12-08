@@ -49,8 +49,8 @@ Same as `helm-ag` except to search only current file
 
 #### `helm-do-ag`
 
-Search with `ag` like `helm-do-grep`. You can specify extra command line option
-of `ag` with minus prefix(`M--` or `C--`).
+Search with `ag` like `helm-do-grep-ag `, `helm-grep-do-git-grep`.
+You can specify extra command line option of `ag` with minus prefix(`M--` or `C--`).
 
 ![helm-do-ag](image/helm-do-ag.gif)
 
