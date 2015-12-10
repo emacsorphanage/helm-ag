@@ -1,5 +1,10 @@
 Revision history for helm-ag.el
 
+Revision 0.48 2015/12/10 syohex
+    - Improve document
+    - Improve using invert match pattern in helm-do-ag(#189)
+    - Use own buffer name for saving result command(#192)
+
 Revision 0.47 2015/10/30 syohex
     - Fix byte-compile warning(#183)
     - Fix for issue when path contains ':'(#182)
