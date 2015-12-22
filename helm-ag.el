@@ -390,9 +390,10 @@ They are specified to `--ignore' options."
   (helm-ag--find-file-action candidate 'find-file-other-window (helm-ag--search-this-file-p)))
 
 (defvar helm-ag--actions
-  '(("Open file" . helm-ag--action-find-file)
-    ("Open file other window" . helm-ag--action--find-file-other-window)
-    ("Save results in buffer" . helm-ag--action-save-buffer)))
+  (helm-make-actions
+   "Open file"              #'helm-ag--action-find-file
+   "Open file other window" #'helm-ag--action--find-file-other-window
+   "Save results in buffer" #'helm-ag--action-save-buffer))
 
 (defvar helm-ag-source
   (helm-build-in-buffer-source "The Silver Searcher"
