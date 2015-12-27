@@ -912,34 +912,47 @@ Continue searching the parent directory? "))
   (cl-loop for olay in olays
            do (when (eq (overlay-get olay 'face) face)
                 (delete-overlay olay))))
-(defun helm-ag--add-overlays (buf beg end regex face)
+(defun helm-ag--clean-space-delimited-regexp (regex)
+  (replace-regexp-in-string
+   "[[:space:]]+" "\\\\|"
+   (replace-regexp-in-string "\\`[[:space:]]+\\|[[:space:]]\\'" "" regex)))
+(defun helm-ag--add-overlays
+    (buf beg end regex face space-delimited-regexp)
+  "Add overlays to BUF between BEG and END for text matching REGEX. Put FACE
+on overlays. If SPACE-DELIMITED-REGEX is on (like most helm patterns), then
+overlays will match any part of the regex."
   (unless (string-equal regex "")
-    (with-current-buffer buf
-      (save-excursion
-        (goto-char beg)
-        (let ((case-fold-search t))
-          (cl-loop while (re-search-forward regex end t)
-                   ;; only show first few matches
-                   for i from 1 to helm-ag--preview-max-matches
-                   collect (let* ((beg (match-beginning 0))
-                                  (end (match-end 0))
-                                  (olay (make-overlay beg end)))
-                             (overlay-put olay 'face face)
-                             olay)))))))
-(defun helm-ag--refresh-overlay-list (prev-list buf beg end regex face)
+    (let ((regex
+           (if (not space-delimited-regexp) regex
+             (helm-ag--clean-space-delimited-regexp regex))))
+      (with-current-buffer buf
+        (save-excursion
+          (goto-char beg)
+          (let ((case-fold-search t))
+            (cl-loop while (re-search-forward regex end t)
+                     ;; only show first few matches
+                     for i from 1 to helm-ag--preview-max-matches
+                     collect (let* ((beg (match-beginning 0))
+                                    (end (match-end 0))
+                                    (olay (make-overlay beg end)))
+                               (overlay-put olay 'face face)
+                               olay))))))))
+(defun helm-ag--refresh-overlay-list
+    (prev-list buf beg end regex face &optional space-delimited-regexp)
   (helm-ag--delete-overlays prev-list face)
-  (helm-ag--add-overlays buf beg end regex face))
+  (helm-ag--add-overlays buf beg end regex face space-delimited-regexp))
 
 (defun helm-ag--refresh-overlays-for-buffer (buf beg end)
   (with-current-buffer buf
     (setq helm-ag--process-preview-overlays
           (helm-ag--refresh-overlay-list
-           helm-ag--process-preview-overlays buf beg end helm-ag--last-query
+           helm-ag--process-preview-overlays buf beg end
+           (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
            'helm-ag-process-pattern-match)
           helm-ag--minibuffer-preview-overlays
           (helm-ag--refresh-overlay-list
            helm-ag--minibuffer-preview-overlays buf beg end helm-pattern
-           'helm-ag-minibuffer-match))))
+           'helm-ag-minibuffer-match t))))
 
 (defun helm-ag--refresh-listing-overlays ()
   (with-helm-window
@@ -947,8 +960,8 @@ Continue searching the parent directory? "))
      (current-buffer) (point-min) (point-max))))
 
 (defvar helm-ag--preview-overlay nil)
-(defvar helm-ag--process-preview-overlays nil)
-(defvar helm-ag--minibuffer-preview-overlays nil)
+(defvar-local helm-ag--process-preview-overlays nil)
+(defvar-local helm-ag--minibuffer-preview-overlays nil)
 
 (defun helm-ag--display-preview-line-overlay (olay buf line)
   (with-current-buffer buf
@@ -973,7 +986,6 @@ Continue searching the parent directory? "))
             (goto-line line)
             (helm-ag--refresh-overlays-for-buffer
              buf-displaying-file (line-beginning-position) (line-end-position))
-            ;; TODO: move point to beginning of match
             (helm-ag--recenter)))))))
 
 (defvar helm-ag--disabled-advices-alist nil)
@@ -1007,7 +1019,12 @@ advices, or hooks leak."
      (helm-ag--setup-advice)
      (helm-ag--setup-overlays)
      (unwind-protect (progn ,@body)
-       (when (= helm-exit-status 0) (helm-ag--recenter))
+       (when (= helm-exit-status 0)
+         ;; move match to center, and move point in front of match
+         (helm-ag--recenter)
+         (end-of-line)
+         (re-search-backward
+          (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)))
        (helm-ag--teardown-advice)
        (helm-ag--delete-temporaries))))
 
@@ -1093,13 +1110,13 @@ Continue searching the parent directory? "))
   (cl-loop for el in helm-ag--disabled-advices-alist
            do (progn (ad-enable-advice (cl-first el) 'around (cl-second el))
                      (ad-activate (cl-first el))))
-  ;; (add-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
+  (add-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
   (add-hook 'helm-after-update-hook #'helm-ag--display-preview))
 (defun helm-ag--teardown-advice ()
   (cl-loop for el in helm-ag--disabled-advices-alist
            do (progn (ad-disable-advice (cl-first el) 'around (cl-second el))
                      (ad-activate (cl-first el))))
-  ;; (remove-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
+  (remove-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
   (remove-hook 'helm-after-update-hook #'helm-ag--display-preview))
 (defun helm-ag--delete-temporaries ()
   (delete-overlay helm-ag--preview-overlay)
