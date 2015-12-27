@@ -453,7 +453,9 @@ They are specified to `--ignore' options."
     (setq helm-ag--last-query query)))
 
 (defsubst helm-ag--clear-variables ()
-  (setq helm-ag--last-default-directory nil))
+  (setq helm-ag--last-default-directory nil)
+  (setq helm-ag--preview-overlay (make-overlay (point) (point)))
+  (overlay-put helm-ag--preview-overlay 'face 'helm-ag-preview-line))
 
 ;;;###autoload
 (defun helm-ag-this-file ()
@@ -727,6 +729,7 @@ Continue searching the parent directory? "))
   (interactive)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
+  (helm-ag--setup-advice)
   (let ((dir (helm-ag--get-default-directory))
         targets)
     (when (listp dir)
@@ -737,7 +740,10 @@ Continue searching the parent directory? "))
       (helm-ag--query)
       (helm-attrset 'search-this-file nil helm-ag-source)
       (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
-      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))))
+      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)
+      (when (= helm-exit-status 0) (helm-ag--recenter))
+      (helm-ag--teardown-advice)
+      (helm-ag--delete-temporaries))))
 
 (defun helm-ag--split-string (str)
   (with-temp-buffer
@@ -893,6 +899,90 @@ Continue searching the parent directory? "))
   (let ((helm-help-message helm-do-ag--help-message))
     (helm-help)))
 
+(defsubst helm-ag--get-string-at-line ()
+  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+(defsubst helm-ag--recenter () (recenter (/ (window-height) 2)))
+
+(defun helm-ag--add-overlays (buf beg end regex face)
+  (with-current-buffer buf
+    (save-excursion
+      (goto-char beg)
+      (let ((case-fold-search t))
+        (while (re-search-forward regex end t)
+          (let* ((beg (match-beginning 0))
+                 (end (match-end 0))
+                 (olay (make-overlay beg end)))
+            (overlay-put olay 'face face)))))))
+(defun helm-ag--refresh-overlays-for-buffer (buf beg end)
+  (with-current-buffer buf
+    (cl-loop for olay in (overlays-in beg end)
+             do (when (memq (overlay-get olay 'face)
+                            '(helm-ag-process-pattern-match
+                              helm-ag-minibuffer-match))
+                    (delete-overlay olay)))
+    (helm-ag--add-overlays buf beg end helm-ag--last-query
+                           'helm-ag-process-pattern-match)
+    (helm-ag--add-overlays buf beg end helm-pattern 'helm-ag-minibuffer-match)))
+
+(defun helm-ag--refresh-listing-overlays ()
+  (with-helm-window
+    (helm-ag--refresh-overlays-for-buffer
+     (current-buffer) (point-min) (point-max))))
+
+(defvar helm-ag--preview-overlay nil)
+(defvar helm-ag--process-preview-overlays nil)
+(defvar helm-ag--minibuffer-preview-overlays nil)
+
+(defun helm-ag--display-preview-line-overlay (olay buf line)
+  (with-current-buffer buf
+    (goto-line line)
+    (let ((beg (line-beginning-position))
+          (end (1+ (line-end-position))))
+      (move-overlay olay beg end buf))))
+
+(defun helm-ag--display-preview ()
+  (with-helm-window
+    (let* ((str (helm-ag--get-string-at-line))
+           (match (string-match "^\\([^:]+\\):\\([0-9]+\\):" str))
+           (file (match-string 1 str))
+           (line (string-to-number (match-string 2 str)))
+           (buf-displaying-file (or (get-file-buffer file)
+                                    (find-file-noselect file))))
+      (with-selected-window helm-ag--original-window
+        (switch-to-buffer buf-displaying-file)
+        (helm-ag--display-preview-line-overlay
+         helm-ag--preview-overlay buf-displaying-file line)
+        (goto-line line)
+        ;; (helm-ag--refresh-overlays-for-buffer
+        ;;  ;;; FIXME: this should make it highlight the matched text in the line
+        ;;  buf-displaying-file (line-beginning-position) (line-end-position))
+        ;; TODO: move point to beginning of match
+        (helm-ag--recenter)))))
+
+(defvar helm-ag--disabled-advices-alist nil)
+
+;;; TODO: move among files with left, right
+(defmacro helm-ag--display-preview-advice (helm-function helm-ag-function)
+  `(progn
+     (defadvice ,helm-function (around ,helm-ag-function disable)
+       (let ((helm-move-to-line-cycle-in-source t))
+         ad-do-it
+         (when (called-interactively-p 'interactive)
+           (helm-ag--display-preview))))
+     (add-to-list 'helm-ag--disabled-advices-alist
+                  (list ',helm-function ',helm-ag-function))))
+
+(helm-ag--display-preview-advice helm-next-line helm-ag--next-line)
+(helm-ag--display-preview-advice helm-previous-line helm-ag--previous-line)
+(helm-ag--display-preview-advice
+ helm-toggle-visible-mark helm-ag--toggle-visible-mark)
+
+(defadvice helm-highlight-current-line (around helm-ag--fix-face disable)
+  (ad-set-args 0 (nil nil nil 'helm-ag-process-pattern-match))
+  ad-do-it)
+(add-to-list 'helm-ag--disabled-advices-alist
+             '(helm-highlight-current-line helm-ag--fix-face))
+
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-ag-map)
@@ -969,6 +1059,22 @@ Continue searching the parent directory? "))
       (helm-do-ag default-directory (list it))
     (error "Error: This buffer is not visited file.")))
 
+(defun helm-ag--setup-advice ()
+  (cl-loop for el in helm-ag--disabled-advices-alist
+           do (progn (ad-enable-advice (cl-first el) 'around (cl-second el))
+                     (ad-activate (cl-first el))))
+  ;; (add-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
+  (add-hook 'helm-after-update-hook #'helm-ag--display-preview))
+(defun helm-ag--teardown-advice ()
+  (cl-loop for el in helm-ag--disabled-advices-alist
+           do (progn (ad-disable-advice (cl-first el) 'around (cl-second el))
+                     (ad-activate (cl-first el))))
+  ;; (remove-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
+  (remove-hook 'helm-after-update-hook #'helm-ag--display-preview))
+(defun helm-ag--delete-temporaries ()
+  (delete-overlay helm-ag--preview-overlay)
+  (setq helm-ag--preview-overlay nil))
+
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets)
   (interactive)
@@ -991,13 +1097,17 @@ Continue searching the parent directory? "))
     (helm-ag--set-do-ag-option)
     (helm-ag--set-command-feature)
     (helm-ag--save-current-context)
+    (helm-ag--setup-advice)
     (helm-attrset 'search-this-file (and (= (length targets) 1) (car targets)) helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
         (helm-do-ag--helm)
       (let* ((helm-ag--default-directory
               (file-name-as-directory (car helm-ag--default-target)))
              (helm-ag--default-target nil))
-        (helm-do-ag--helm)))))
+        (helm-do-ag--helm)))
+    (when (= helm-exit-status 0) (helm-ag--recenter))
+    (helm-ag--teardown-advice)
+    (helm-ag--delete-temporaries)))
 
 (defun helm-ag--project-root ()
   (cl-loop for dir in '(".git/" ".hg/" ".svn/")
