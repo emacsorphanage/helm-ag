@@ -452,10 +452,11 @@ They are specified to `--ignore' options."
       (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
 
-(defsubst helm-ag--clear-variables ()
-  (setq helm-ag--last-default-directory nil)
+(defsubst helm-ag--setup-overlays ()
   (setq helm-ag--preview-overlay (make-overlay (point) (point)))
   (overlay-put helm-ag--preview-overlay 'face 'helm-ag-preview-line))
+(defsubst helm-ag--clear-variables ()
+  (setq helm-ag--last-default-directory nil))
 
 ;;;###autoload
 (defun helm-ag-this-file ()
@@ -465,7 +466,8 @@ They are specified to `--ignore' options."
     (helm-ag--query)
     (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
+    (helm-ag--safe-do-helm
+     (helm :sources '(helm-ag-source) :buffer "*helm-ag*"))))
 
 (defun helm-ag--get-default-directory ()
   (let ((prefix-val (and current-prefix-arg (abs (prefix-numeric-value current-prefix-arg)))))
@@ -721,7 +723,9 @@ Continue searching the parent directory? "))
                   (helm-ag--default-directory parent))
              (setq helm-ag--last-default-directory default-directory)
              (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
-             (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))))
+             (helm-ag--safe-do-helm
+              (helm :sources '(helm-ag-source) :buffer "*helm-ag*"
+                    :keymap helm-ag-map))))))
     (message nil)))
 
 ;;;###autoload
@@ -729,7 +733,6 @@ Continue searching the parent directory? "))
   (interactive)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
-  (helm-ag--setup-advice)
   (let ((dir (helm-ag--get-default-directory))
         targets)
     (when (listp dir)
@@ -739,11 +742,11 @@ Continue searching the parent directory? "))
           (helm-ag--default-target targets))
       (helm-ag--query)
       (helm-attrset 'search-this-file nil helm-ag-source)
-      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
-      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)
-      (when (= helm-exit-status 0) (helm-ag--recenter))
-      (helm-ag--teardown-advice)
-      (helm-ag--delete-temporaries))))
+      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
+                    helm-ag-source)
+      (helm-ag--safe-do-helm
+       (helm :sources '(helm-ag-source) :buffer "*helm-ag*"
+             :keymap helm-ag-map)))))
 
 (defun helm-ag--split-string (str)
   (with-temp-buffer
@@ -997,6 +1000,17 @@ Continue searching the parent directory? "))
 (add-to-list 'helm-ag--disabled-advices-alist
              '(helm-highlight-current-line helm-ag--fix-face))
 
+(defmacro helm-ag--safe-do-helm (&rest body)
+  "Wraps calls to helm with setup and teardown forms to make sure no overlays,
+advices, or hooks leak."
+  `(progn
+     (helm-ag--setup-advice)
+     (helm-ag--setup-overlays)
+     (unwind-protect (progn ,@body)
+       (when (= helm-exit-status 0) (helm-ag--recenter))
+       (helm-ag--teardown-advice)
+       (helm-ag--delete-temporaries))))
+
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-ag-map)
@@ -1029,8 +1043,9 @@ Continue searching the parent directory? "))
              (setq helm-ag--last-default-directory default-directory)
              (helm-attrset 'name (helm-ag--helm-header parent)
                            helm-source-do-ag)
-             (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-                   :input initial-input :keymap helm-do-ag-map)))))
+             (helm-ag--safe-do-helm
+              (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+                    :input initial-input :keymap helm-do-ag-map))))))
     (message nil)))
 
 (defun helm-ag--set-do-ag-option ()
@@ -1062,9 +1077,10 @@ Continue searching the parent directory? "))
                         helm-ag--default-directory))))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
-    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-          :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
-          :keymap helm-do-ag-map)))
+    (helm-ag--safe-do-helm
+     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+           :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
+           :keymap helm-do-ag-map))))
 
 ;;;###autoload
 (defun helm-do-ag-this-file ()
@@ -1087,7 +1103,12 @@ Continue searching the parent directory? "))
   (remove-hook 'helm-after-update-hook #'helm-ag--display-preview))
 (defun helm-ag--delete-temporaries ()
   (delete-overlay helm-ag--preview-overlay)
-  (setq helm-ag--preview-overlay nil))
+  (cl-loop for olay in (append helm-ag--process-preview-overlays
+                               helm-ag--minibuffer-preview-overlays)
+           do (delete-overlay olay))
+  (setq helm-ag--preview-overlay nil
+        helm-ag--process-preview-overlays nil
+        helm-ag--minibuffer-preview-overlays nil))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets)
@@ -1111,17 +1132,13 @@ Continue searching the parent directory? "))
     (helm-ag--set-do-ag-option)
     (helm-ag--set-command-feature)
     (helm-ag--save-current-context)
-    (helm-ag--setup-advice)
     (helm-attrset 'search-this-file (and (= (length targets) 1) (car targets)) helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
         (helm-do-ag--helm)
       (let* ((helm-ag--default-directory
               (file-name-as-directory (car helm-ag--default-target)))
              (helm-ag--default-target nil))
-        (helm-do-ag--helm)))
-    (when (= helm-exit-status 0) (helm-ag--recenter))
-    (helm-ag--teardown-advice)
-    (helm-ag--delete-temporaries)))
+        (helm-do-ag--helm)))))
 
 (defun helm-ag--project-root ()
   (cl-loop for dir in '(".git/" ".hg/" ".svn/")
