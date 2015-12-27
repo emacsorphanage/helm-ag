@@ -117,6 +117,21 @@ They are specified to `--ignore' options."
   "Face of deleted line in edit mode."
   :group 'helm-ag)
 
+(defface helm-ag-preview-line
+  '((t (:background "green" :foreground "black")))
+  "Face of preview line."
+  :group 'helm-ag)
+
+(defface helm-ag-process-pattern-match
+  '((t (:background "purple" :foreground "white")))
+  "Face of the text matched by the pattern given to the ag process."
+  :group 'helm-ag)
+
+(defface helm-ag-minibuffer-match
+  '((t (:background "blue" :foreground "yellow")))
+  "Face of the text matched for the pattern given in the minibuffer."
+  :group 'helm-ag)
+
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
