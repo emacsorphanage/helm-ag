@@ -903,26 +903,40 @@ Continue searching the parent directory? "))
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 (defsubst helm-ag--recenter () (recenter (/ (window-height) 2)))
 
+
+(defconst helm-ag--preview-max-matches 20)
+(defun helm-ag--delete-overlays (olays face)
+  (cl-loop for olay in olays
+           do (when (eq (overlay-get olay 'face) face)
+                (delete-overlay olay))))
 (defun helm-ag--add-overlays (buf beg end regex face)
-  (with-current-buffer buf
-    (save-excursion
-      (goto-char beg)
-      (let ((case-fold-search t))
-        (while (re-search-forward regex end t)
-          (let* ((beg (match-beginning 0))
-                 (end (match-end 0))
-                 (olay (make-overlay beg end)))
-            (overlay-put olay 'face face)))))))
+  (unless (string-equal regex "")
+    (with-current-buffer buf
+      (save-excursion
+        (goto-char beg)
+        (let ((case-fold-search t))
+          (cl-loop while (re-search-forward regex end t)
+                   ;; only show first few matches
+                   for i from 1 to helm-ag--preview-max-matches
+                   collect (let* ((beg (match-beginning 0))
+                                  (end (match-end 0))
+                                  (olay (make-overlay beg end)))
+                             (overlay-put olay 'face face)
+                             olay)))))))
+(defun helm-ag--refresh-overlay-list (prev-list buf beg end regex face)
+  (helm-ag--delete-overlays prev-list face)
+  (helm-ag--add-overlays buf beg end regex face))
+
 (defun helm-ag--refresh-overlays-for-buffer (buf beg end)
   (with-current-buffer buf
-    (cl-loop for olay in (overlays-in beg end)
-             do (when (memq (overlay-get olay 'face)
-                            '(helm-ag-process-pattern-match
-                              helm-ag-minibuffer-match))
-                    (delete-overlay olay)))
-    (helm-ag--add-overlays buf beg end helm-ag--last-query
-                           'helm-ag-process-pattern-match)
-    (helm-ag--add-overlays buf beg end helm-pattern 'helm-ag-minibuffer-match)))
+    (setq helm-ag--process-preview-overlays
+          (helm-ag--refresh-overlay-list
+           helm-ag--process-preview-overlays buf beg end helm-ag--last-query
+           'helm-ag-process-pattern-match)
+          helm-ag--minibuffer-preview-overlays
+          (helm-ag--refresh-overlay-list
+           helm-ag--minibuffer-preview-overlays buf beg end helm-pattern
+           'helm-ag-minibuffer-match))))
 
 (defun helm-ag--refresh-listing-overlays ()
   (with-helm-window
@@ -943,21 +957,21 @@ Continue searching the parent directory? "))
 (defun helm-ag--display-preview ()
   (with-helm-window
     (let* ((str (helm-ag--get-string-at-line))
-           (match (string-match "^\\([^:]+\\):\\([0-9]+\\):" str))
-           (file (match-string 1 str))
-           (line (string-to-number (match-string 2 str)))
-           (buf-displaying-file (or (get-file-buffer file)
-                                    (find-file-noselect file))))
-      (with-selected-window helm-ag--original-window
-        (switch-to-buffer buf-displaying-file)
-        (helm-ag--display-preview-line-overlay
-         helm-ag--preview-overlay buf-displaying-file line)
-        (goto-line line)
-        ;; (helm-ag--refresh-overlays-for-buffer
-        ;;  ;;; FIXME: this should make it highlight the matched text in the line
-        ;;  buf-displaying-file (line-beginning-position) (line-end-position))
-        ;; TODO: move point to beginning of match
-        (helm-ag--recenter)))))
+           (match (string-match "^\\([^:]+\\):\\([0-9]+\\):" str)))
+      (when match
+        (let* ((file (match-string 1 str))
+               (line (string-to-number (match-string 2 str)))
+               (buf-displaying-file (or (get-file-buffer file)
+                                        (find-file-noselect file))))
+          (with-selected-window helm-ag--original-window
+            (switch-to-buffer buf-displaying-file)
+            (helm-ag--display-preview-line-overlay
+             helm-ag--preview-overlay buf-displaying-file line)
+            (goto-line line)
+            (helm-ag--refresh-overlays-for-buffer
+             buf-displaying-file (line-beginning-position) (line-end-position))
+            ;; TODO: move point to beginning of match
+            (helm-ag--recenter)))))))
 
 (defvar helm-ag--disabled-advices-alist nil)
 
