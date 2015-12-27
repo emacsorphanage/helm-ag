@@ -272,12 +272,14 @@ They are specified to `--ignore' options."
               helm-ag--last-command cmds)
         (let ((ret (apply 'process-file (car cmds) nil t nil (cdr cmds))))
           (if (zerop (length (buffer-string)))
-              (error "No output: '%s'" helm-ag--last-query)
+              (error "No ag output: '%s'" helm-ag--last-query)
             (unless (zerop ret)
               (unless (executable-find (car cmds))
                 (error "'ag' is not installed."))
               (error "Failed: '%s'" helm-ag--last-query))))
         (helm-ag--save-current-context)))))
+
+(add-to-list 'debug-ignored-errors "^No ag output: ")
 
 (defun helm-ag--search-only-one-file-p ()
   (when (and helm-ag--default-target (= (length helm-ag--default-target) 1))
