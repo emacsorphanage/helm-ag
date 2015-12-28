@@ -112,6 +112,12 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag--preview-highlight-matches nil
+  "Whether to highlight `helm-ag' matches inline in matched buffers. Can be
+`let'-bound dynamically to turn off highlighting for large buffers."
+  :type 'boolean
+  :group 'helm-ag)
+
 (defcustom helm-ag--preview-max-matches 100
   "Number of matches to highlight with overlays in preview, by default."
   :type 'integer
@@ -457,9 +463,6 @@ They are specified to `--ignore' options."
       (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
 
-(defsubst helm-ag--setup-overlays ()
-  (setq helm-ag--preview-overlay (make-overlay (point) (point)))
-  (overlay-put helm-ag--preview-overlay 'face 'helm-ag-preview-line))
 (defsubst helm-ag--clear-variables ()
   (setq helm-ag--last-default-directory nil))
 
@@ -747,8 +750,7 @@ Continue searching the parent directory? "))
           (helm-ag--default-target targets))
       (helm-ag--query)
       (helm-attrset 'search-this-file nil helm-ag-source)
-      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory)
-                    helm-ag-source)
+      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
       (helm-ag--safe-do-helm
        (helm :sources '(helm-ag-source) :buffer "*helm-ag*"
              :keymap helm-ag-map)))))
@@ -964,12 +966,13 @@ search."
                                secondary-regexp secondary-face))
 
 (defun helm-ag--refresh-overlays-in-region (beg end)
-  (setq helm-ag--process-preview-overlays
-        (helm-ag--refresh-overlay-list
-         helm-ag--process-preview-overlays beg end
-         (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
-         'helm-ag-process-pattern-match
-         helm-pattern 'helm-ag-minibuffer-match)))
+  (when helm-ag--preview-highlight-matches
+    (setq helm-ag--process-preview-overlays
+          (helm-ag--refresh-overlay-list
+           helm-ag--process-preview-overlays beg end
+           (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
+           'helm-ag-process-pattern-match
+           helm-pattern 'helm-ag-minibuffer-match))))
 
 (defun helm-ag--refresh-listing-overlays ()
   (with-helm-window
@@ -1002,15 +1005,16 @@ search."
             (switch-to-buffer buf-displaying-file)
             (helm-ag--display-preview-line-overlay
              helm-ag--preview-overlay buf-displaying-file line)
-            (goto-line line)
-            (unless (and (eq helm-ag--previous-preview-buffer
-                             buf-displaying-file)
-                         (string-equal helm-ag--previous-minibuffer-pattern
-                                       helm-pattern))
+            (unless (or (and (eq helm-ag--previous-preview-buffer
+                                 buf-displaying-file)
+                             (string-equal helm-ag--previous-minibuffer-pattern
+                                           helm-pattern))
+                        (not helm-ag--preview-highlight-matches))
               ;; maybe add with-current-buffer if this doesn't work?
               (helm-ag--refresh-overlays-in-region
                ;; (line-beginning-position) (line-end-position)
                (point-min) (point-max)))
+            (goto-line line)
             (helm-ag--recenter))
           (setq helm-ag--previous-preview-buffer buf-displaying-file
                 helm-ag--previous-minibuffer-pattern helm-pattern))))))
@@ -1038,9 +1042,36 @@ search."
 (add-to-list 'helm-ag--disabled-advices-alist
              '(helm-highlight-current-line helm-ag--fix-face))
 
+(defun helm-ag--setup-advice ()
+  (cl-loop for el in helm-ag--disabled-advices-alist
+           do (progn (ad-enable-advice (cl-first el) 'around (cl-second el))
+                     (ad-activate (cl-first el))))
+  (add-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
+  (add-hook 'helm-after-update-hook #'helm-ag--display-preview))
+(defsubst helm-ag--setup-overlays ()
+  (setq helm-ag--preview-overlay (make-overlay (point) (point)))
+  (overlay-put helm-ag--preview-overlay 'face 'helm-ag-preview-line))
+(defun helm-ag--teardown-advice ()
+  (cl-loop for el in helm-ag--disabled-advices-alist
+           do (progn (ad-disable-advice (cl-first el) 'around (cl-second el))
+                     (ad-activate (cl-first el))))
+  (remove-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
+  (remove-hook 'helm-after-update-hook #'helm-ag--display-preview))
+(defun helm-ag--delete-temporaries ()
+  (delete-overlay helm-ag--preview-overlay)
+  (cl-loop for buf in helm-ag--buffers-displayed
+           do (with-current-buffer buf
+                (cl-loop for olay in helm-ag--process-preview-overlays
+                         do (delete-overlay olay))
+                (setq helm-ag--process-preview-overlays nil)))
+  (setq helm-ag--preview-overlay nil
+        helm-ag--previous-preview-buffer nil
+        helm-ag--previous-minibuffer-pattern nil
+        helm-ag--buffers-displayed nil))
+
 (defmacro helm-ag--safe-do-helm (&rest body)
-  "Wraps calls to helm with setup and teardown forms to make sure no overlays,
-advices, or hooks leak."
+  "Wraps calls to `helm' with setup and teardown forms to make sure no overlays,
+advices, or hooks leak from the preview."
   `(progn
      (helm-ag--setup-advice)
      (helm-ag--setup-overlays)
@@ -1053,6 +1084,7 @@ advices, or hooks leak."
           (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)))
        (helm-ag--teardown-advice)
        (helm-ag--delete-temporaries))))
+
 
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
@@ -1131,29 +1163,6 @@ Continue searching the parent directory? "))
   (helm-aif (buffer-file-name)
       (helm-do-ag default-directory (list it))
     (error "Error: This buffer is not visited file.")))
-
-(defun helm-ag--setup-advice ()
-  (cl-loop for el in helm-ag--disabled-advices-alist
-           do (progn (ad-enable-advice (cl-first el) 'around (cl-second el))
-                     (ad-activate (cl-first el))))
-  (add-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
-  (add-hook 'helm-after-update-hook #'helm-ag--display-preview))
-(defun helm-ag--teardown-advice ()
-  (cl-loop for el in helm-ag--disabled-advices-alist
-           do (progn (ad-disable-advice (cl-first el) 'around (cl-second el))
-                     (ad-activate (cl-first el))))
-  (remove-hook 'helm-update-hook #'helm-ag--refresh-listing-overlays)
-  (remove-hook 'helm-after-update-hook #'helm-ag--display-preview))
-(defun helm-ag--delete-temporaries ()
-  (delete-overlay helm-ag--preview-overlay)
-  (cl-loop for buf in helm-ag--buffers-displayed
-           do (with-current-buffer buf
-                (cl-loop for olay in helm-ag--process-preview-overlays
-                         do (delete-overlay olay))
-                (setq helm-ag--process-preview-overlays nil)))
-  (setq helm-ag--preview-overlay nil
-        helm-ag--previous-preview-buffer nil
-        helm-ag--previous-minibuffer-pattern nil))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets)
