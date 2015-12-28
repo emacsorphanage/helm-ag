@@ -816,7 +816,7 @@ Continue searching the parent directory? "))
          (query (cdr opt-query)))
     (when helm-ag-use-emacs-lisp-regexp
       (setq query (helm-ag--elisp-regexp-to-pcre query)))
-    (unless (string= (cdr opt-query) "")
+    (unless (string= query "")
       (append (car helm-do-ag--commands)
               (cl-remove-if (lambda (x) (string= "--" x)) options)
               (list "--" (helm-ag--join-patterns query))
