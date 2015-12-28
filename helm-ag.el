@@ -710,8 +710,8 @@ Special commands:
 
 (defun helm-ag--refresh-position ()
   (let ((helm-swoop-move-to-line-cycle t))
-    (helm-move-selection-common :where 'line :direction 'next)
-    (helm-move-selection-common :where 'line :direction 'previous)))
+    (call-interactively #'helm-next-line)
+    (call-interactively #'helm-previous-line)))
 
 (defun helm-ag--next-file ()
   (interactive)
