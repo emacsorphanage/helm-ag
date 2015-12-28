@@ -675,6 +675,37 @@ Special commands:
        (lambda (_arg)
          (helm-ag--save-results use-other-buf-p))))))
 
+(defconst helm-ag--file-line-parse-regexp "^\\([^:]+\\):\\([0-9]+\\):")
+(defun helm-ag--get-match-info ()
+  (with-helm-window
+    (let ((s (buffer-substring (line-beginning-position) (line-end-position))))
+      (when (string-match helm-ag--file-line-parse-regexp s)
+        (list :file (match-string 1 s)
+              :line (string-to-number (match-string 2 s)))))))
+
+(defun helm-ag--advance-match (direction)
+  (with-helm-window
+    (let ((initial-match-info (helm-ag--get-match-info))
+          (helm-move-to-line-cycle-in-source t))
+      (when initial-match-info
+        (cl-destructuring-bind (:file file :line line) initial-match-info
+          (helm-move-selection-common :where 'line :direction direction)
+          (cl-loop
+           for cur-match-info = (helm-ag--get-match-info)
+           while (string= file (plist-get cur-match-info :file))
+           until (= line (plist-get cur-match-info :line))
+           do (helm-move-selection-common :where 'line :direction direction)
+           finally (when (string= file (plist-get cur-match-info :file))
+                     (message "%s" "Couldn't find new file!"))))))))
+
+(defun helm-ag--next-file ()
+  (interactive)
+  (helm-ag--advance-match 'next))
+
+(defun helm-ag--previous-file ()
+  (interactive)
+  (helm-ag--advance-match 'previous))
+
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
@@ -683,6 +714,10 @@ Special commands:
     (define-key map (kbd "C-c C-e") 'helm-ag-edit)
     (define-key map (kbd "C-x C-s") 'helm-ag--run-save-buffer)
     (define-key map (kbd "C-c ?") 'helm-ag-help)
+    (define-key map (kbd "<right>") #'helm-ag--next-file)
+    (define-key map (kbd "C->") #'helm-ag--next-file)
+    (define-key map (kbd "<left>") #'helm-ag--previous-file)
+    (define-key map (kbd "C-<") #'helm-ag--previous-file)
     map)
   "Keymap for `helm-ag'.")
 
@@ -881,6 +916,10 @@ Continue searching the parent directory? "))
     (set-keymap-parent map helm-ag-map)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
     (define-key map (kbd "C-c ?") 'helm-ag--do-ag-help)
+    (define-key map (kbd "<right>") #'helm-ag--next-file)
+    (define-key map (kbd "C->") #'helm-ag--next-file)
+    (define-key map (kbd "<left>") #'helm-ag--previous-file)
+    (define-key map (kbd "C-<") #'helm-ag--previous-file)
     map)
   "Keymap for `helm-do-ag'.")
 
