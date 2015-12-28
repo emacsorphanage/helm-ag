@@ -957,6 +957,12 @@ apply an overlay with face FACE."
                        (line-beginning-position) (line-end-position)
                        regexp face)))))
 
+(defun helm-ag--convert-helm-regexp-to-elisp (regexp)
+  (let* ((regexp (if helm-ag-use-emacs-lisp-regexp regexp
+                   (helm-ag--pcre-to-elisp-regexp regexp)))
+         (split (helm-ag--clean-space-delimited-regexp regexp)))
+    (string-join split "\\|")))
+
 (defun helm-ag--clean-add-overlays
     (beg end primary-regexp primary-face secondary-regexp secondary-face)
   "Add overlays between BEG and END for text matching PRIMARY-REGEXP. Put
@@ -965,15 +971,21 @@ overlays covering text matching SECONDARY-REGEXP, with face
 SECONDARY-FACE. SECONDARY-REGEXP is a helm minibuffer regexp, so it is split
 into components based on whitespace."
   (let* ((case-fold-search t)
-         (primary-overlays (helm-ag--make-overlays
-                            beg end primary-regexp primary-face))
-         (split-regex
-          (helm-ag--clean-space-delimited-regexp secondary-regexp))
+         (primary-fixed (helm-ag--convert-helm-regexp-to-elisp primary-regexp))
+         (primary-overlays
+          (unless (string= "" primary-fixed)
+            (helm-ag--make-overlays beg end primary-fixed primary-face)))
+         (secondary-fixed
+          (helm-ag--convert-helm-regexp-to-elisp secondary-regexp))
          (secondary-overlays
-          (unless (null split-regex)
+          (unless (string= "" secondary-fixed)
             (helm-ag--apply-first-second-overlays
-             primary-overlays (string-join split-regex "\\|") secondary-face))))
+             primary-overlays secondary-fixed secondary-face))))
     (append primary-overlays secondary-overlays)))
+
+(defmacro helm-ag--conditional-let (condition bindings &rest body)
+  (declare (indent 2))
+  `(if ,condition (let ,bindings ,@body) ,@body))
 
 (defun helm-ag--refresh-overlay-list
     (prev-list beg end primary-regexp primary-face
@@ -981,9 +993,12 @@ into components based on whitespace."
   "Delete old overlays from PREV-LIST and return new ones between BEG and
 END. PRIMARY-REGEXP, PRIMARY-FACE, SECONDARY-REGEXP, and SECONDARY-FACE work as
 described in `helm-ag--clean-add-overlays'."
-  (helm-ag--delete-overlays prev-list)
-  (helm-ag--clean-add-overlays beg end primary-regexp primary-face
-                               secondary-regexp secondary-face))
+  (helm-ag--conditional-let (string= helm-ag--last-query helm-pattern)
+      ;; doesn't match anything
+      ((secondary-regexp "[^[:ascii:][:nonascii:]]+"))
+    (helm-ag--delete-overlays prev-list)
+    (helm-ag--clean-add-overlays beg end primary-regexp primary-face
+                                 secondary-regexp secondary-face)))
 
 (defvar-local helm-ag--process-preview-overlays nil
   "Buffer-local variable containing the overlays temporarily assigned to each
@@ -994,7 +1009,7 @@ buffer as `helm-ag' highlights their matches.")
   (setq helm-ag--process-preview-overlays
         (helm-ag--refresh-overlay-list
          helm-ag--process-preview-overlays beg end
-         (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
+         (helm-ag--pcre-to-elisp-regexp (or helm-ag--last-query ""))
          'helm-ag-process-pattern-match
          helm-pattern 'helm-ag-minibuffer-match)))
 
@@ -1120,7 +1135,7 @@ through `helm-ag--disabled-advices-alist'."
   (cl-loop for buf in helm-ag--buffers-displayed
            do (with-current-buffer buf
                 (cl-loop for olay in helm-ag--process-preview-overlays
-                         do (delete-overlay olay))
+                         do (when olay (delete-overlay olay)))
                 (setq helm-ag--process-preview-overlays nil)))
   (setq helm-ag--preview-overlay nil
         helm-ag--previous-preview-buffer nil
@@ -1138,12 +1153,14 @@ advices, or hooks leak from the preview."
        (when (= helm-exit-status 0)
          ;; move match to center, and move point in front of match, if succeeded
          (helm-ag--recenter)
-         (end-of-line)
-         (re-search-backward
-          (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)))
+         (unless (string= helm-ag--last-query "")
+           (let ((orig-pt (point))
+                 (back-reg
+                  (helm-ag--convert-helm-regexp-to-elisp helm-ag--last-query)))
+             (end-of-line)
+             (unless (re-search-backward back-reg nil t) (goto-char orig-pt)))))
        (helm-ag--teardown-advice)
        (helm-ag--delete-temporaries))))
-
 
 (defvar helm-do-ag-map
   (let ((map (make-sparse-keymap)))
