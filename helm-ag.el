@@ -112,15 +112,26 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
-(defcustom helm-ag--preview-highlight-matches nil
+(defcustom helm-ag--preview-highlight-matches 'any
   "Whether to highlight `helm-ag' matches inline in matched buffers. Can be
-`let'-bound dynamically to turn off highlighting for large buffers."
-  :type 'boolean
+`let'-bound dynamically or used as a file-local variable to turn off
+highlighting for large buffers. If set to nil, no highlighting or previewing is
+performed. If set to 'line-only, the line that the current match points to is
+highlighted, and a preview of the match is displayed. If set to
+'highlight-matches-current-line, the matched text is highlighted, along with the
+current line. Finally, if set to 'any, highlights all matches in the matched
+buffer."
+  :type 'symbol
+  :options '(nil line-only highlight-matches-current-line any)
+  :safe t
   :group 'helm-ag)
 
 (defcustom helm-ag--preview-max-matches 100
-  "Number of matches to highlight with overlays in preview, by default."
+  "Number of matches to highlight with overlays in preview, by default. Can be
+`let'-bound or used as a file-local variable to reduce number of searches for
+large buffers."
   :type 'integer
+  :safe t
   :group 'helm-ag)
 
 (defface helm-ag-edit-deleted-line
@@ -919,6 +930,7 @@ Continue searching the parent directory? "))
 (defun helm-ag--clean-space-delimited-regexp (regexp)
   (split-string
    (replace-regexp-in-string "\\`[[:space:]]+\\|[[:space:]]\\'" "" regexp)))
+
 (defun helm-ag--make-overlays (beg end regexp face)
   (save-excursion
     (goto-char beg)
@@ -929,6 +941,7 @@ Continue searching the parent directory? "))
                             (olay (make-overlay reg-beg reg-end)))
                        (overlay-put olay 'face face)
                        olay))))
+
 (defun helm-ag--apply-first-second-overlays (olays regexp face)
   "To all lines on which a member of OLAYS begins on, search for REGEXP and
 apply an overlay with face FACE."
@@ -940,6 +953,7 @@ apply an overlay with face FACE."
                       (helm-ag--make-overlays
                        (line-beginning-position) (line-end-position)
                        regexp face)))))
+
 (defun helm-ag--clean-add-overlays
     (beg end primary-regexp primary-face secondary-regexp secondary-face)
   "Add overlays between BEG and END for text matching PRIMARY-REGEXP. Put
@@ -958,6 +972,7 @@ search."
             (helm-ag--apply-first-second-overlays
              primary-overlays (string-join split-regex "\\|") secondary-face))))
     (append primary-overlays secondary-overlays)))
+
 (defun helm-ag--refresh-overlay-list
     (prev-list beg end primary-regexp primary-face
                secondary-regexp secondary-face)
@@ -966,17 +981,23 @@ search."
                                secondary-regexp secondary-face))
 
 (defun helm-ag--refresh-overlays-in-region (beg end)
-  (when helm-ag--preview-highlight-matches
-    (setq helm-ag--process-preview-overlays
-          (helm-ag--refresh-overlay-list
-           helm-ag--process-preview-overlays beg end
-           (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
-           'helm-ag-process-pattern-match
-           helm-pattern 'helm-ag-minibuffer-match))))
+  (setq helm-ag--process-preview-overlays
+        (helm-ag--refresh-overlay-list
+         helm-ag--process-preview-overlays beg end
+         (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
+         'helm-ag-process-pattern-match
+         helm-pattern 'helm-ag-minibuffer-match)))
 
 (defun helm-ag--refresh-listing-overlays ()
   (with-helm-window
-    (helm-ag--refresh-overlays-in-region (point-min) (point-max))))
+    (cond ((eq helm-ag--preview-highlight-matches
+               'highlight-matches-current-line)
+           (helm-ag--refresh-overlays-in-region
+            (line-beginning-position) (line-end-position)))
+          ((eq helm-ag--preview-highlight-matches 'any)
+           (helm-ag--refresh-overlays-in-region
+            (point-min) (point-max)))
+          (t nil))))
 
 (defvar helm-ag--preview-overlay nil)
 (defvar-local helm-ag--process-preview-overlays nil)
@@ -990,6 +1011,7 @@ search."
 
 (defvar helm-ag--previous-preview-buffer nil)
 (defvar helm-ag--previous-minibuffer-pattern nil)
+(defvar helm-ag--previous-line nil)
 (defvar helm-ag--buffers-displayed nil)
 (defun helm-ag--display-preview ()
   (with-helm-window
@@ -1003,21 +1025,31 @@ search."
           (add-to-list 'helm-ag--buffers-displayed buf-displaying-file)
           (with-selected-window helm-ag--original-window
             (switch-to-buffer buf-displaying-file)
-            (helm-ag--display-preview-line-overlay
-             helm-ag--preview-overlay buf-displaying-file line)
+            (goto-line line)
+            (when helm-ag--preview-highlight-matches
+              (helm-ag--display-preview-line-overlay
+               helm-ag--preview-overlay buf-displaying-file line))
             (unless (or (and (eq helm-ag--previous-preview-buffer
                                  buf-displaying-file)
                              (string-equal helm-ag--previous-minibuffer-pattern
-                                           helm-pattern))
-                        (not helm-ag--preview-highlight-matches))
-              ;; maybe add with-current-buffer if this doesn't work?
-              (helm-ag--refresh-overlays-in-region
-               ;; (line-beginning-position) (line-end-position)
-               (point-min) (point-max)))
-            (goto-line line)
+                                           helm-pattern)
+                             (and helm-ag--previous-line
+                                  (= helm-ag--previous-line line)))
+                        (memq helm-ag--preview-highlight-matches
+                              `(nil line-only)))
+              (cond ((eq helm-ag--preview-highlight-matches
+                         'highlight-matches-current-line)
+                     (helm-ag--refresh-overlays-in-region
+                      (line-beginning-position) (line-end-position)))
+                    ((eq helm-ag--preview-highlight-matches 'any)
+                     (helm-ag--refresh-overlays-in-region
+                      (point-min) (point-max)))
+                    (t (error "Invalid selection for
+helm-ag--preview-highlight-matches!"))))
             (helm-ag--recenter))
           (setq helm-ag--previous-preview-buffer buf-displaying-file
-                helm-ag--previous-minibuffer-pattern helm-pattern))))))
+                helm-ag--previous-minibuffer-pattern helm-pattern
+                helm-ag--previous-line line))))))
 
 (defvar helm-ag--disabled-advices-alist nil)
 
@@ -1067,7 +1099,8 @@ search."
   (setq helm-ag--preview-overlay nil
         helm-ag--previous-preview-buffer nil
         helm-ag--previous-minibuffer-pattern nil
-        helm-ag--buffers-displayed nil))
+        helm-ag--buffers-displayed nil
+        helm-ag--previous-line nil))
 
 (defmacro helm-ag--safe-do-helm (&rest body)
   "Wraps calls to `helm' with setup and teardown forms to make sure no overlays,
