@@ -460,10 +460,11 @@ They are specified to `--ignore' options."
                (push (read-directory-name "Search directory: " nil nil t) dirs))
              (reverse dirs))))))
 
-(defsubst helm-ag--helm-header (dir)
+(defsubst helm-ag--helm-header (dir &optional regex)
   (if helm-ag--buffer-search
       "Search Buffers"
-    (concat "Search at " (abbreviate-file-name dir))))
+    (concat "Search" (if regex (concat " /" regex "/") "") " at "
+            (abbreviate-file-name dir))))
 
 (defun helm-ag--run-other-window-action ()
   (interactive)
@@ -707,7 +708,7 @@ Continue searching the parent directory? "))
 
 (defun helm-ag-run (dir query)
   (helm-attrset 'search-this-file nil helm-ag-source)
-  (helm-attrset 'name (helm-ag--helm-header dir) helm-ag-source)
+  (helm-attrset 'name (helm-ag--helm-header dir query) helm-ag-source)
   (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))
 
 ;;;###autoload
@@ -948,8 +949,7 @@ Continue searching the parent directory? "))
                       (if (helm-do-ag--target-one-directory-p helm-ag--default-target)
                           (car helm-ag--default-target)
                         helm-ag--default-directory))))
-    (helm-attrset 'name (helm-ag--helm-header search-dir)
-                  helm-source-do-ag)
+    (helm-attrset 'name "The Silver Searcher" helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
           :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
           :keymap helm-do-ag-map)))
