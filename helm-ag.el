@@ -683,29 +683,47 @@ Special commands:
         (list :file (match-string 1 s)
               :line (string-to-number (match-string 2 s)))))))
 
-(defun helm-ag--advance-match (direction)
-  (with-helm-window
-    (let ((initial-match-info (helm-ag--get-match-info))
-          (helm-move-to-line-cycle-in-source t))
-      ;; if there are any matches
-      (when initial-match-info
-        (cl-destructuring-bind (:file file :line line) initial-match-info
-          (helm-move-selection-common :where 'line :direction direction)
-          (cl-loop
-           for cur-match-info = (helm-ag--get-match-info)
-           while (string= file (plist-get cur-match-info :file))
-           until (= line (plist-get cur-match-info :line))
-           do (helm-move-selection-common :where 'line :direction direction)
-           finally (when (string= file (plist-get cur-match-info :file))
-                     (message "%s" "Couldn't find new file!"))))))))
+(defun helm-ag--advance-match (motion)
+  (let ((initial-match-info (helm-ag--get-match-info)))
+    ;; if there are any matches
+    (when initial-match-info
+      (cl-destructuring-bind (:file file :line line) initial-match-info
+        (funcall motion)
+        (cl-loop
+         for cur-match-info = (helm-ag--get-match-info)
+         ;; these are nil if cur-match-info is nil
+         for f = (plist-get cur-match-info :file)
+         for l = (plist-get cur-match-info :line)
+         while (or (not f) (string= file f))
+         until (and l (= line l))
+         do (funcall motion)
+         finally (when (string= file f)
+                   (message "%s" "Couldn't find new file!")))))))
+
+(defun helm-ag--wrapping-forward-line ()
+  (if (looking-at "[^\n]*\\'") (goto-char (point-min))
+    (forward-line 1)))
+
+(defun helm-ag--wrapping-backward-line ()
+  (if (looking-back "\\`[^\n]*") (goto-char (point-max))
+    (forward-line -1)))
+
+(defun helm-ag--refresh-position ()
+  (let ((helm-swoop-move-to-line-cycle t))
+    (helm-move-selection-common :where 'line :direction 'next)
+    (helm-move-selection-common :where 'line :direction 'previous)))
 
 (defun helm-ag--next-file ()
   (interactive)
-  (helm-ag--advance-match 'next))
+  (with-helm-window
+    (helm-ag--advance-match #'helm-ag--wrapping-forward-line)
+    (helm-ag--refresh-position)))
 
 (defun helm-ag--previous-file ()
   (interactive)
-  (helm-ag--advance-match 'previous))
+  (with-helm-window
+    (helm-ag--advance-match #'helm-ag--wrapping-backward-line)
+    (helm-ag--refresh-position)))
 
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
