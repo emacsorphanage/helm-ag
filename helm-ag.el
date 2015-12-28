@@ -112,6 +112,11 @@ They are specified to `--ignore' options."
   :type 'boolean
   :group 'helm-ag)
 
+(defcustom helm-ag--preview-max-matches 100
+  "Number of matches to highlight with overlays in preview, by default."
+  :type 'integer
+  :group 'helm-ag)
+
 (defface helm-ag-edit-deleted-line
   '((t (:inherit font-lock-comment-face :strike-through t)))
   "Face of deleted line in edit mode."
@@ -907,61 +912,71 @@ Continue searching the parent directory? "))
 (defsubst helm-ag--recenter () (recenter (/ (window-height) 2)))
 
 
-(defconst helm-ag--preview-max-matches 20)
-(defun helm-ag--delete-overlays (olays face)
-  (cl-loop for olay in olays
-           do (when (eq (overlay-get olay 'face) face)
-                (delete-overlay olay))))
-(defun helm-ag--clean-space-delimited-regexp (regex)
-  (replace-regexp-in-string
-   "[[:space:]]+" "\\\\|"
-   (replace-regexp-in-string "\\`[[:space:]]+\\|[[:space:]]\\'" "" regex)))
-(defun helm-ag--add-overlays
-    (buf beg end regex face space-delimited-regexp)
-  "Add overlays to BUF between BEG and END for text matching REGEX. Put FACE
-on overlays. If SPACE-DELIMITED-REGEX is on (like most helm patterns), then
-overlays will match any part of the regex."
-  (unless (string-equal regex "")
-    (let ((regex
-           (if (not space-delimited-regexp) regex
-             (helm-ag--clean-space-delimited-regexp regex))))
-      (with-current-buffer buf
-        (save-excursion
-          (goto-char beg)
-          (let ((case-fold-search t))
-            (cl-loop while (re-search-forward regex end t)
-                     ;; only show first few matches
-                     for i from 1 to helm-ag--preview-max-matches
-                     collect (let* ((beg (match-beginning 0))
-                                    (end (match-end 0))
-                                    (olay (make-overlay beg end)))
-                               (overlay-put olay 'face face)
-                               olay))))))))
+(defun helm-ag--delete-overlays (olays)
+  (cl-loop for olay in olays do (delete-overlay olay)))
+(defun helm-ag--clean-space-delimited-regexp (regexp)
+  (split-string
+   (replace-regexp-in-string "\\`[[:space:]]+\\|[[:space:]]\\'" "" regexp)))
+(defun helm-ag--make-overlays (beg end regexp face)
+  (save-excursion
+    (goto-char beg)
+    (cl-loop while (re-search-forward regexp end t)
+             for i from 1 to helm-ag--preview-max-matches
+             collect (let* ((reg-beg (match-beginning 0))
+                            (reg-end (match-end 0))
+                            (olay (make-overlay reg-beg reg-end)))
+                       (overlay-put olay 'face face)
+                       olay))))
+(defun helm-ag--apply-first-second-overlays (olays regexp face)
+  "To all lines on which a member of OLAYS begins on, search for REGEXP and
+apply an overlay with face FACE."
+  (apply
+   #'append
+   (cl-loop for olay in olays
+            collect (save-excursion
+                      (goto-char (overlay-start olay))
+                      (helm-ag--make-overlays
+                       (line-beginning-position) (line-end-position)
+                       regexp face)))))
+(defun helm-ag--clean-add-overlays
+    (beg end primary-regexp primary-face secondary-regexp secondary-face)
+  "Add overlays between BEG and END for text matching PRIMARY-REGEXP. Put
+PRIMARY-FACE on those overlays. On lines which match PRIMARY-REGEXP, add
+overlays for SECONDARY-REGEXP with face SECONDARY-FACE. SECONDARY-REGEXP is a
+helm minibuffer regexp, so it is split into components based on whitespace, and
+only components of greater than `helm-ag--min-regexp-length' are used to
+search."
+  (let* ((case-fold-search t)
+         (primary-overlays (helm-ag--make-overlays
+                            beg end primary-regexp primary-face))
+         (split-regex
+          (helm-ag--clean-space-delimited-regexp secondary-regexp))
+         (secondary-overlays
+          (unless (null split-regex)
+            (helm-ag--apply-first-second-overlays
+             primary-overlays (string-join split-regex "\\|") secondary-face))))
+    (append primary-overlays secondary-overlays)))
 (defun helm-ag--refresh-overlay-list
-    (prev-list buf beg end regex face &optional space-delimited-regexp)
-  (helm-ag--delete-overlays prev-list face)
-  (helm-ag--add-overlays buf beg end regex face space-delimited-regexp))
+    (prev-list beg end primary-regexp primary-face
+               secondary-regexp secondary-face)
+  (helm-ag--delete-overlays prev-list)
+  (helm-ag--clean-add-overlays beg end primary-regexp primary-face
+                               secondary-regexp secondary-face))
 
-(defun helm-ag--refresh-overlays-for-buffer (buf beg end)
-  (with-current-buffer buf
-    (setq helm-ag--process-preview-overlays
-          (helm-ag--refresh-overlay-list
-           helm-ag--process-preview-overlays buf beg end
-           (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
-           'helm-ag-process-pattern-match)
-          helm-ag--minibuffer-preview-overlays
-          (helm-ag--refresh-overlay-list
-           helm-ag--minibuffer-preview-overlays buf beg end helm-pattern
-           'helm-ag-minibuffer-match t))))
+(defun helm-ag--refresh-overlays-for-buffer (beg end)
+  (setq helm-ag--process-preview-overlays
+        (helm-ag--refresh-overlay-list
+         helm-ag--process-preview-overlays beg end
+         (helm-ag--pcre-to-elisp-regexp helm-ag--last-query)
+         'helm-ag-process-pattern-match
+         helm-pattern 'helm-ag-minibuffer-match)))
 
 (defun helm-ag--refresh-listing-overlays ()
   (with-helm-window
-    (helm-ag--refresh-overlays-for-buffer
-     (current-buffer) (point-min) (point-max))))
+    (helm-ag--refresh-overlays-for-buffer (point-min) (point-max))))
 
 (defvar helm-ag--preview-overlay nil)
 (defvar-local helm-ag--process-preview-overlays nil)
-(defvar-local helm-ag--minibuffer-preview-overlays nil)
 
 (defun helm-ag--display-preview-line-overlay (olay buf line)
   (with-current-buffer buf
@@ -970,6 +985,9 @@ overlays will match any part of the regex."
           (end (1+ (line-end-position))))
       (move-overlay olay beg end buf))))
 
+(defvar helm-ag--previous-preview-buffer nil)
+(defvar helm-ag--previous-minibuffer-pattern nil)
+(defvar helm-ag--buffers-displayed nil)
 (defun helm-ag--display-preview ()
   (with-helm-window
     (let* ((str (helm-ag--get-string-at-line))
@@ -979,18 +997,26 @@ overlays will match any part of the regex."
                (line (string-to-number (match-string 2 str)))
                (buf-displaying-file (or (get-file-buffer file)
                                         (find-file-noselect file))))
+          (add-to-list 'helm-ag--buffers-displayed buf-displaying-file)
           (with-selected-window helm-ag--original-window
             (switch-to-buffer buf-displaying-file)
             (helm-ag--display-preview-line-overlay
              helm-ag--preview-overlay buf-displaying-file line)
             (goto-line line)
-            (helm-ag--refresh-overlays-for-buffer
-             buf-displaying-file (line-beginning-position) (line-end-position))
-            (helm-ag--recenter)))))))
+            (unless (and (eq helm-ag--previous-preview-buffer
+                             buf-displaying-file)
+                         (string-equal helm-ag--previous-minibuffer-pattern
+                                       helm-pattern))
+              ;; maybe add with-current-buffer if this doesn't work?
+              (helm-ag--refresh-overlays-for-buffer
+               ;; (line-beginning-position) (line-end-position)
+               (point-min) (point-max)))
+            (helm-ag--recenter))
+          (setq helm-ag--previous-preview-buffer buf-displaying-file
+                helm-ag--previous-minibuffer-pattern helm-pattern))))))
 
 (defvar helm-ag--disabled-advices-alist nil)
 
-;;; TODO: move among files with left, right
 (defmacro helm-ag--display-preview-advice (helm-function helm-ag-function)
   `(progn
      (defadvice ,helm-function (around ,helm-ag-function disable)
@@ -1120,12 +1146,14 @@ Continue searching the parent directory? "))
   (remove-hook 'helm-after-update-hook #'helm-ag--display-preview))
 (defun helm-ag--delete-temporaries ()
   (delete-overlay helm-ag--preview-overlay)
-  (cl-loop for olay in (append helm-ag--process-preview-overlays
-                               helm-ag--minibuffer-preview-overlays)
-           do (delete-overlay olay))
+  (cl-loop for buf in helm-ag--buffers-displayed
+           do (with-current-buffer buf
+                (cl-loop for olay in helm-ag--process-preview-overlays
+                         do (delete-overlay olay))
+                (setq helm-ag--process-preview-overlays nil)))
   (setq helm-ag--preview-overlay nil
-        helm-ag--process-preview-overlays nil
-        helm-ag--minibuffer-preview-overlays nil))
+        helm-ag--previous-preview-buffer nil
+        helm-ag--previous-minibuffer-pattern nil))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets)
