@@ -815,11 +815,15 @@ Continue searching the parent directory? "))
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
 
 (defun helm-ag--construct-do-ag-command (pattern)
-  (let ((opt-query (helm-ag--parse-options-and-query pattern)))
+  (let* ((opt-query (helm-ag--parse-options-and-query pattern))
+         (options (car opt-query))
+         (query (cdr opt-query)))
+    (when helm-ag-use-emacs-lisp-regexp
+      (setq query (helm-ag--elisp-regexp-to-pcre query)))
     (unless (string= (cdr opt-query) "")
       (append (car helm-do-ag--commands)
-              (cl-remove-if (lambda (x) (string= "--" x)) (car opt-query))
-              (list "--" (helm-ag--join-patterns (cdr opt-query)))
+              (cl-remove-if (lambda (x) (string= "--" x)) options)
+              (list "--" (helm-ag--join-patterns query))
               (cdr helm-do-ag--commands)))))
 
 (defun helm-ag--do-ag-set-command ()
