@@ -687,6 +687,7 @@ Special commands:
   (with-helm-window
     (let ((initial-match-info (helm-ag--get-match-info))
           (helm-move-to-line-cycle-in-source t))
+      ;; if there are any matches
       (when initial-match-info
         (cl-destructuring-bind (:file file :line line) initial-match-info
           (helm-move-selection-common :where 'line :direction direction)
