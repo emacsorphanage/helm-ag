@@ -193,8 +193,6 @@ They are specified to `--ignore' options."
   (let* ((parsed (helm-ag--parse-options-and-query input))
          (options (car parsed))
          (query (cdr parsed)))
-    (when helm-ag-use-emacs-lisp-regexp
-      (setq query (helm-ag--elisp-regexp-to-pcre query)))
     (setq helm-ag--last-query query
           helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
     (setq helm-ag--valid-regexp-for-emacs
@@ -818,11 +816,14 @@ Continue searching the parent directory? "))
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
 
 (defun helm-ag--construct-do-ag-command (pattern)
-  (let ((opt-query (helm-ag--parse-options-and-query pattern)))
+  (let* ((opt-query (helm-ag--parse-options-and-query pattern))
+         (final-pattern (helm-ag--join-patterns (cdr opt-query))))
     (unless (string= (cdr opt-query) "")
       (append (car helm-do-ag--commands)
               (cl-remove-if (lambda (x) (string= "--" x)) (car opt-query))
-              (list "--" (helm-ag--join-patterns (cdr opt-query)))
+              (list "--" (if helm-ag-use-emacs-lisp-regexp
+                             (helm-ag--elisp-regexp-to-pcre final-pattern)
+                           final-pattern))
               (cdr helm-do-ag--commands)))))
 
 (defun helm-ag--do-ag-set-command ()
@@ -902,9 +903,19 @@ Continue searching the parent directory? "))
     :requires-pattern 3
     :candidate-number-limit 9999))
 
+(defvar helm-ag--previous-last-query nil)
+
 (defun helm-ag--do-ag-switch-to-ag (dir query)
   (interactive (list default-directory helm-pattern))
-  (helm-run-after-exit (lambda () (helm-ag dir query))))
+  (let ((real-query
+         (if helm-ag-use-emacs-lisp-regexp (helm-ag--elisp-regexp-to-pcre query)
+           query)))
+    (helm-run-after-exit
+     (lambda ()
+       (setq helm-ag--previous-last-query query)
+       (helm-ag
+        dir (helm-ag--join-patterns
+             (cdr (helm-ag--parse-options-and-query real-query))))))))
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
@@ -966,7 +977,11 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--ag-switch-to-do-ag (dir query)
   (interactive (list default-directory helm-ag--last-query))
-  (helm-run-after-exit (lambda () (helm-do-ag dir dir query))))
+  ;; if we just converted from a helm regex to enter helm-ag from helm-do-ag
+  (let ((real-query (or helm-ag--previous-last-query query)))
+    (setq helm-ag--previous-last-query nil)
+    (helm-run-after-exit
+     (lambda () (helm-do-ag dir dir real-query)))))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets query)
