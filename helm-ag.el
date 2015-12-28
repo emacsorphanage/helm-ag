@@ -1023,7 +1023,6 @@ buffer as `helm-ag' highlights their matches.")
           (end (1+ (line-end-position))))
       (move-overlay olay beg end buf))))
 
-;;; temporary variables used as
 (defvar helm-ag--previous-preview-buffer nil
   "Sentinel used in `helm-ag--display-preview' to tell whether the match has
 changed.")
