@@ -429,10 +429,12 @@ They are specified to `--ignore' options."
   (when (use-region-p)
     (buffer-substring-no-properties (region-beginning) (region-end))))
 
-(defun helm-ag--query ()
+(defun helm-ag--query (&optional previous-query)
   (let* ((searched-word (helm-ag--searched-word))
          (marked-word (helm-ag--marked-input))
-         (query (read-string "Pattern: " (or marked-word searched-word) 'helm-ag--command-history)))
+         (query (or previous-query
+                    (read-string "Pattern: " (or marked-word searched-word)
+                                 'helm-ag--command-history))))
     (when (string= query "")
       (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
@@ -709,13 +711,8 @@ Continue searching the parent directory? "))
              (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))))
     (message nil)))
 
-(defun helm-ag-run (dir query)
-  (helm-attrset 'search-this-file nil helm-ag-source)
-  (helm-attrset 'name (helm-ag--helm-header dir query) helm-ag-source)
-  (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))
-
 ;;;###autoload
-(defun helm-ag (&optional basedir)
+(defun helm-ag (&optional basedir query)
   (interactive)
   (setq helm-ag--original-window (selected-window))
   (helm-ag--clear-variables)
@@ -726,8 +723,13 @@ Continue searching the parent directory? "))
             targets dir))
     (let ((helm-ag--default-directory (or basedir dir))
           (helm-ag--default-target targets))
-      (helm-ag--query)
-      (helm-ag-run helm-ag--default-directory helm-ag--last-query))))
+      (helm-ag--query query)
+      (helm-attrset 'search-this-file nil helm-ag-source)
+      (helm-attrset
+       'name
+       (helm-ag--helm-header helm-ag--default-directory helm-ag--last-query)
+       helm-ag-source)
+      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))))
 
 (defun helm-ag--split-string (str)
   (with-temp-buffer
@@ -908,7 +910,7 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--do-ag-switch-to-ag (dir query)
   (interactive (list default-directory helm-pattern))
-  (helm-run-after-exit (lambda () (helm-ag-run dir query))))
+  (helm-run-after-exit (lambda () (helm-ag dir query))))
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
@@ -970,8 +972,7 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--ag-switch-to-do-ag (dir query)
   (interactive (list default-directory helm-ag--last-query))
-  (helm-run-after-exit
-   (lambda () (helm-do-ag dir dir query))))
+  (helm-run-after-exit (lambda () (helm-do-ag dir dir query))))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets query)
