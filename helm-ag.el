@@ -963,7 +963,7 @@ search."
   (helm-ag--clean-add-overlays beg end primary-regexp primary-face
                                secondary-regexp secondary-face))
 
-(defun helm-ag--refresh-overlays-for-buffer (beg end)
+(defun helm-ag--refresh-overlays-in-region (beg end)
   (setq helm-ag--process-preview-overlays
         (helm-ag--refresh-overlay-list
          helm-ag--process-preview-overlays beg end
@@ -973,7 +973,7 @@ search."
 
 (defun helm-ag--refresh-listing-overlays ()
   (with-helm-window
-    (helm-ag--refresh-overlays-for-buffer (point-min) (point-max))))
+    (helm-ag--refresh-overlays-in-region (point-min) (point-max))))
 
 (defvar helm-ag--preview-overlay nil)
 (defvar-local helm-ag--process-preview-overlays nil)
@@ -1008,7 +1008,7 @@ search."
                          (string-equal helm-ag--previous-minibuffer-pattern
                                        helm-pattern))
               ;; maybe add with-current-buffer if this doesn't work?
-              (helm-ag--refresh-overlays-for-buffer
+              (helm-ag--refresh-overlays-in-region
                ;; (line-beginning-position) (line-end-position)
                (point-min) (point-max)))
             (helm-ag--recenter))
