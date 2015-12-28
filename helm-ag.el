@@ -705,6 +705,11 @@ Continue searching the parent directory? "))
              (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))))
     (message nil)))
 
+(defun helm-ag-run (dir query)
+  (helm-attrset 'search-this-file nil helm-ag-source)
+  (helm-attrset 'name (helm-ag--helm-header dir) helm-ag-source)
+  (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))
+
 ;;;###autoload
 (defun helm-ag (&optional basedir)
   (interactive)
@@ -718,9 +723,7 @@ Continue searching the parent directory? "))
     (let ((helm-ag--default-directory (or basedir dir))
           (helm-ag--default-target targets))
       (helm-ag--query)
-      (helm-attrset 'search-this-file nil helm-ag-source)
-      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
-      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))))
+      (helm-ag-run helm-ag--default-directory helm-ag--last-query))))
 
 (defun helm-ag--split-string (str)
   (with-temp-buffer
@@ -881,6 +884,7 @@ Continue searching the parent directory? "))
     (set-keymap-parent map helm-ag-map)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
     (define-key map (kbd "C-c ?") 'helm-ag--do-ag-help)
+    (define-key map (kbd "C-s") 'helm-ag--do-ag-switch-to-ag)
     map)
   "Keymap for `helm-do-ag'.")
 
@@ -893,6 +897,11 @@ Continue searching the parent directory? "))
     :nohighlight t
     :requires-pattern 3
     :candidate-number-limit 9999))
+
+(defun helm-ag--do-ag-switch-to-ag (dir query)
+  (interactive (list default-directory helm-pattern))
+  (helm-run-after-exit
+   (lambda () (helm-ag-run dir query))))
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
