@@ -957,12 +957,6 @@ apply an overlay with face FACE."
                        (line-beginning-position) (line-end-position)
                        regexp face)))))
 
-(defun helm-ag--convert-helm-regexp-to-elisp (regexp)
-  (let* ((regexp (if helm-ag-use-emacs-lisp-regexp regexp
-                   (helm-ag--pcre-to-elisp-regexp regexp)))
-         (split (helm-ag--clean-space-delimited-regexp regexp)))
-    (string-join split "\\|")))
-
 (defun helm-ag--clean-add-overlays
     (beg end primary-regexp primary-face secondary-regexp secondary-face)
   "Add overlays between BEG and END for text matching PRIMARY-REGEXP. Put
@@ -971,16 +965,13 @@ overlays covering text matching SECONDARY-REGEXP, with face
 SECONDARY-FACE. SECONDARY-REGEXP is a helm minibuffer regexp, so it is split
 into components based on whitespace."
   (let* ((case-fold-search t)
-         (primary-fixed (helm-ag--convert-helm-regexp-to-elisp primary-regexp))
          (primary-overlays
-          (unless (string= "" primary-fixed)
-            (helm-ag--make-overlays beg end primary-fixed primary-face)))
-         (secondary-fixed
-          (helm-ag--convert-helm-regexp-to-elisp secondary-regexp))
+          (unless (string= "" primary-regexp)
+            (helm-ag--make-overlays beg end primary-regexp primary-face)))
          (secondary-overlays
-          (unless (string= "" secondary-fixed)
+          (unless (string= "" secondary-regexp)
             (helm-ag--apply-first-second-overlays
-             primary-overlays secondary-fixed secondary-face))))
+             primary-overlays secondary-regexp secondary-face))))
     (append primary-overlays secondary-overlays)))
 
 (defmacro helm-ag--conditional-let (condition bindings &rest body)
@@ -1009,9 +1000,11 @@ buffer as `helm-ag' highlights their matches.")
   (setq helm-ag--process-preview-overlays
         (helm-ag--refresh-overlay-list
          helm-ag--process-preview-overlays beg end
-         (helm-ag--pcre-to-elisp-regexp (or helm-ag--last-query ""))
+         (helm-ag--pcre-to-elisp-regexp
+          (helm-ag--join-patterns (or helm-ag--last-query "")))
          'helm-ag-process-pattern-match
-         helm-pattern 'helm-ag-minibuffer-match)))
+         (helm-ag--pcre-to-elisp-regexp (helm-ag--join-patterns helm-pattern))
+         'helm-ag-minibuffer-match)))
 
 (defun helm-ag--refresh-listing-overlays ()
   "Refresh overlays in *helm-ag* buffer."
