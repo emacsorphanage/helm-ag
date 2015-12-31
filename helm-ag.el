@@ -321,23 +321,6 @@ They are specified to `--ignore' options."
          t)
      (invalid-regexp nil))))
 
-(defsubst helm-ag--is-positive-lookahead (c1 c2 c3 c4)
-  (and c1 c2 c3 c4
-       (char-equal c1 ?\\)
-       (char-equal c2 40)               ; 40 is paren
-       (char-equal c3 ??)
-       (char-equal c4 ?=)))
-(defsubst helm-ag--is-negative-lookahead (c1 c2 c3 c4)
-  (and c1 c2 c3 c4
-       (char-equal c1 ?\\)
-       (char-equal c2 40)
-       (char-equal c3 ??)
-       (char-equal c4 ?!)))
-(defsubst helm-ag--end-paren-group (c1 c2)
-  (and c1 c2 (char-equal c1 ?\\) (char-equal c2 41)))
-(defsubst helm-ag--is-dot-star (c1 c2)
-  (and c1 c2 (char-equal c1 ?.) (char-equal c2 ?*)))
-
 (defconst helm-ag--parse-join-regexp
   (concat
    "\\`\\\\(\\?="
