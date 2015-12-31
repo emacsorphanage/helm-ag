@@ -469,6 +469,13 @@ regexp by inserting alternation (\\|) in between top-level groups."
    "Open file other window" #'helm-ag--action-find-file-other-window
    "Save results in buffer" #'helm-ag--action-save-buffer))
 
+(defun helm-ag--buffer-search-fn (pattern)
+  (ignore-errors
+    (if (char-equal (aref pattern 0) ?^)
+        (re-search-forward
+         (concat "^[^:]+?:[0-9]+?:" (substring pattern 1)) nil t)
+      (re-search-forward pattern nil t))))
+
 (defvar helm-ag-source
   (helm-build-in-buffer-source "The Silver Searcher"
     :init 'helm-ag--init
@@ -476,6 +483,7 @@ regexp by inserting alternation (\\|) in between top-level groups."
     :persistent-action 'helm-ag--persistent-action
     :fuzzy-match helm-ag-fuzzy-match
     :action helm-ag--actions
+    :search '(helm-ag--buffer-search-fn)
     :candidate-number-limit 9999))
 
 ;;;###autoload
@@ -823,10 +831,18 @@ Continue searching the parent directory? "))
       (push (buffer-substring-no-properties prev (point)) patterns)
       (reverse (cl-loop for p in patterns unless (string= p "") collect p)))))
 
+(defsubst helm-ag--add-anchor-tags (pattern &optional no-end-dot-star)
+  (let ((pattern (if (char-equal (aref pattern 0) ?^) pattern
+                        (concat ".*" pattern))))
+    (if (or no-end-dot-star
+            (char-equal (aref pattern (1- (length pattern))) ?$))
+        pattern
+      (concat pattern ".*"))))
+
 (defsubst helm-ag--convert-invert-pattern (pattern)
   (when (and (not helm-ag--command-feature)
              (string-prefix-p "!" pattern) (> (length pattern) 1))
-    (concat "^(?!.*" (substring pattern 1) ").+$")))
+    (concat "^(?!" (helm-ag--add-anchor-tags (substring pattern 1) t) ").+$")))
 
 (defun helm-ag--join-patterns (input)
   (let ((patterns (helm-ag--split-string input)))
@@ -836,11 +852,13 @@ Continue searching the parent directory? "))
       (cl-case helm-ag--command-feature
         (pt input)
         (pt-regexp (mapconcat 'identity patterns ".*"))
-        (otherwise (cl-loop for s in patterns
-                            if (helm-ag--convert-invert-pattern s)
-                            concat (concat "(?=" it ")")
-                            else
-                            concat (concat "(?=.*" s ".*)")))))))
+        (otherwise
+         (cl-loop
+          for s in patterns
+          if (helm-ag--convert-invert-pattern s)
+          concat (concat "(?=" it ")")
+          else
+          concat (concat "(?=" (helm-ag--add-anchor-tags s) ")")))))))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
   (let ((reg (helm-ag--join-patterns input)))
@@ -867,14 +885,17 @@ Continue searching the parent directory? "))
                  (let ((curpoint (point))
                        (case-fold-search helm-ag--ignore-case))
                    (dolist (pattern patterns)
-                     (let ((last-point (point)))
-                       (while (re-search-forward pattern bound t)
-                         (set-text-properties (match-beginning 0) (match-end 0)
-                                              '(face helm-match))
-                         (when (= last-point (point))
-                           (forward-char 1))
-                         (setq last-point (point)))
-                       (goto-char curpoint)))))
+                     (unless (string= pattern "^")
+                       (let ((last-point (point)))
+                         (while (if (char-equal (aref pattern 0) ?^)
+                                    (looking-at (substring pattern 1))
+                                  (re-search-forward pattern bound t))
+                           (set-text-properties (match-beginning 0) (match-end 0)
+                                                '(face helm-match))
+                           (when (= last-point (point))
+                             (forward-char 1))
+                           (setq last-point (point)))
+                         (goto-char curpoint))))))
                (forward-line 1)))))
 
 (defun helm-ag--do-ag-propertize (input)
