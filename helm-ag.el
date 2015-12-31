@@ -504,7 +504,6 @@ regexp by inserting alternation (\\|) in between top-level groups."
           (cl-return-from found t))))))
 
 (defvar helm-ag--buffer-search-cache (make-hash-table :test 'equal))
-(clrhash helm-ag--buffer-search-cache)
 (defconst helm-ag--cache-size 10000)
 
 (defun helm-ag--filter-helm-patterns (patterns)
