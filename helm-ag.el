@@ -677,6 +677,56 @@ Special commands:
        (lambda (_arg)
          (helm-ag--save-results use-other-buf-p))))))
 
+(defconst helm-ag--file-line-parse-regexp "^\\([^:]+\\):\\([0-9]+\\):")
+(defun helm-ag--get-match-info ()
+  (with-helm-window
+    (let ((s (buffer-substring (line-beginning-position) (line-end-position))))
+      (when (string-match helm-ag--file-line-parse-regexp s)
+        (list :file (match-string 1 s)
+              :line (string-to-number (match-string 2 s)))))))
+
+(defun helm-ag--advance-match (motion)
+  (let ((initial-match-info (helm-ag--get-match-info)))
+    ;; if there are any matches
+    (when initial-match-info
+      (cl-destructuring-bind (:file file :line line) initial-match-info
+        (funcall motion)
+        (cl-loop
+         for cur-match-info = (helm-ag--get-match-info)
+         ;; these are nil if cur-match-info is nil
+         for f = (plist-get cur-match-info :file)
+         for l = (plist-get cur-match-info :line)
+         while (or (not f) (string= file f))
+         until (and l (= line l))
+         do (funcall motion)
+         finally (when (string= file f)
+                   (message "%s" "Couldn't find new file!")))))))
+
+(defun helm-ag--wrapping-forward-line ()
+  (if (looking-at "[^\n]*\\'") (goto-char (point-min))
+    (forward-line 1)))
+
+(defun helm-ag--wrapping-backward-line ()
+  (if (looking-back "\\`[^\n]*") (goto-char (point-max))
+    (forward-line -1)))
+
+(defun helm-ag--refresh-position ()
+  (let ((helm-swoop-move-to-line-cycle t))
+    (call-interactively #'helm-next-line)
+    (call-interactively #'helm-previous-line)))
+
+(defun helm-ag--next-file ()
+  (interactive)
+  (with-helm-window
+    (helm-ag--advance-match #'helm-ag--wrapping-forward-line)
+    (helm-ag--refresh-position)))
+
+(defun helm-ag--previous-file ()
+  (interactive)
+  (with-helm-window
+    (helm-ag--advance-match #'helm-ag--wrapping-backward-line)
+    (helm-ag--refresh-position)))
+
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
@@ -685,6 +735,10 @@ Special commands:
     (define-key map (kbd "C-c C-e") 'helm-ag-edit)
     (define-key map (kbd "C-x C-s") 'helm-ag--run-save-buffer)
     (define-key map (kbd "C-c ?") 'helm-ag-help)
+    (define-key map (kbd "<right>") #'helm-ag--next-file)
+    (define-key map (kbd "C->") #'helm-ag--next-file)
+    (define-key map (kbd "<left>") #'helm-ag--previous-file)
+    (define-key map (kbd "C-<") #'helm-ag--previous-file)
     map)
   "Keymap for `helm-ag'.")
 
@@ -883,6 +937,10 @@ Continue searching the parent directory? "))
     (set-keymap-parent map helm-ag-map)
     (define-key map (kbd "C-l") 'helm-ag--do-ag-up-one-level)
     (define-key map (kbd "C-c ?") 'helm-ag--do-ag-help)
+    (define-key map (kbd "<right>") #'helm-ag--next-file)
+    (define-key map (kbd "C->") #'helm-ag--next-file)
+    (define-key map (kbd "<left>") #'helm-ag--previous-file)
+    (define-key map (kbd "C-<") #'helm-ag--previous-file)
     map)
   "Keymap for `helm-do-ag'.")
 
