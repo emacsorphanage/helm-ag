@@ -193,10 +193,14 @@ They are specified to `--ignore' options."
   (let* ((parsed (helm-ag--parse-options-and-query input))
          (options (car parsed))
          (query (cdr parsed)))
-    (setq helm-ag--last-query query
-          helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
+    (setq helm-ag--last-query query)
+    (setq helm-ag--elisp-regexp-query
+          (helm-ag--replace-lookarounds (helm-ag--pcre-to-elisp-regexp query)))
     (setq helm-ag--valid-regexp-for-emacs
-          (helm-ag--validate-regexp helm-ag--elisp-regexp-query))
+          (cl-destructuring-bind (:positive pos :negative neg)
+              helm-ag--elisp-regexp-query
+            (and (cl-every #'helm-ag--validate-regexp pos)
+                 (cl-every #'helm-ag--validate-regexp neg))))
     (if (not options)
         (list query)
       (nconc (nreverse options) (list query)))))
@@ -301,11 +305,13 @@ They are specified to `--ignore' options."
     (helm-highlight-current-line)))
 
 (defun helm-ag--validate-regexp (regexp)
-  (condition-case nil
-      (progn
-        (string-match-p regexp "")
-        t)
-    (invalid-regexp nil)))
+  (and
+   (not (string= regexp ""))
+   (condition-case nil
+       (progn
+         (string-match-p regexp "")
+         t)
+     (invalid-regexp nil))))
 
 (defsubst helm-ag--is-positive-lookahead (c1 c2 c3 c4)
   (and c1 c2 c3 c4
@@ -319,73 +325,60 @@ They are specified to `--ignore' options."
        (char-equal c2 40)
        (char-equal c3 ??)
        (char-equal c4 ?!)))
-(defsubst helm-ag--is-just-paren-group (c1 c2)
-  (and c1 c2 (char-equal c1 ?\\) (char-equal c2 40)))
 (defsubst helm-ag--end-paren-group (c1 c2)
   (and c1 c2 (char-equal c1 ?\\) (char-equal c2 41)))
 (defsubst helm-ag--is-dot-star (c1 c2)
   (and c1 c2 (char-equal c1 ?.) (char-equal c2 ?*)))
+
+(defconst helm-ag--parse-join-regexp
+  (concat
+   "\\`\\\\(\\?=\\(\\^\\\\(\\?!\\)?\\.\\*"
+   "\\(\\(?:.\\|\n\\)+?\\)"
+   "\\(?:\\\\)\\.\\+\\$\\|\\.\\*\\)\\\\)"))
+
+(defsubst helm-ag--join-regexps (reg-list) (string-join reg-list "\\|"))
+
+(defun helm-ag--collect-lookaround-regexps (regexp-list)
+  (cl-loop with pos-results = nil
+           with neg-results = nil
+           for reg-pair in regexp-list
+           do (cl-destructuring-bind (type . reg) reg-pair
+                (when (helm-ag--validate-regexp reg)
+                  (push reg
+                        (if (eq type 'positive) pos-results neg-results))))
+           finally (return
+                    (list :positive pos-results
+                          :negative neg-results))))
+
+(defconst helm-ag--sole-negative-lookaround-regexp
+  "\\`\\^\\\\(\\?!\\.\\*\\(\\(?:.\\|\n\\)+?\\)\\\\)\\.\\+\\$\\'")
+
+(defun helm-ag--parse-sole-negative-lookaround (regexp)
+  (if (string-match helm-ag--sole-negative-lookaround-regexp regexp)
+      (list :positive nil
+            :negative (list
+                       (substring regexp (match-beginning 1) (match-end 1))))
+    (list :positive (list regexp)
+          :negative nil)))
 
 (defun helm-ag--replace-lookarounds (regexp)
   "`helm-ag--join-patterns' converts helm-like patterns into PCRE, but the
 conversation isn't two-way through `helm-ag--pcre-to-elisp-regexp' due to the
 addition of lookarounds. This turns REGEXP into a (hopefully) valid elisp
 regexp by inserting alternation (\\|) in between top-level groups."
-  (if (not (string-match-p "\\`\\\\(\\?[!=]" regexp)) regexp
+  ;; only process regexps which were created by `helm-ag--join-patterns'
+  (if (not (string-match-p helm-ag--parse-join-regexp regexp))
+      (helm-ag--parse-sole-negative-lookaround regexp)
     (cl-loop
-     for idx from 0 upto (1- (length regexp))
-     for char = (aref regexp idx)
-     for next-char = (when (< idx (- (length regexp) 1))
-                       (aref regexp (+ 1 idx)))
-     for second-next-char = (when (< idx (- (length regexp) 2))
-                              (aref regexp (+ 2 idx)))
-     for third-next-char = (when (< idx (- (length regexp) 3))
-                             (aref regexp (+ 3 idx)))
-     with lookahead-stack = nil
-     with check-dot-stars = nil
-     with not-literal-backslash = nil
      with results = nil
-     do (progn
-          (setq not-literal-backslash
-                (if (char-equal char ?\\) (not not-literal-backslash)
-                  nil))
-          (if (and check-dot-stars (helm-ag--is-dot-star char next-char))
-              (incf idx 1)
-            (setq check-dot-stars nil)
-            (cond ((and not-literal-backslash
-                        (helm-ag--is-positive-lookahead
-                         char next-char second-next-char third-next-char))
-                   (push t lookahead-stack)
-                   (setq not-literal-backslash nil
-                         check-dot-stars t)
-                   (incf idx 3))
-                  ((and not-literal-backslash
-                        (helm-ag--is-negative-lookahead
-                         char next-char second-next-char third-next-char))
-                   (push t lookahead-stack)
-                   (setq not-literal-backslash nil
-                         check-dot-stars t)
-                   (incf idx 3))
-                  ((and not-literal-backslash
-                        (helm-ag--is-just-paren-group char next-char))
-                   (push nil lookahead-stack)
-                   (setq not-literal-backslash nil
-                         check-dot-stars t)
-                   (push char results))
-                  ((and not-literal-backslash
-                        (helm-ag--end-paren-group char next-char))
-                   (if (pop lookahead-stack)
-                       (progn
-                         (incf idx 1)
-                         (when (let ((a (car results)) (b (cadr results)))
-                                 (and a b (char-equal a ?*) (char-equal b ?.)))
-                           (setq results (cddr results)))
-                         (unless (= idx (1- (length regexp)))
-                           (push ?\\ results) (push ?| results))
-                         (setq not-literal-backslash nil))
-                     (push char results)))
-                  (t (push char results)))))
-     finally (return (concat (reverse results))))))
+     while (string-match helm-ag--parse-join-regexp regexp)
+     do (cl-destructuring-bind
+            (beg end neg-beg neg-end text-beg text-end) (match-data)
+          (push (cons (if (and neg-beg neg-end) 'negative 'positive)
+                      (substring regexp text-beg text-end))
+                results)
+          (setq regexp (substring regexp end)))
+     finally (return (helm-ag--collect-lookaround-regexps (reverse results))))))
 
 (defun helm-ag--pcre-to-elisp-regexp (pcre)
   ;; This is very simple conversion
@@ -406,7 +399,7 @@ regexp by inserting alternation (\\|) in between top-level groups."
     (while (re-search-forward "\\(\\\\s\\)" nil t)
       (unless (looking-back "\\\\\\\\s" nil)
         (insert "-")))
-    (helm-ag--replace-lookarounds (buffer-string))))
+    (buffer-string)))
 
 (defun helm-ag--elisp-regexp-to-pcre (regexp)
   (with-temp-buffer
@@ -425,10 +418,13 @@ regexp by inserting alternation (\\|) in between top-level groups."
 (defun helm-ag--highlight-candidate (candidate)
   (let ((limit (1- (length candidate)))
         (last-pos 0)
-        (case-fold-search helm-ag--ignore-case))
+        (case-fold-search helm-ag--ignore-case)
+        (joined-query
+         (helm-ag--join-regexps
+          (plist-get helm-ag--elisp-regexp-query :positive))))
     (when helm-ag--valid-regexp-for-emacs
       (while (and (< last-pos limit)
-                  (string-match helm-ag--elisp-regexp-query candidate last-pos))
+                  (string-match joined-query candidate last-pos))
         (let ((start (match-beginning 0))
               (end (match-end 0)))
           (if (= start end)
@@ -847,16 +843,15 @@ Continue searching the parent directory? "))
                             concat (concat "(?=.*" s ".*)")))))))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
-  (if helm-ag--command-feature
-      (list (helm-ag--join-patterns input))
-    (cl-loop with regexp = (helm-ag--pcre-to-elisp-regexp input)
-             for pattern in (helm-ag--split-string regexp)
-             when (helm-ag--validate-regexp pattern)
-             collect pattern)))
+  (let ((reg (helm-ag--join-patterns input)))
+    (if helm-ag--command-feature (list :positive reg)
+      (helm-ag--replace-lookarounds
+       (helm-ag--pcre-to-elisp-regexp reg)))))
 
 (defun helm-ag--propertize-candidates (input)
   (goto-char (point-min))
-  (let ((patterns (helm-ag--do-ag-highlight-patterns input)))
+  (let ((patterns
+         (plist-get (helm-ag--do-ag-highlight-patterns input) :positive)))
     (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
              while (not (eobp))
              do
