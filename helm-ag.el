@@ -189,13 +189,21 @@ They are specified to `--ignore' options."
         (replace-match ""))
       (cons options (buffer-string)))))
 
+(defsubst helm-ag--parse-helm-input (input)
+  (helm-ag--replace-lookarounds
+   (helm-ag--pcre-to-elisp-regexp
+    (helm-ag--join-patterns
+     (if helm-ag-use-emacs-lisp-regexp
+         (helm-ag--elisp-regexp-to-pcre input)
+       input)))))
+
 (defun helm-ag--parse-query (input)
   (let* ((parsed (helm-ag--parse-options-and-query input))
          (options (car parsed))
          (query (cdr parsed)))
     (setq helm-ag--last-query query)
     (setq helm-ag--elisp-regexp-query
-          (helm-ag--replace-lookarounds (helm-ag--pcre-to-elisp-regexp query)))
+          (helm-ag--parse-helm-input query))
     (setq helm-ag--valid-regexp-for-emacs
           (cl-destructuring-bind (:positive pos :negative neg)
               helm-ag--elisp-regexp-query
@@ -332,9 +340,10 @@ They are specified to `--ignore' options."
 
 (defconst helm-ag--parse-join-regexp
   (concat
-   "\\`\\\\(\\?=\\(\\^\\\\(\\?!\\)?\\.\\*"
+   "\\`\\\\(\\?="
+   "\\(\\^\\\\(\\?!\\)?\\(?:\\.\\*\\)?"
    "\\(\\(?:.\\|\n\\)+?\\)"
-   "\\(?:\\\\)\\.\\+\\$\\|\\.\\*\\)\\\\)"))
+   "\\(?:\\\\)\\.\\+\\$\\)?\\(?:\\.\\*\\)?\\\\)"))
 
 (defsubst helm-ag--join-regexps (reg-list) (string-join reg-list "\\|"))
 
@@ -421,7 +430,10 @@ regexp by inserting alternation (\\|) in between top-level groups."
         (case-fold-search helm-ag--ignore-case)
         (joined-query
          (helm-ag--join-regexps
-          (plist-get helm-ag--elisp-regexp-query :positive))))
+          (plist-get
+           (helm-ag--plist-map
+            #'helm-ag--filter-helm-patterns helm-ag--elisp-regexp-query)
+           :positive))))
     (when helm-ag--valid-regexp-for-emacs
       (while (and (< last-pos limit)
                   (string-match joined-query candidate last-pos))
@@ -469,22 +481,77 @@ regexp by inserting alternation (\\|) in between top-level groups."
    "Open file other window" #'helm-ag--action-find-file-other-window
    "Save results in buffer" #'helm-ag--action-save-buffer))
 
+(defsubst helm-ag--get-string-at-line ()
+  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+
+(defun helm-ag--xor (a b)
+  (or (and a (not b))
+      (and b (not a))))
+
+(defun helm-ag--matches-all-regexps (regexp-list str &optional no)
+  (cond ((string-match-p "\\`[[:space:]]*\\'" str) nil)
+        (no (cl-every (lambda (reg) (not (string-match-p reg str)))
+                      regexp-list))
+        (t (cl-every (lambda (reg) (string-match-p reg str)) regexp-list))))
+
+(defvar helm-ag--prev-line nil)
+(defun helm-ag--search-next-match-pos-neg (pos-reg neg-reg)
+  (cl-block found
+    (while (re-search-forward (or (car pos-reg) ".") nil t)
+      (let ((this-line (helm-ag--get-string-at-line)))
+        (when (and (helm-ag--matches-all-regexps (cdr pos-reg) this-line)
+                   (helm-ag--matches-all-regexps neg-reg this-line t))
+          (cl-return-from found t))))))
+
+(defvar helm-ag--buffer-search-cache (make-hash-table :test 'equal))
+(clrhash helm-ag--buffer-search-cache)
+(defconst helm-ag--cache-size 10000)
+
+(defun helm-ag--filter-helm-patterns (patterns)
+  (cl-remove-if #'null (cl-mapcar #'helm-ag--add-header-for-carat patterns)))
+
+(defun helm-ag--plist-map (fn plist)
+  (cl-loop for el in plist
+           for counter = 0 then (1+ counter)
+           collect (if (zerop (% counter 2)) el
+                     (funcall fn el))))
+
+(defun helm-ag--convert-helm-to-regexps (pattern)
+  (helm-aif (gethash pattern helm-ag--buffer-search-cache) it
+    (let* ((reg-pos-neg (helm-ag--parse-helm-input pattern))
+           (result
+            (helm-ag--plist-map #'helm-ag--filter-helm-patterns reg-pos-neg)))
+      (when (> (hash-table-size helm-ag--buffer-search-cache)
+               helm-ag--cache-size)
+        (clrhash helm-ag--buffer-search-cache))
+      (puthash pattern result helm-ag--buffer-search-cache)
+      result)))
+
 (defun helm-ag--buffer-search-fn (pattern)
-  (ignore-errors
-    (if (char-equal (aref pattern 0) ?^)
-        (re-search-forward
-         (concat "^[^:]+?:[0-9]+?:" (substring pattern 1)) nil t)
-      (re-search-forward pattern nil t))))
+  (let* ((fixed-pattern (string-trim pattern))
+         (pos-neg-regexps (helm-ag--convert-helm-to-regexps fixed-pattern)))
+    (cl-destructuring-bind (:positive pos-reg :negative neg-reg) pos-neg-regexps
+      (helm-ag--search-next-match-pos-neg pos-reg neg-reg))))
+
+(defun helm-ag--add-header-for-carat (pattern)
+  (cond ((or (string= pattern "^")
+             (string= pattern "$"))
+         nil)
+        ((char-equal (aref pattern 0) ?^)
+         (concat "^[^:]+:[0-9]+:" (substring pattern 1)))
+        (t pattern)))
 
 (defvar helm-ag-source
-  (helm-build-in-buffer-source "The Silver Searcher"
-    :init 'helm-ag--init
-    :real-to-display 'helm-ag--candidate-transformer
-    :persistent-action 'helm-ag--persistent-action
-    :fuzzy-match helm-ag-fuzzy-match
-    :action helm-ag--actions
-    :search '(helm-ag--buffer-search-fn)
-    :candidate-number-limit 9999))
+  (let ((src
+         (helm-build-in-buffer-source "The Silver Searcher"
+           :init 'helm-ag--init
+           :real-to-display 'helm-ag--candidate-transformer
+           :persistent-action 'helm-ag--persistent-action
+           :fuzzy-match helm-ag-fuzzy-match
+           :action helm-ag--actions
+           :candidate-number-limit 9999)))
+    (setf (cdr (assoc 'search src)) '(helm-ag--buffer-search-fn))
+    src))
 
 ;;;###autoload
 (defun helm-ag-pop-stack ()
@@ -887,14 +954,19 @@ Continue searching the parent directory? "))
                    (dolist (pattern patterns)
                      (unless (string= pattern "^")
                        (let ((last-point (point)))
-                         (while (if (char-equal (aref pattern 0) ?^)
-                                    (looking-at (substring pattern 1))
-                                  (re-search-forward pattern bound t))
-                           (set-text-properties (match-beginning 0) (match-end 0)
-                                                '(face helm-match))
-                           (when (= last-point (point))
-                             (forward-char 1))
-                           (setq last-point (point)))
+                         (if (char-equal (aref pattern 0) ?^)
+                             (save-excursion
+                               (goto-char curpoint)
+                               (when (looking-at (substring pattern 1))
+                                 (set-text-properties
+                                  (match-beginning 0) (match-end 0)
+                                  '(face helm-match))))
+                           (while (re-search-forward pattern bound t)
+                             (set-text-properties (match-beginning 0) (match-end 0)
+                                                  '(face helm-match))
+                             (when (= last-point (point))
+                               (forward-char 1))
+                             (setq last-point (point))))
                          (goto-char curpoint))))))
                (forward-line 1)))))
 
