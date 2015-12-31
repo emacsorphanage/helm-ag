@@ -677,6 +677,30 @@ Special commands:
        (lambda (_arg)
          (helm-ag--save-results use-other-buf-p))))))
 
+(defun helm-ag--file-of-current-file ()
+  (let ((line (helm-current-line-contents)))
+    (when (string-match helm-grep-split-line-regexp line)
+      (match-string-no-properties 1 line))))
+
+(defun helm-ag--move-file-common (pred move-fn wrap-fn)
+  (with-helm-window
+    (let ((file (helm-ag--file-of-current-file)))
+      (funcall move-fn)
+      (while (and (not (funcall pred)) (string= file (helm-ag--file-of-current-file)))
+        (funcall move-fn))
+      (when (funcall pred)
+        (funcall wrap-fn)))))
+
+(defun helm-ag--previous-file ()
+  (interactive)
+  (helm-ag--move-file-common
+   #'helm-beginning-of-source-p #'helm-previous-line #'helm-end-of-buffer))
+
+(defun helm-ag--next-file ()
+  (interactive)
+  (helm-ag--move-file-common
+   #'helm-end-of-source-p #'helm-next-line #'helm-beginning-of-buffer))
+
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
@@ -685,6 +709,10 @@ Special commands:
     (define-key map (kbd "C-c C-e") 'helm-ag-edit)
     (define-key map (kbd "C-x C-s") 'helm-ag--run-save-buffer)
     (define-key map (kbd "C-c ?") 'helm-ag-help)
+    (define-key map (kbd "C-c >") 'helm-ag--next-file)
+    (define-key map (kbd "<right>") 'helm-ag--next-file)
+    (define-key map (kbd "C-c <") 'helm-ag--previous-file)
+    (define-key map (kbd "<left>") 'helm-ag--previous-file)
     map)
   "Keymap for `helm-ag'.")
 

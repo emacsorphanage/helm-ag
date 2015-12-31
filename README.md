@@ -180,14 +180,16 @@ Use temporary buffer and not open file for persistent action.
 
 `helm-ag-map` and `helm-do-ag-map` are inherited by `helm-map`.
 
-| Key       | Action                                                                     |
-|:----------|:---------------------------------------------------------------------------|
-| `C-c o`   | Open other window                                                          |
-| `C-l`     | Search in parent directory                                                 |
-| `C-c C-e` | Switch to edit mode                                                        |
-| `C-x C-s` | Save ag results to buffer(Ask save buffer name if prefix key is specified) |
-| `C-c C-f` | Enable helm-follow-mode                                                    |
-| `C-c ?`   | Show help message                                                          |
+| Key              | Action                                                                     |
+|:-----------------|:---------------------------------------------------------------------------|
+| `C-c o`          | Open other window                                                          |
+| `C-l`            | Search in parent directory                                                 |
+| `C-c C-e`        | Switch to edit mode                                                        |
+| `C-x C-s`        | Save ag results to buffer(Ask save buffer name if prefix key is specified) |
+| `C-c C-f`        | Enable helm-follow-mode                                                    |
+| `C-c >`, `right` | Move to next file                                                          |
+| `C-c <`, `left`  | Move to previous file                                                      |
+| `C-c ?`          | Show help message                                                          |
 
 
 ### Edit mode keymap
