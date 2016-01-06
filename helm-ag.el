@@ -713,12 +713,13 @@ Special commands:
   (interactive (list 'query-user))
   (let* ((initial-input helm-input)
          (cur-src (helm-get-current-source))
-         (cur-buf (with-helm-buffer (current-buffer))))
+         (cur-buf (with-helm-buffer (buffer-name))))
     (helm-ag--get-dir-query-and-switch (dir to-directory)
       (let ((default-directory dir)
             (helm-ag--default-directory dir))
         (setq helm-ag--last-default-directory default-directory)
-        (helm-attrset 'name (helm-ag--helm-header dir) cur-src)
+        (helm-attrset 'name (helm-ag--helm-header dir helm-ag--last-query)
+                      cur-src)
         (helm :sources (list cur-src) :buffer cur-buf
               :input initial-input)))))
 
