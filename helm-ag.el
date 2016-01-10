@@ -276,7 +276,7 @@ They are specified to `--ignore' options."
   (let* ((file-line (helm-grep-split-line candidate))
          (filename (or this-file (cl-first file-line)))
          (line (if this-file
-                   (cl-first file-line)
+                   (cl-first (split-string candidate ":"))
                  (cl-second file-line)))
          (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
