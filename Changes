@@ -1,5 +1,8 @@
 Revision history for helm-ag.el
 
+Revision 0.50 2016/01/10 syohex
+    - Fix helm-ag-this-file, and helm-do-ag-this-file actions(#202)
+
 Revision 0.49 2016/01/09 syohex
     - Refactoring code
     - Support converting elisp -> PCRE in helm-do-ag
