@@ -57,65 +57,53 @@
       "ag --vimgrep"
     "ag --nocolor --nogroup")
   "Base command of `ag'"
-  :type 'string
-  :group 'helm-ag)
+  :type 'string)
 
 (defcustom helm-ag-command-option nil
   "Command line option of `ag'. This is appended after `helm-ag-base-command'"
-  :type 'string
-  :group 'helm-ag)
+  :type 'string)
 
 (defcustom helm-ag-insert-at-point nil
   "Insert thing at point as search pattern.
    You can set value same as `thing-at-point'"
-  :type 'symbol
-  :group 'helm-ag)
+  :type 'symbol)
 
 (defcustom helm-ag-ignore-patterns nil
   "Ignore patterns for `ag'. This parameters are specified as --ignore"
-  :type '(repeat string)
-  :group 'helm-ag)
+  :type '(repeat string))
 
 (defcustom helm-ag-use-grep-ignore-list nil
   "Use `grep-find-ignored-files' and `grep-find-ignored-directories' as ignore pattern.
 They are specified to `--ignore' options."
-  :type 'boolean
-  :group 'helm-ag)
+  :type 'boolean)
 
 (defcustom helm-ag-always-set-extra-option nil
   "Always set `ag' options of `helm-do-ag'."
-  :type 'boolean
-  :group 'helm-ag)
+  :type 'boolean)
 
 (defcustom helm-ag-fuzzy-match nil
   "Enable fuzzy match"
-  :type 'boolean
-  :group 'helm-ag)
+  :type 'boolean)
 
 (defcustom helm-ag-edit-save t
   "Save buffers you edit at completed."
-  :type 'boolean
-  :group 'helm-ag)
+  :type 'boolean)
 
 (defcustom helm-ag-use-emacs-lisp-regexp nil
   "[Experimental] Use Emacs Lisp regexp instead of PCRE."
-  :type 'boolean
-  :group 'helm-ag)
+  :type 'boolean)
 
 (defcustom helm-ag-use-agignore nil
   "Use .agignore where is at project root if it exists."
-  :type 'boolean
-  :group 'helm-ag)
+  :type 'boolean)
 
 (defcustom helm-ag-use-temp-buffer nil
   "Use temporary buffer for persistent action."
-  :type 'boolean
-  :group 'helm-ag)
+  :type 'boolean)
 
 (defface helm-ag-edit-deleted-line
   '((t (:inherit font-lock-comment-face :strike-through t)))
-  "Face of deleted line in edit mode."
-  :group 'helm-ag)
+  "Face of deleted line in edit mode.")
 
 (defvar helm-ag--command-history '())
 (defvar helm-ag--context-stack nil)
