@@ -49,9 +49,6 @@
 (defsubst helm-ag--windows-p ()
   (memq system-type '(ms-dos windows-nt)))
 
-(defsubst helm-ag--has-drive-letter-p (path)
-  (string-match-p "\\`[a-zA-Z]:" path))
-
 (defcustom helm-ag-base-command
   (if (helm-ag--windows-p)
       "ag --vimgrep"
