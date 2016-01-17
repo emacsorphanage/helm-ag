@@ -243,7 +243,7 @@ They are specified to `--ignore' options."
              (coding-system-for-write buf-coding))
         (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmds helm-ag--last-query)
               helm-ag--last-command cmds)
-        (let ((ret (apply 'process-file (car cmds) nil t nil (cdr cmds))))
+        (let ((ret (apply #'process-file (car cmds) nil t nil (cdr cmds))))
           (if (zerop (length (buffer-string)))
               (error "No ag output: '%s'" helm-ag--last-query)
             (unless (zerop ret)
@@ -287,8 +287,8 @@ They are specified to `--ignore' options."
 
 (defun helm-ag--persistent-action (candidate)
   (let ((find-func (if helm-ag-use-temp-buffer
-                       'helm-ag--open-file-with-temp-buffer
-                     'find-file)))
+                       #'helm-ag--open-file-with-temp-buffer
+                     #'find-file)))
     (helm-ag--find-file-action candidate find-func (helm-attr 'search-this-file) t)
     (helm-highlight-current-line)))
 
@@ -867,7 +867,7 @@ Continue searching the parent directory? "))
                                 default-directory))
          (cmd-args (helm-ag--construct-do-ag-command helm-pattern)))
     (when cmd-args
-      (let ((proc (apply 'start-file-process "helm-do-ag" nil cmd-args)))
+      (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
         (setq helm-ag--last-query helm-pattern
               helm-ag--last-command cmd-args
               helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
