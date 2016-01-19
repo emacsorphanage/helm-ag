@@ -389,7 +389,8 @@ They are specified to `--ignore' options."
     :persistent-action 'helm-ag--persistent-action
     :fuzzy-match helm-ag-fuzzy-match
     :action helm-ag--actions
-    :candidate-number-limit 9999))
+    :candidate-number-limit 9999
+    :follow (and helm-follow-mode-persistent 1)))
 
 ;;;###autoload
 (defun helm-ag-pop-stack ()
@@ -911,7 +912,8 @@ Continue searching the parent directory? "))
     :action helm-ag--actions
     :nohighlight t
     :requires-pattern 3
-    :candidate-number-limit 9999))
+    :candidate-number-limit 9999
+    :follow (and helm-follow-mode-persistent 1)))
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
