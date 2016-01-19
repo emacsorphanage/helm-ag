@@ -791,6 +791,7 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--propertize-candidates (input)
   (goto-char (point-min))
+  (forward-line 1)
   (let ((patterns (helm-ag--do-ag-highlight-patterns input)))
     (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
              while (not (eobp))
