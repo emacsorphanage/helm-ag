@@ -258,6 +258,9 @@ They are specified to `--ignore' options."
         target))))
 
 (defun helm-ag--find-file-action (candidate find-func this-file &optional persistent)
+  (when helm-ag--command-feature
+    ;; 'pt' always show filename if matched file is only one.
+    (setq this-file nil))
   (let* ((file-line (helm-grep-split-line candidate))
          (filename (or this-file (cl-first file-line)))
          (line (if this-file
@@ -432,7 +435,9 @@ They are specified to `--ignore' options."
   (helm-ag--clear-variables)
   (let ((filename (file-name-nondirectory (buffer-file-name))))
     (helm-ag--query)
-    (helm-attrset 'search-this-file (buffer-file-name) helm-ag-source)
+    (helm-ag--set-command-feature)
+    (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
+                  helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
     (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
 
