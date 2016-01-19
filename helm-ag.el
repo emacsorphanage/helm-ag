@@ -5,7 +5,7 @@
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-helm-ag
 ;; Version: 0.50
-;; Package-Requires: ((helm "1.7.7") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.3") (helm "1.7.7"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
