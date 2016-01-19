@@ -88,6 +88,16 @@ Move to point before jump
 Clear context stack
 
 
+## Enable helm-follow-mode by default
+
+Please set `helm-follow-mode-persistent` to non-nil if you want to use `helm-follow-mode` by default. You must set it before loading `helm-ag.el`.
+
+``` lisp
+(custom-set-variables
+ '(helm-follow-mode-persistent t))
+```
+
+
 ## Persistent action
 
 You can see file content temporarily by persistent action(`C-j`).
