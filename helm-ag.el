@@ -472,7 +472,7 @@ They are specified to `--ignore' options."
   (let ((read-only-files 0)
         (default-directory helm-ag--default-directory)
         (line-deletes (make-hash-table :test #'equal)))
-    (while (re-search-forward "^\\([^:]+\\):\\([1-9][0-9]*\\):\\(.*\\)$" nil t)
+    (while (re-search-forward "^\\([^:]+\\):\\([1-9][0-9]*\\)[:-]\\(.*\\)$" nil t)
       (let* ((file (match-string-no-properties 1))
              (line (string-to-number (match-string-no-properties 2)))
              (body (match-string-no-properties 3))
@@ -553,7 +553,7 @@ They are specified to `--ignore' options."
                 (format "[%s] C-c C-c: Commit, C-c C-k: Abort"
                         (abbreviate-file-name helm-ag--default-directory)))
           (goto-char (point-min))
-          (while (re-search-forward "^\\(\\(?:[^:]+:\\)\\{1,2\\}\\)\\(.*\\)$" nil t)
+          (while (re-search-forward "^\\(\\(?:[^:]+:\\)?[^:-]+[:-]\\)\\(.*\\)$" nil t)
             (let ((file-line-begin (match-beginning 1))
                   (file-line-end (match-end 1))
                   (body-begin (match-beginning 2))
