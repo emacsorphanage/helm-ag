@@ -470,6 +470,7 @@ They are specified to `--ignore' options."
   (interactive)
   (goto-char (point-min))
   (let ((read-only-files 0)
+        (saved-buffers nil)
         (default-directory helm-ag--default-directory)
         (line-deletes (make-hash-table :test #'equal)))
     (while (re-search-forward "^\\([^:]+\\):\\([1-9][0-9]*\\)[:-]\\(.*\\)$" nil t)
@@ -491,8 +492,11 @@ They are specified to `--ignore' options."
                   (forward-line 1)
                   (delete-region beg (point))
                   (puthash file (1+ deleted-lines) line-deletes)))
-              (when helm-ag-edit-save
-                (save-buffer)))))))
+              (cl-pushnew (current-buffer) saved-buffers))))))
+    (when helm-ag-edit-save
+      (dolist (buf saved-buffers)
+        (with-current-buffer buf
+          (save-buffer))))
     (select-window helm-ag--original-window)
     (helm-ag--kill-edit-buffer)
     (if (not (zerop read-only-files))
