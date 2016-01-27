@@ -1,5 +1,12 @@
 Revision history for helm-ag.el
 
+Revision 0.51 2016/01/27 syohex
+    - Better saving buffer at edit mode(#215)
+    - Support context option(-A, -B, -C) output(#214)
+    - Fix pt mode issue at this file commands(#211)
+    - Add enabling follow-mode by default option(#210)
+    - Refactoring code
+
 Revision 0.50 2016/01/10 syohex
     - Fix helm-ag-this-file, and helm-do-ag-this-file actions(#202)
 
