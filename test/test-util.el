@@ -128,6 +128,13 @@
       (let* ((got (helm-ag--construct-do-ag-command "somepattern"))
              (expected '("ag" "--nocolor" "--nogroup" "--ignore-case" "--all-text"
                          "--" "somepattern")))
+        (should (equal got expected))))
+
+    (let ((helm-ag-ignore-patterns '("apple" "orange")))
+      (helm-ag--do-ag-set-command)
+      (let* ((got (helm-ag--construct-do-ag-command "somepattern"))
+             (expected '("ag" "--nocolor" "--nogroup" "--ignore=apple" "--ignore=orange"
+                         "--" "somepattern")))
         (should (equal got expected))))))
 
 (ert-deftest construct-do-ag-command-with-extra-option ()
