@@ -855,10 +855,10 @@ Continue searching the parent directory? "))
     (when helm-ag--extra-options
       (setq cmd-opts (append cmd-opts (split-string helm-ag--extra-options))))
     (when helm-ag-ignore-patterns
-          (setq cmd-opts
-                (append cmd-opts
-                        (mapcar 'helm-ag--construct-ignore-option
-                                helm-ag-ignore-patterns))))
+      (setq cmd-opts
+            (append cmd-opts
+                    (mapcar #'helm-ag--construct-ignore-option
+                            helm-ag-ignore-patterns))))
     (when helm-ag-use-agignore
       (helm-aif (helm-ag--root-agignore)
           (setq cmd-opts (append cmd-opts (list "-p" it)))))
