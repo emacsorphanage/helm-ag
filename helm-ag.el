@@ -1018,7 +1018,11 @@ Continue searching the parent directory? "))
     (helm-ag--set-do-ag-option)
     (helm-ag--set-command-feature)
     (helm-ag--save-current-context)
-    (helm-attrset 'search-this-file (and (= (length targets) 1) (car targets)) helm-source-do-ag)
+    (helm-attrset 'search-this-file
+                  (and (= (length helm-ag--default-target) 1)
+                       (not (file-directory-p (car helm-ag--default-target)))
+                       (car helm-ag--default-target))
+                  helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
         (helm-do-ag--helm)
       (let* ((helm-ag--default-directory
