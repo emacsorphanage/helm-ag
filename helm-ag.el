@@ -471,10 +471,13 @@ They are specified to `--ignore' options."
   (goto-char (point-min))
   (let ((read-only-files 0)
         (saved-buffers nil)
+        (regexp (if helm-ag--search-this-file-p
+                    "^\\(?2:[1-9][0-9]*\\)[:-]\\(?3:.*\\)$"
+                  "^\\([^:]+\\):\\([1-9][0-9]*\\)[:-]\\(.*\\)$"))
         (default-directory helm-ag--default-directory)
         (line-deletes (make-hash-table :test #'equal)))
-    (while (re-search-forward "^\\([^:]+\\):\\([1-9][0-9]*\\)[:-]\\(.*\\)$" nil t)
-      (let* ((file (match-string-no-properties 1))
+    (while (re-search-forward regexp nil t)
+      (let* ((file (or (match-string-no-properties 1) helm-ag--search-this-file-p))
              (line (string-to-number (match-string-no-properties 2)))
              (body (match-string-no-properties 3))
              (ovs (overlays-at (line-beginning-position))))
@@ -537,6 +540,8 @@ They are specified to `--ignore' options."
     (with-current-buffer (get-buffer-create "*helm-ag-edit*")
       (erase-buffer)
       (setq-local helm-ag--default-directory helm-ag--default-directory)
+      (setq-local helm-ag--search-this-file-p
+                  (assoc-default 'search-this-file (helm-get-current-source)))
       (let (buf-content)
         (with-current-buffer (get-buffer "*helm-ag*")
           (goto-char (point-min))
@@ -552,12 +557,15 @@ They are specified to `--ignore' options."
         (insert buf-content)
         (add-text-properties (point-min) (point-max)
                              '(read-only t rear-nonsticky t front-sticky t))
-        (let ((inhibit-read-only t))
+        (let ((inhibit-read-only t)
+              (regexp (if helm-ag--search-this-file-p
+                          "^\\([^:-]+\\)[:-]\\(.*\\)$"
+                        "^\\(\\(?:[^:]+:\\)?[^:-]+[:-]\\)\\(.*\\)$")))
           (setq header-line-format
                 (format "[%s] C-c C-c: Commit, C-c C-k: Abort"
                         (abbreviate-file-name helm-ag--default-directory)))
           (goto-char (point-min))
-          (while (re-search-forward "^\\(\\(?:[^:]+:\\)?[^:-]+[:-]\\)\\(.*\\)$" nil t)
+          (while (re-search-forward regexp nil t)
             (let ((file-line-begin (match-beginning 1))
                   (file-line-end (match-end 1))
                   (body-begin (match-beginning 2))
