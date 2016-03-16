@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.52 2016/03/16 syohex
+   - Fix edit mode for search-this-file commands
+   - Use helm-ag-ignore-patterns for helm-do-ag too(Thanks David Zuber)
+
 Revision 0.51 2016/01/27 syohex
     - Better saving buffer at edit mode(#215)
     - Support context option(-A, -B, -C) output(#214)
