@@ -466,14 +466,28 @@ They are specified to `--ignore' options."
 (defsubst helm-ag--kill-edit-buffer ()
   (kill-buffer (get-buffer "*helm-ag-edit*")))
 
+(defsubst helm-ag--has-column-option ()
+  (cl-loop for option in '("--vimgrep" "--column")
+           thereis (member option helm-ag--last-command)))
+
+(defun helm-ag--match-line-regexp ()
+  ;; $1: file name
+  ;; $2: line
+  ;; $3: match body
+  ;; $4: file attributes part(filename, line, column)
+  (cond ((helm-ag--has-column-option)
+         "^\\(?4:\\(?1:[^:]+\\):\\(?2:[1-9][0-9]*\\):[^:]+:\\)\\(?3:.*\\)$")
+        (helm-ag--search-this-file-p
+         "^\\(?4:\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?3:.*\\)$")
+        (t
+         "^\\(?4:\\(?1:[^:]+\\):\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?3:.*\\)$")))
+
 (defun helm-ag--edit-commit ()
   (interactive)
   (goto-char (point-min))
   (let ((read-only-files 0)
         (saved-buffers nil)
-        (regexp (if helm-ag--search-this-file-p
-                    "^\\(?2:[1-9][0-9]*\\)[:-]\\(?3:.*\\)$"
-                  "^\\([^:]+\\):\\([1-9][0-9]*\\)[:-]\\(.*\\)$"))
+        (regexp (helm-ag--match-line-regexp))
         (default-directory helm-ag--default-directory)
         (line-deletes (make-hash-table :test #'equal)))
     (while (re-search-forward regexp nil t)
@@ -558,18 +572,16 @@ They are specified to `--ignore' options."
         (add-text-properties (point-min) (point-max)
                              '(read-only t rear-nonsticky t front-sticky t))
         (let ((inhibit-read-only t)
-              (regexp (if helm-ag--search-this-file-p
-                          "^\\([^:-]+\\)[:-]\\(.*\\)$"
-                        "^\\(\\(?:[^:]+:\\)?[^:-]+[:-]\\)\\(.*\\)$")))
+              (regexp (helm-ag--match-line-regexp)))
           (setq header-line-format
                 (format "[%s] C-c C-c: Commit, C-c C-k: Abort"
                         (abbreviate-file-name helm-ag--default-directory)))
           (goto-char (point-min))
           (while (re-search-forward regexp nil t)
-            (let ((file-line-begin (match-beginning 1))
-                  (file-line-end (match-end 1))
-                  (body-begin (match-beginning 2))
-                  (body-end (match-end 2)))
+            (let ((file-line-begin (match-beginning 4))
+                  (file-line-end (match-end 4))
+                  (body-begin (match-beginning 3))
+                  (body-end (match-end 3)))
               (add-text-properties file-line-begin file-line-end
                                    '(face font-lock-function-name-face
                                           intangible t))
