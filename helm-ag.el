@@ -285,11 +285,20 @@ They are specified to `--ignore' options."
     (set-auto-mode)
     (font-lock-fontify-region (point-min) (point-max))))
 
+(defsubst helm-ag--vimgrep-option ()
+  (member "--vimgrep" helm-ag--last-command))
+
+(defun helm-ag--search-this-file-p ()
+  (unless (helm-ag--vimgrep-option)
+    (if (eq (helm-get-current-source) 'helm-source-do-ag)
+        (helm-ag--search-only-one-file-p)
+      (helm-attr 'search-this-file))))
+
 (defun helm-ag--persistent-action (candidate)
   (let ((find-func (if helm-ag-use-temp-buffer
                        #'helm-ag--open-file-with-temp-buffer
                      #'find-file)))
-    (helm-ag--find-file-action candidate find-func (helm-attr 'search-this-file) t)
+    (helm-ag--find-file-action candidate find-func (helm-ag--search-this-file-p) t)
     (helm-highlight-current-line)))
 
 (defun helm-ag--validate-regexp (regexp)
@@ -367,11 +376,6 @@ They are specified to `--ignore' options."
           (helm-ag--candidate-transform-for-this-file candidate)
         (helm-ag--candidate-transform-for-files candidate))
       candidate))
-
-(defun helm-ag--search-this-file-p ()
-  (if (eq (helm-get-current-source) 'helm-source-do-ag)
-      (helm-ag--search-only-one-file-p)
-    (helm-attr 'search-this-file)))
 
 (defun helm-ag--action-find-file (candidate)
   (helm-ag--find-file-action candidate 'find-file (helm-ag--search-this-file-p)))
@@ -468,16 +472,12 @@ They are specified to `--ignore' options."
 (defsubst helm-ag--kill-edit-buffer ()
   (kill-buffer (get-buffer "*helm-ag-edit*")))
 
-(defsubst helm-ag--has-column-option ()
-  (cl-loop for option in '("--vimgrep" "--column")
-           thereis (member option helm-ag--last-command)))
-
 (defun helm-ag--match-line-regexp ()
   ;; $1: file name
   ;; $2: line
   ;; $3: match body
   ;; $4: file attributes part(filename, line, column)
-  (cond ((helm-ag--has-column-option)
+  (cond ((helm-ag--vimgrep-option)
          "^\\(?4:\\(?1:[^:]+\\):\\(?2:[1-9][0-9]*\\):[^:]+:\\)\\(?3:.*\\)$")
         (helm-ag--search-this-file-p
          "^\\(?4:\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?3:.*\\)$")
@@ -556,8 +556,9 @@ They are specified to `--ignore' options."
     (with-current-buffer (get-buffer-create "*helm-ag-edit*")
       (erase-buffer)
       (setq-local helm-ag--default-directory helm-ag--default-directory)
-      (setq-local helm-ag--search-this-file-p
-                  (assoc-default 'search-this-file (helm-get-current-source)))
+      (unless (helm-ag--vimgrep-option)
+        (setq-local helm-ag--search-this-file-p
+                    (assoc-default 'search-this-file (helm-get-current-source))))
       (let (buf-content)
         (with-current-buffer (get-buffer "*helm-ag*")
           (goto-char (point-min))
@@ -651,7 +652,8 @@ Special commands:
     (save-excursion
       (insert result)))
   (helm-ag-mode)
-  (setq-local helm-ag--search-this-file-p search-this-file-p)
+  (unless (helm-ag--vimgrep-option)
+    (setq-local helm-ag--search-this-file-p search-this-file-p))
   (setq-local helm-ag--default-directory default-directory))
 
 (defun helm-ag--save-results (use-other-buf)
@@ -818,7 +820,8 @@ Continue searching the parent directory? "))
   (goto-char (point-min))
   (forward-line 1)
   (let ((patterns (helm-ag--do-ag-highlight-patterns input)))
-    (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
+    (cl-loop with one-file-p = (and (not (helm-ag--vimgrep-option))
+                                    (helm-ag--search-only-one-file-p))
              while (not (eobp))
              do
              (progn
