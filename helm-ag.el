@@ -285,11 +285,20 @@ They are specified to `--ignore' options."
     (set-auto-mode)
     (font-lock-fontify-region (point-min) (point-max))))
 
+(defsubst helm-ag--vimgrep-option ()
+  (member "--vimgrep" helm-ag--last-command))
+
+(defun helm-ag--search-this-file-p ()
+  (unless (helm-ag--vimgrep-option)
+    (if (eq (helm-get-current-source) 'helm-source-do-ag)
+        (helm-ag--search-only-one-file-p)
+      (helm-attr 'search-this-file))))
+
 (defun helm-ag--persistent-action (candidate)
   (let ((find-func (if helm-ag-use-temp-buffer
                        #'helm-ag--open-file-with-temp-buffer
                      #'find-file)))
-    (helm-ag--find-file-action candidate find-func (helm-attr 'search-this-file) t)
+    (helm-ag--find-file-action candidate find-func (helm-ag--search-this-file-p) t)
     (helm-highlight-current-line)))
 
 (defun helm-ag--validate-regexp (regexp)
@@ -368,11 +377,6 @@ They are specified to `--ignore' options."
         (helm-ag--candidate-transform-for-files candidate))
       candidate))
 
-(defun helm-ag--search-this-file-p ()
-  (if (eq (helm-get-current-source) 'helm-source-do-ag)
-      (helm-ag--search-only-one-file-p)
-    (helm-attr 'search-this-file)))
-
 (defun helm-ag--action-find-file (candidate)
   (helm-ag--find-file-action candidate 'find-file (helm-ag--search-this-file-p)))
 
@@ -426,20 +430,22 @@ They are specified to `--ignore' options."
       (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
 
-(defsubst helm-ag--clear-variables ()
-  (setq helm-ag--last-default-directory nil))
+(defsubst helm-ag--init-state ()
+  (setq helm-ag--original-window (selected-window)
+        helm-ag--last-default-directory nil))
 
 ;;;###autoload
 (defun helm-ag-this-file ()
   (interactive)
-  (helm-ag--clear-variables)
-  (let ((filename (file-name-nondirectory (buffer-file-name))))
+  (helm-ag--init-state)
+  (let ((filename (file-name-nondirectory (buffer-file-name)))
+        (helm-ag--default-directory default-directory))
     (helm-ag--query)
     (helm-ag--set-command-feature)
     (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
                   helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
+    (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))
 
 (defun helm-ag--get-default-directory ()
   (let ((prefix-val (and current-prefix-arg (abs (prefix-numeric-value current-prefix-arg)))))
@@ -466,14 +472,24 @@ They are specified to `--ignore' options."
 (defsubst helm-ag--kill-edit-buffer ()
   (kill-buffer (get-buffer "*helm-ag-edit*")))
 
+(defun helm-ag--match-line-regexp ()
+  ;; $1: file name
+  ;; $2: line
+  ;; $3: match body
+  ;; $4: file attributes part(filename, line, column)
+  (cond ((helm-ag--vimgrep-option)
+         "^\\(?4:\\(?1:[^:]+\\):\\(?2:[1-9][0-9]*\\):[^:]+:\\)\\(?3:.*\\)$")
+        (helm-ag--search-this-file-p
+         "^\\(?4:\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?3:.*\\)$")
+        (t
+         "^\\(?4:\\(?1:[^:]+\\):\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?3:.*\\)$")))
+
 (defun helm-ag--edit-commit ()
   (interactive)
   (goto-char (point-min))
   (let ((read-only-files 0)
         (saved-buffers nil)
-        (regexp (if helm-ag--search-this-file-p
-                    "^\\(?2:[1-9][0-9]*\\)[:-]\\(?3:.*\\)$"
-                  "^\\([^:]+\\):\\([1-9][0-9]*\\)[:-]\\(.*\\)$"))
+        (regexp (helm-ag--match-line-regexp))
         (default-directory helm-ag--default-directory)
         (line-deletes (make-hash-table :test #'equal)))
     (while (re-search-forward regexp nil t)
@@ -540,8 +556,9 @@ They are specified to `--ignore' options."
     (with-current-buffer (get-buffer-create "*helm-ag-edit*")
       (erase-buffer)
       (setq-local helm-ag--default-directory helm-ag--default-directory)
-      (setq-local helm-ag--search-this-file-p
-                  (assoc-default 'search-this-file (helm-get-current-source)))
+      (unless (helm-ag--vimgrep-option)
+        (setq-local helm-ag--search-this-file-p
+                    (assoc-default 'search-this-file (helm-get-current-source))))
       (let (buf-content)
         (with-current-buffer (get-buffer "*helm-ag*")
           (goto-char (point-min))
@@ -558,18 +575,16 @@ They are specified to `--ignore' options."
         (add-text-properties (point-min) (point-max)
                              '(read-only t rear-nonsticky t front-sticky t))
         (let ((inhibit-read-only t)
-              (regexp (if helm-ag--search-this-file-p
-                          "^\\([^:-]+\\)[:-]\\(.*\\)$"
-                        "^\\(\\(?:[^:]+:\\)?[^:-]+[:-]\\)\\(.*\\)$")))
+              (regexp (helm-ag--match-line-regexp)))
           (setq header-line-format
                 (format "[%s] C-c C-c: Commit, C-c C-k: Abort"
                         (abbreviate-file-name helm-ag--default-directory)))
           (goto-char (point-min))
           (while (re-search-forward regexp nil t)
-            (let ((file-line-begin (match-beginning 1))
-                  (file-line-end (match-end 1))
-                  (body-begin (match-beginning 2))
-                  (body-end (match-end 2)))
+            (let ((file-line-begin (match-beginning 4))
+                  (file-line-end (match-end 4))
+                  (body-begin (match-beginning 3))
+                  (body-end (match-end 3)))
               (add-text-properties file-line-begin file-line-end
                                    '(face font-lock-function-name-face
                                           intangible t))
@@ -637,7 +652,8 @@ Special commands:
     (save-excursion
       (insert result)))
   (helm-ag-mode)
-  (setq-local helm-ag--search-this-file-p search-this-file-p)
+  (unless (helm-ag--vimgrep-option)
+    (setq-local helm-ag--search-this-file-p search-this-file-p))
   (setq-local helm-ag--default-directory default-directory))
 
 (defun helm-ag--save-results (use-other-buf)
@@ -741,8 +757,7 @@ Continue searching the parent directory? "))
 ;;;###autoload
 (defun helm-ag (&optional basedir)
   (interactive)
-  (setq helm-ag--original-window (selected-window))
-  (helm-ag--clear-variables)
+  (helm-ag--init-state)
   (let ((dir (helm-ag--get-default-directory))
         targets)
     (when (listp dir)
@@ -805,7 +820,8 @@ Continue searching the parent directory? "))
   (goto-char (point-min))
   (forward-line 1)
   (let ((patterns (helm-ag--do-ag-highlight-patterns input)))
-    (cl-loop with one-file-p = (helm-ag--search-only-one-file-p)
+    (cl-loop with one-file-p = (and (not (helm-ag--vimgrep-option))
+                                    (helm-ag--search-only-one-file-p))
              while (not (eobp))
              do
              (progn
@@ -1000,8 +1016,7 @@ Continue searching the parent directory? "))
 (defun helm-do-ag (&optional basedir targets)
   (interactive)
   (require 'helm-mode)
-  (setq helm-ag--original-window (selected-window))
-  (helm-ag--clear-variables)
+  (helm-ag--init-state)
   (let* ((helm-ag--default-directory (or basedir default-directory))
          (helm-ag--default-target (cond (targets targets)
                                         ((and (helm-ag--windows-p) basedir) (list basedir))
