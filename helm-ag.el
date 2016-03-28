@@ -439,7 +439,7 @@ They are specified to `--ignore' options."
     (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
                   helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
+    (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))
 
 (defun helm-ag--get-default-directory ()
   (let ((prefix-val (and current-prefix-arg (abs (prefix-numeric-value current-prefix-arg)))))
