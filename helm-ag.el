@@ -857,6 +857,7 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--do-ag-propertize (input)
   (with-helm-window
+    (helm-ag--remove-carrige-returns)
     (helm-ag--propertize-candidates input)
     (goto-char (point-min))
     (helm-display-mode-line (helm-get-current-source))))
@@ -925,7 +926,6 @@ Continue searching the parent directory? "))
              (helm-process-deferred-sentinel-hook
               process event (helm-default-directory))
              (when (string= event "finished\n")
-               (helm-ag--remove-carrige-returns)
                (helm-ag--do-ag-propertize helm-input)))))))))
 
 (defconst helm-do-ag--help-message
