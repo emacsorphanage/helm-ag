@@ -229,9 +229,6 @@ They are specified to `--ignore' options."
       (setq args (append args (helm-ag--construct-targets helm-ag--default-target))))
     (cons command args)))
 
-(defsubst helm-ag--windows-p ()
-  (memq system-type '(windows-nt ms-dos)))
-
 (defun helm-ag--remove-carrige-returns ()
   (when (helm-ag--windows-p)
     (save-excursion
@@ -444,19 +441,6 @@ They are specified to `--ignore' options."
 (defsubst helm-ag--init-state ()
   (setq helm-ag--original-window (selected-window)
         helm-ag--last-default-directory nil))
-
-;;;###autoload
-(defun helm-ag-this-file ()
-  (interactive)
-  (helm-ag--init-state)
-  (let ((filename (file-name-nondirectory (buffer-file-name)))
-        (helm-ag--default-directory default-directory))
-    (helm-ag--query)
-    (helm-ag--set-command-feature)
-    (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
-                  helm-ag-source)
-    (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))
 
 (defun helm-ag--get-default-directory ()
   (let ((prefix-val (and current-prefix-arg (abs (prefix-numeric-value current-prefix-arg)))))
@@ -765,6 +749,19 @@ Continue searching the parent directory? "))
              (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
              (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))))
     (message nil)))
+
+;;;###autoload
+(defun helm-ag-this-file ()
+  (interactive)
+  (helm-ag--init-state)
+  (let ((filename (file-name-nondirectory (buffer-file-name)))
+        (helm-ag--default-directory default-directory))
+    (helm-ag--query)
+    (helm-ag--set-command-feature)
+    (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
+                  helm-ag-source)
+    (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
+    (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))
 
 ;;;###autoload
 (defun helm-ag (&optional basedir)
