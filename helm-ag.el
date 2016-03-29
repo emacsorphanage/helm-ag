@@ -464,7 +464,9 @@ They are specified to `--ignore' options."
   (with-helm-alive-p
     (helm-exit-and-execute-action #'helm-ag--action-find-file-other-window)))
 
-(defsubst helm-ag--kill-edit-buffer ()
+(defun helm-ag--exit-from-edit-mode ()
+  (when (window-live-p helm-ag--original-window)
+    (select-window helm-ag--original-window))
   (kill-buffer (get-buffer "*helm-ag-edit*")))
 
 (defun helm-ag--match-line-regexp ()
@@ -511,8 +513,7 @@ They are specified to `--ignore' options."
       (dolist (buf saved-buffers)
         (with-current-buffer buf
           (save-buffer))))
-    (select-window helm-ag--original-window)
-    (helm-ag--kill-edit-buffer)
+    (helm-ag--exit-from-edit-mode)
     (if (not (zerop read-only-files))
         (message "%d files are read-only and not editable." read-only-files)
       (message "Success update"))))
@@ -520,8 +521,7 @@ They are specified to `--ignore' options."
 (defun helm-ag--edit-abort ()
   (interactive)
   (when (y-or-n-p "Discard changes ?")
-    (select-window helm-ag--original-window)
-    (helm-ag--kill-edit-buffer)
+    (helm-ag--exit-from-edit-mode)
     (message "Abort edit")))
 
 (defun helm-ag--mark-line-deleted ()
