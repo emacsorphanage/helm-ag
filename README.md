@@ -132,6 +132,10 @@ Pattern: -- --count
 Search pattern is `--count`.
 `helm-ag` treats words after `--` as search pattern.
 
+#### Search meta characters as literal
+
+`ag`(`ack`, `pt`) takes Perl compatible PCRE so that you need to escape meta characters
+likes brackets, braces, asterisk, when you search them as literals.
 
 ## Customize
 
