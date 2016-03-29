@@ -229,6 +229,16 @@ They are specified to `--ignore' options."
       (setq args (append args (helm-ag--construct-targets helm-ag--default-target))))
     (cons command args)))
 
+(defsubst helm-ag--windows-p ()
+  (memq system-type '(windows-nt ms-dos)))
+
+(defun helm-ag--remove-carrige-returns ()
+  (when (helm-ag--windows-p)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "\xd" nil t)
+        (replace-match "")))))
+
 (defun helm-ag--init ()
   (let ((buf-coding buffer-file-coding-system))
     (helm-attrset 'recenter t)
@@ -247,6 +257,7 @@ They are specified to `--ignore' options."
               (unless (executable-find (car cmds))
                 (error "'ag' is not installed."))
               (error "Failed: '%s'" helm-ag--last-query))))
+        (helm-ag--remove-carrige-returns)
         (helm-ag--save-current-context)))))
 
 (add-to-list 'debug-ignored-errors "^No ag output: ")
@@ -680,6 +691,7 @@ Special commands:
          (result (with-temp-buffer
                    (apply #'process-file (car helm-ag--last-command) nil t nil
                           (cdr helm-ag--last-command))
+                   (helm-ag--remove-carrige-returns)
                    (helm-ag--propertize-candidates helm-ag--last-query)
                    (buffer-string))))
     (helm-ag--put-result-in-save-buffer result helm-ag--search-this-file-p)
@@ -916,6 +928,7 @@ Continue searching the parent directory? "))
              (helm-process-deferred-sentinel-hook
               process event (helm-default-directory))
              (when (string= event "finished\n")
+               (helm-ag--remove-carrige-returns)
                (helm-ag--do-ag-propertize helm-input)))))))))
 
 (defconst helm-do-ag--help-message
