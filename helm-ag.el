@@ -863,7 +863,14 @@ Continue searching the parent directory? "))
     (helm-ag--remove-carrige-returns)
     (helm-ag--propertize-candidates input)
     (goto-char (point-min))
-    (helm-display-mode-line (helm-get-current-source))))
+    (setq mode-line-format
+          '(" " mode-line-buffer-identification " "
+            (:eval (propertize
+                    (format
+                     "[AG process finished - (%s results)] "
+                     (helm-get-candidate-number))
+                    'face 'helm-grep-finish))))
+    (force-mode-line-update)))
 
 (defun helm-ag--construct-extension-options ()
   (cl-loop for ext in helm-do-ag--extensions
