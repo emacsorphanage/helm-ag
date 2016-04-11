@@ -98,6 +98,11 @@ They are specified to `--ignore' options."
   "Use temporary buffer for persistent action."
   :type 'boolean)
 
+(defcustom helm-ag-show-status-function 'helm-ag-show-status-default-mode-line
+  "Function called after that `ag' process is finished after `helm-do-ag'.
+Default behaviour shows finish and result in mode-line."
+  :type 'function)
+
 (defface helm-ag-edit-deleted-line
   '((t (:inherit font-lock-comment-face :strike-through t)))
   "Face of deleted line in edit mode.")
@@ -858,19 +863,23 @@ Continue searching the parent directory? "))
                  (put-text-property start bound 'helm-cand-num num))
                (forward-line 1)))))
 
+(defun helm-ag-show-status-default-mode-line ()
+  (setq mode-line-format
+        '(" " mode-line-buffer-identification " "
+          (:eval (propertize
+                  (format
+                   "[AG process finished - (%s results)] "
+                   (helm-get-candidate-number))
+                  'face 'helm-grep-finish)))))
+
 (defun helm-ag--do-ag-propertize (input)
   (with-helm-window
     (helm-ag--remove-carrige-returns)
     (helm-ag--propertize-candidates input)
     (goto-char (point-min))
-    (setq mode-line-format
-          '(" " mode-line-buffer-identification " "
-            (:eval (propertize
-                    (format
-                     "[AG process finished - (%s results)] "
-                     (helm-get-candidate-number))
-                    'face 'helm-grep-finish))))
-    (force-mode-line-update)))
+    (when helm-ag-show-status-function
+      (funcall helm-ag-show-status-function)
+      (force-mode-line-update))))
 
 (defun helm-ag--construct-extension-options ()
   (cl-loop for ext in helm-do-ag--extensions
