@@ -287,7 +287,10 @@ Default behaviour shows finish and result in mode-line."
     (funcall find-func filename)
     (goto-char (point-min))
     (when line
-      (forward-line (1- (string-to-number line))))))
+      (forward-line (1- (string-to-number line))))
+    (ignore-errors
+      (and (re-search-forward helm-ag--last-query (line-end-position) t)
+           (goto-char (match-beginning 0))))))
 
 (defun helm-ag--open-file-with-temp-buffer (filename)
   (switch-to-buffer (get-buffer-create " *helm-ag persistent*"))
