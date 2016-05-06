@@ -1,5 +1,9 @@
 Revision history for helm-ag.el
 
+Revision 0.54 2016/05/06 syohex
+   - Implement column jump feature(#234)
+   - Add customize variable for updating mode-line(#233)
+
 Revision 0.53 2016/04/06 syohex
    - Show process finished information in mode-line as well as
      helm-do-grep command(#231)
