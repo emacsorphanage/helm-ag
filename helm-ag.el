@@ -1034,7 +1034,8 @@ Continue searching the parent directory? "))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-          :input (helm-ag--insert-thing-at-point helm-ag-insert-at-point)
+          :input (or (helm-ag--marked-input)
+                     (helm-ag--insert-thing-at-point helm-ag-insert-at-point))
           :keymap helm-do-ag-map)))
 
 ;;;###autoload
