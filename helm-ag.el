@@ -571,10 +571,13 @@ Default behaviour shows finish and result in mode-line."
     map))
 
 (defun helm-ag--edit (_candidate)
-  (let ((default-directory helm-ag--default-directory))
+  (let* ((helm-buf-dir (or helm-ag--default-directory
+                           helm-ag--last-default-directory
+                           default-directory))
+         (default-directory helm-buf-dir))
     (with-current-buffer (get-buffer-create "*helm-ag-edit*")
       (erase-buffer)
-      (setq-local helm-ag--default-directory helm-ag--default-directory)
+      (setq-local helm-ag--default-directory helm-buf-dir)
       (unless (helm-ag--vimgrep-option)
         (setq-local helm-ag--search-this-file-p
                     (assoc-default 'search-this-file (helm-get-current-source))))
