@@ -36,52 +36,52 @@ You can install `helm-ag` with the following command.
 
 ## Basic Usage
 
-#### `helm-ag`
+##### `helm-ag`
 
 Input search word with `ag` command. You can change search directory
 with `C-u` prefix.
 
-#### `helm-ag-this-file`
+##### `helm-ag-this-file`
 
 Same as `helm-ag` except to search only current file
 
-#### `helm-do-ag`
+##### `helm-do-ag`
 
 Search with `ag` like `helm-do-grep-ag `, `helm-grep-do-git-grep`.
 You can specify extra command line option of `ag` with minus prefix(`M--` or `C--`).
 
 ![helm-do-ag](image/helm-do-ag.gif)
 
-#### `helm-do-ag-this-file`
+##### `helm-do-ag-this-file`
 
 Same as `helm-do-ag` except to search only current file
 
-#### `helm-ag-project-root`
+##### `helm-ag-project-root`
 
 Call `helm-ag` at project root. `helm-ag` seems directory as project root where
 there is `.git` or `.hg` or `.svn`.
 
 
-#### `helm-do-ag-project-root`
+##### `helm-do-ag-project-root`
 
 Call `helm-do-ag` at project root.
 
 
-#### `helm-ag-buffers`
+##### `helm-ag-buffers`
 
 Search buffers by `helm-ag`
 
 
-#### `helm-do-ag-buffers`
+##### `helm-do-ag-buffers`
 
 Search buffers by `helm-do-ag`
 
 
-#### `helm-ag-pop-stack`
+##### `helm-ag-pop-stack`
 
 Move to point before jump
 
-#### `helm-ag-clear-stack`
+##### `helm-ag-clear-stack`
 
 Clear context stack
 
@@ -103,7 +103,7 @@ You can see file content temporarily by persistent action(`C-j`).
 
 ## Search Tips of `helm-ag`
 
-#### Passing command line options and pattern
+##### Passing command line options and pattern
 
 ```
 Pattern: -Gmd$ search_pattern
@@ -112,7 +112,7 @@ Pattern: -Gmd$ search_pattern
 Command line options is `-Gmd$` and search pattern is `search_pattern`.
 `helm-ag` treats words which starts with `-` as command line option.
 
-#### Pattern contains space(`helm-do-ag`)
+##### Pattern contains space(`helm-do-ag`)
 
 ```
 Pattern: foo\ bar\ baz
@@ -123,7 +123,7 @@ Search pattern is `foo\ bar\ baz`. You need to escape spaces with backslash.
 In `helm-ag`, you need not to escape spaces.
 
 
-#### Pattern starts with `-`
+##### Pattern starts with `-`
 
 ```
 Pattern: -- --count
@@ -132,54 +132,54 @@ Pattern: -- --count
 Search pattern is `--count`.
 `helm-ag` treats words after `--` as search pattern.
 
-#### Search meta characters as literal
+##### Search meta characters as literal
 
 `ag`(`ack`, `pt`) takes Perl compatible PCRE so that you need to escape meta characters
 likes brackets, braces, asterisk, when you search them as literals.
 
 ## Customize
 
-#### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
+##### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
 
 Base command of `ag`. Windows users should set `--vimgrep` option for using `helm-do-ag`.
 
-#### `helm-ag-command-option`(Default: `nil`)
+##### `helm-ag-command-option`(Default: `nil`)
 
 Command line option of base command.
 
-#### `helm-ag-insert-at-point`(Default: `nil`)
+##### `helm-ag-insert-at-point`(Default: `nil`)
 
 Insert thing at point as default search pattern, if this value is `non nil`.
 You can set the parameter same as `thing-at-point`(Such as `'word`, `symbol` etc).
 
-#### `helm-ag-fuzzy-match`(Default: `nil`)
+##### `helm-ag-fuzzy-match`(Default: `nil`)
 
 Enable fuzzy matching.
 
-#### `helm-ag-use-grep-ignore-list`(Default: `nil`)
+##### `helm-ag-use-grep-ignore-list`(Default: `nil`)
 
 Use `grep-find-ignored-files` and `grep-find-ignored-directories` as ignore pattern.
 They are specified to `--ignore' options."
 
-#### `helm-ag-always-set-extra-option`(Default: `nil`)
+##### `helm-ag-always-set-extra-option`(Default: `nil`)
 
 Always set extra command line option of `ag` in `helm-do-ag`
 if this value is non-nil.
 
-#### `helm-ag-edit-save`(Default: `t`)
+##### `helm-ag-edit-save`(Default: `t`)
 
 Save buffers you edit at editing completed.
 
-#### `helm-ag-use-emacs-lisp-regexp`(Default: `nil`)
+##### `helm-ag-use-emacs-lisp-regexp`(Default: `nil`)
 
 Use Emacs Lisp regexp instead of PCRE as pattern.
 NOTE: this is very simple conversion.
 
-#### `helm-ag-use-agignore`(Default: `nil`)
+##### `helm-ag-use-agignore`(Default: `nil`)
 
 Use `.agignore` file at project root if this variable is non nil.
 
-#### `helm-ag-use-temp-buffer`(Default: `nil`)
+##### `helm-ag-use-temp-buffer`(Default: `nil`)
 
 Use temporary buffer and not open file for persistent action.
 
