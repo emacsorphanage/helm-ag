@@ -1,5 +1,10 @@
 Revision history for helm-ag.el
 
+Revision 0.56 2016/06/15 syohex
+   - Kill non-opened buffers after editing mode finished(#248)
+   - De-activate mark when using region as input query
+   - Fix changing position in sentinel function issue(#242)
+
 Revision 0.55 2016/05/15 syohex
    - Fix keymap setting for calling commands from helm-resume(#240)
    - Set default input of helm-do-ag same as helm-ag(#237)
