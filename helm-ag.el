@@ -403,7 +403,8 @@ Default behaviour shows finish and result in mode-line."
   (helm-make-actions
    "Open file"              #'helm-ag--action-find-file
    "Open file other window" #'helm-ag--action-find-file-other-window
-   "Save results in buffer" #'helm-ag--action-save-buffer))
+   "Save results in buffer" #'helm-ag--action-save-buffer
+   "Edit search results"    #'helm-ag--edit))
 
 (defvar helm-ag-map
   (let ((map (make-sparse-keymap)))
