@@ -665,7 +665,6 @@ Default behaviour shows finish and result in mode-line."
     (define-key map (kbd "g") 'helm-ag--update-save-results)
     map))
 
-;;;###autoload
 (define-derived-mode helm-ag-mode special-mode "helm-ag"
   "Major mode to provide actions in helm grep saved buffer.
 
