@@ -241,6 +241,14 @@ Default behaviour shows finish and result in mode-line."
       (while (re-search-forward "\xd" nil t)
         (replace-match "")))))
 
+(defun helm-ag--abbreviate-file-name ()
+  (unless (helm-ag--windows-p)
+    (save-excursion
+      (goto-char (point-min))
+      (forward-line 1)
+      (while (re-search-forward "^\\([^:]+\\)" nil t)
+        (replace-match (abbreviate-file-name (match-string-no-properties 1)))))))
+
 (defun helm-ag--init ()
   (let ((buf-coding buffer-file-coding-system))
     (helm-attrset 'recenter t)
@@ -259,6 +267,8 @@ Default behaviour shows finish and result in mode-line."
               (unless (executable-find (car cmds))
                 (error "'ag' is not installed."))
               (error "Failed: '%s'" helm-ag--last-query))))
+        (when helm-ag--buffer-search
+          (helm-ag--abbreviate-file-name))
         (helm-ag--remove-carrige-returns)
         (helm-ag--save-current-context)))))
 
@@ -709,6 +719,8 @@ Special commands:
                    (apply #'process-file (car helm-ag--last-command) nil t nil
                           (cdr helm-ag--last-command))
                    (helm-ag--remove-carrige-returns)
+                   (when helm-ag--buffer-search
+                     (helm-ag--abbreviate-file-name))
                    (helm-ag--propertize-candidates helm-ag--last-query)
                    (buffer-string))))
     (helm-ag--put-result-in-save-buffer result helm-ag--search-this-file-p)
@@ -889,6 +901,8 @@ Continue searching the parent directory? "))
 (defun helm-ag--do-ag-propertize (input)
   (with-helm-window
     (helm-ag--remove-carrige-returns)
+    (when helm-ag--buffer-search
+      (helm-ag--abbreviate-file-name))
     (helm-ag--propertize-candidates input)
     (when helm-ag-show-status-function
       (funcall helm-ag-show-status-function)
