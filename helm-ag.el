@@ -587,6 +587,9 @@ Default behaviour shows finish and result in mode-line."
     (define-key map (kbd "C-c C-u") 'helm-ag--unmark)
     map))
 
+(defsubst helm-ag--edit-func-to-keys (func)
+  (key-description (car-safe (where-is-internal func helm-ag-edit-map))))
+
 (defun helm-ag--edit (_candidate)
   (let* ((helm-buf-dir (or helm-ag--default-directory
                            helm-ag--last-default-directory
@@ -616,8 +619,10 @@ Default behaviour shows finish and result in mode-line."
         (let ((inhibit-read-only t)
               (regexp (helm-ag--match-line-regexp)))
           (setq header-line-format
-                (format "[%s] C-c C-c: Commit, C-c C-k: Abort"
-                        (abbreviate-file-name helm-ag--default-directory)))
+                (format "[%s] %s: Commit, %s: Abort"
+                        (abbreviate-file-name helm-ag--default-directory)
+                        (helm-ag--edit-func-to-keys #'helm-ag--edit-commit)
+                        (helm-ag--edit-func-to-keys #'helm-ag--edit-abort)))
           (goto-char (point-min))
           (while (re-search-forward regexp nil t)
             (let ((file-line-begin (match-beginning 4))
