@@ -1107,7 +1107,7 @@ Continue searching the parent directory? "))
         (helm-do-ag--helm)))))
 
 (defun helm-ag--project-root ()
-  (cl-loop for dir in '(".git/" ".hg/" ".svn/")
+  (cl-loop for dir in '(".git/" ".hg/" ".svn/" ".git")
            when (locate-dominating-file default-directory dir)
            return it))
 
