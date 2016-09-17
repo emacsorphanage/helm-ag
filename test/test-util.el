@@ -107,35 +107,35 @@
   (let ((helm-ag-base-command "ag --nocolor --nogroup"))
     (helm-ag--do-ag-set-command)
     (let ((got (helm-ag--construct-do-ag-command "somepattern"))
-          (expected '("ag" "--nocolor" "--nogroup" "--" "somepattern")))
+          (expected '("ag" "--nocolor" "--nogroup" "somepattern")))
       (should (equal got expected)))
 
     (let ((got (helm-ag--construct-do-ag-command "pat1 pat2"))
-          (expected '("ag" "--nocolor" "--nogroup" "--" "(?=.*pat1.*)(?=.*pat2.*)")))
+          (expected '("ag" "--nocolor" "--nogroup" "(?=.*pat1.*)(?=.*pat2.*)")))
       (should (equal got expected)))
 
     (let* ((helm-ag--command-feature 'pt)
            (got (helm-ag--construct-do-ag-command "pat1 pat2"))
-           (expected '("ag" "--nocolor" "--nogroup" "--" "pat1 pat2")))
+           (expected '("ag" "--nocolor" "--nogroup" "pat1 pat2")))
       (should (equal got expected)))
 
     (let* ((helm-ag--command-feature 'pt-regexp)
            (got (helm-ag--construct-do-ag-command "pat1 pat2"))
-           (expected '("ag" "--nocolor" "--nogroup" "--" "pat1.*pat2")))
+           (expected '("ag" "--nocolor" "--nogroup" "pat1.*pat2")))
       (should (equal got expected)))
 
     (let ((helm-ag-command-option "--ignore-case --all-text"))
       (helm-ag--do-ag-set-command)
       (let* ((got (helm-ag--construct-do-ag-command "somepattern"))
              (expected '("ag" "--nocolor" "--nogroup" "--ignore-case" "--all-text"
-                         "--" "somepattern")))
+                         "somepattern")))
         (should (equal got expected))))
 
     (let ((helm-ag-ignore-patterns '("apple" "orange")))
       (helm-ag--do-ag-set-command)
       (let* ((got (helm-ag--construct-do-ag-command "somepattern"))
              (expected '("ag" "--nocolor" "--nogroup" "--ignore=apple" "--ignore=orange"
-                         "--" "somepattern")))
+                         "somepattern")))
         (should (equal got expected))))))
 
 (ert-deftest construct-do-ag-command-with-extra-option ()
@@ -144,7 +144,7 @@
         (helm-ag--extra-options "-G\\.md$"))
     (helm-ag--do-ag-set-command)
     (let ((got (helm-ag--construct-do-ag-command "somepattern"))
-          (expected '("ag" "--nocolor" "--nogroup" "-G\\.md$" "--" "somepattern")))
+          (expected '("ag" "--nocolor" "--nogroup" "-G\\.md$" "somepattern")))
       (should (equal got expected)))))
 
 (ert-deftest validate-regexp-with-valid-regexp ()
