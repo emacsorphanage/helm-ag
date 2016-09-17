@@ -930,7 +930,7 @@ Continue searching the parent directory? "))
     (unless (string= query "")
       (append (car helm-do-ag--commands)
               (cl-remove-if (lambda (x) (string= "--" x)) options)
-              (list "--" (helm-ag--join-patterns query))
+              (list (helm-ag--join-patterns query))
               (cdr helm-do-ag--commands)))))
 
 (defun helm-ag--do-ag-set-command ()
