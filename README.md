@@ -183,6 +183,10 @@ Use `.agignore` file at project root if this variable is non nil.
 
 Use temporary buffer and not open file for persistent action.
 
+##### `helm-ag-ignore-buffer-patterns`(Default: `nil`)
+
+Ignore buffer patterns of buffer search commands.
+
 #### NOTE
 
 `helm` removes `file-line` type feature from 1.6.9. So `helm-ag-source-type` is no longer available.
@@ -231,7 +235,8 @@ current line indicates.
 (custom-set-variables
  '(helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
  '(helm-ag-command-option "--all-text")
- '(helm-ag-insert-at-point 'symbol))
+ '(helm-ag-insert-at-point 'symbol)
+ '(helm-ag-ignore-buffer-patterns '("\\.txt\\'" "\\.mkd\\'")))
 ```
 
 ## helm-ag.el with [the platinum searcher][pt-link] or [ack][ack-link] or [sift](https://github.com/svent/sift)
