@@ -267,4 +267,20 @@ option specified"
     (let ((helm-ag--default-target '("a.txt")))
       (should (helm-ag--search-this-file-p)))))
 
+(ert-deftest visited-buffers ()
+  "Remove buffers which are matched against helm-ag-ignore-buffer-patterns"
+  (cl-letf (((symbol-function 'buffer-list)
+             (lambda () '("aa.txt" "bb.md" "cc.el")))
+            ((symbol-function 'buffer-file-name)
+             (lambda (b) b))
+            ((symbol-function 'buffer-name)
+             (lambda (b) b)))
+    (let* ((helm-ag-ignore-buffer-patterns nil)
+           (got (helm-ag--file-visited-buffers)))
+      (should (equal got '("aa.txt" "bb.md" "cc.el"))))
+
+    (let* ((helm-ag-ignore-buffer-patterns '("\\.md\\'" "\\`cc"))
+           (got (helm-ag--file-visited-buffers)))
+      (should (equal got '("aa.txt"))))))
+
 ;;; test-util.el ends here

@@ -99,6 +99,10 @@ They are specified to `--ignore' options."
   "Use temporary buffer for persistent action."
   :type 'boolean)
 
+(defcustom helm-ag-ignore-buffer-patterns nil
+  "Use temporary buffer for persistent action."
+  :type '(repeat regexp))
+
 (defcustom helm-ag-show-status-function 'helm-ag-show-status-default-mode-line
   "Function called after that `ag' process is finished after `helm-do-ag'.
 Default behaviour shows finish and result in mode-line."
@@ -194,10 +198,19 @@ Default behaviour shows finish and result in mode-line."
         (list query)
       (nconc (nreverse options) (list query)))))
 
-(defsubst helm-ag--file-visited-buffers ()
-  (cl-loop for buf in (buffer-list)
-           when (buffer-file-name buf)
-           collect it))
+(defsubst helm-ag--search-buffer-p (bufname)
+  (cl-loop for regexp in helm-ag-ignore-buffer-patterns
+           never (string-match-p regexp bufname)))
+
+(defun helm-ag--file-visited-buffers ()
+  (let ((bufs (cl-loop for buf in (buffer-list)
+                       when (buffer-file-name buf)
+                       collect it)))
+    (if (not helm-ag-ignore-buffer-patterns)
+        bufs
+      (cl-loop for buf in bufs
+               when (helm-ag--search-buffer-p buf)
+               collect buf))))
 
 (defun helm-ag--construct-targets (targets)
   (let ((default-directory helm-ag--default-directory))
