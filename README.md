@@ -239,34 +239,37 @@ current line indicates.
  '(helm-ag-ignore-buffer-patterns '("\\.txt\\'" "\\.mkd\\'")))
 ```
 
-## helm-ag.el with [the platinum searcher][pt-link] or [ack][ack-link] or [sift](https://github.com/svent/sift)
+## helm-ag.el with other searching tools
 
-`helm-ag.el` can work the platinum searcher or ack instead of the silver searcher.
-It is difficult to install the silver search on some platform such as Windows,
-while it is easy to install the platinum searcher because it is written in
-go language and its author provides binaries for some platforms. And ack is written in Perl.
+`helm-ag.el` can work other searching tools like platinum searcher or ack instead of the silver searcher.
+I think the searching tool which supports grep like output, helm-ag can work with it.
 
-NOTE: Please use pt 1.7.7 or higher version if you use the platinum searcher.
-
-Please add following configuration if you use `helm-ag` with the platinum searcher. I recommend you to set `-e` option which enables regexp searching.
+#### [the platinum searcher](https://github.com/monochromegane/the_platinum_searcher/)
 
 ```lisp
 (custom-set-variables
  '(helm-ag-base-command "pt -e --nocolor --nogroup"))
 ```
 
-or using `ack`
+#### [ack](http://beyondgrep.com/)
 
 ```lisp
 (custom-set-variables
  '(helm-ag-base-command "ack --nocolor --nogroup"))
 ```
 
-or using `shift`
+#### [sift](https://sift-tool.org/)
 
 ```lisp
 (custom-set-variables
  '(helm-ag-base-command "sift --no-color -n"))
+```
+
+#### [ripgrep](https://github.com/BurntSushi/ripgrep/)
+
+```lisp
+(custom-set-variables
+ '(helm-ag-base-command "rg --vimgrep --no-heading"))
 ```
 
 #### NOTE: For pt users
