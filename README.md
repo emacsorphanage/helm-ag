@@ -137,6 +137,11 @@ Search pattern is `--count`.
 `ag`(`ack`, `pt`) takes Perl compatible PCRE so that you need to escape meta characters
 likes brackets, braces, asterisk, when you search them as literals.
 
+##### Use long option
+
+Please use `=` for using long option. For example `--ignore=pattern` is ok, `--ignore pattern` is not ok.
+This is limitation of current implementation, sorry.
+
 ## Customize
 
 ##### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
