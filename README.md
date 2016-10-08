@@ -50,7 +50,7 @@ Same as `helm-ag` except to search only current file
 Search with `ag` like `helm-do-grep-ag `, `helm-grep-do-git-grep`.
 You can specify extra command line option of `ag` with minus prefix(`M--` or `C--`).
 
-![helm-do-ag](image/helm-do-ag.gif)
+![Screen cast of helm-do-ag](image/helm-do-ag.gif)
 
 ##### `helm-do-ag-this-file`
 
