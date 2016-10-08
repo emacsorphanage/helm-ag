@@ -139,8 +139,7 @@ likes brackets, braces, asterisk, when you search them as literals.
 
 ##### Use long option
 
-Please use `=` for using long option. For example `--ignore=pattern` is ok, `--ignore pattern` is not ok.
-This is limitation of current implementation, sorry.
+Please always use `=` separator for using long option. For example `--ignore=pattern` is ok, `--ignore pattern` is not ok.
 
 ## Customize
 
