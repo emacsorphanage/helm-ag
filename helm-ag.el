@@ -476,8 +476,10 @@ Default behaviour shows finish and result in mode-line."
 
 (defsubst helm-ag--marked-input ()
   (when (use-region-p)
-    (prog1 (buffer-substring-no-properties (region-beginning) (region-end))
-      (deactivate-mark))))
+    (let* ((text (buffer-substring-no-properties (region-beginning) (region-end)))
+           (text (replace-regexp-in-string " " "\\\\ " text)))
+      (deactivate-mark)
+      text)))
 
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
