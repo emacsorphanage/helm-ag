@@ -126,7 +126,7 @@ Default behaviour shows finish and result in mode-line."
 (defvar helm-ag--search-this-file-p nil)
 (defvar helm-ag--default-target nil)
 (defvar helm-ag--buffer-search nil)
-(defvar helm-ag--command-feature nil)
+(defvar helm-ag--command-features '())
 (defvar helm-ag--ignore-case nil)
 (defvar helm-do-ag--extensions nil)
 (defvar helm-do-ag--commands nil)
@@ -295,7 +295,7 @@ Default behaviour shows finish and result in mode-line."
         target))))
 
 (defun helm-ag--find-file-action (candidate find-func this-file &optional persistent)
-  (when helm-ag--command-feature
+  (when (member 'pt helm-ag--command-features)
     ;; 'pt' always show filename if matched file is only one.
     (setq this-file nil))
   (let* ((file-line (helm-grep-split-line candidate))
@@ -806,7 +806,7 @@ Continue searching the parent directory? "))
   (let ((filename (file-name-nondirectory (buffer-file-name)))
         (helm-ag--default-directory default-directory))
     (helm-ag--query)
-    (helm-ag--set-command-feature)
+    (helm-ag--set-command-features)
     (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
                   helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
@@ -848,7 +848,7 @@ Continue searching the parent directory? "))
       (reverse (cl-loop for p in patterns unless (string= p "") collect p)))))
 
 (defsubst helm-ag--convert-invert-pattern (pattern)
-  (when (and (not helm-ag--command-feature)
+  (when (and (member 'pcre helm-ag--command-features)
              (string-prefix-p "!" pattern) (> (length pattern) 1))
     (concat "^(?!.*" (substring pattern 1) ").+$")))
 
@@ -857,22 +857,24 @@ Continue searching the parent directory? "))
     (if (= (length patterns) 1)
         (or (helm-ag--convert-invert-pattern (car patterns))
             (car patterns))
-      (cl-case helm-ag--command-feature
-        (pt input)
-        (pt-regexp (string-join patterns ".*"))
-        (otherwise (cl-loop for s in patterns
-                            if (helm-ag--convert-invert-pattern s)
-                            concat (concat "(?=" it ")")
-                            else
-                            concat (concat "(?=.*" s ".*)")))))))
+      (cond ((member 'pcre helm-ag--command-features)
+             (cl-loop for s in patterns
+                      if (helm-ag--convert-invert-pattern s)
+                      concat (concat "(?=" it ")")
+                      else
+                      concat (concat "(?=.*" s ".*)")))
+            ((member 're2 helm-ag--command-features)
+             (string-join patterns ".*"))
+            ;; we don't know anything about this pattern
+            (t input)))))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
-  (if helm-ag--command-feature
-      (list (helm-ag--join-patterns input))
-    (cl-loop with regexp = (helm-ag--pcre-to-elisp-regexp input)
-             for pattern in (helm-ag--split-string regexp)
-             when (helm-ag--validate-regexp pattern)
-             collect pattern)))
+  (if (member 'pcre helm-ag--command-features)
+      (cl-loop with regexp = (helm-ag--pcre-to-elisp-regexp input)
+               for pattern in (helm-ag--split-string regexp)
+               when (helm-ag--validate-regexp pattern)
+               collect pattern)
+    (list (helm-ag--join-patterns input))))
 
 (defun helm-ag--propertize-candidates (input)
   (save-excursion
@@ -1060,12 +1062,30 @@ Continue searching the parent directory? "))
                                'helm-ag--extra-options-history)))
       (setq helm-ag--extra-options option))))
 
-(defun helm-ag--set-command-feature ()
-  (setq helm-ag--command-feature
-        (when (string-prefix-p "pt" helm-ag-base-command)
-          (if (string-match-p "-e" helm-ag-base-command)
-              'pt-regexp
-            'pt))))
+(defun helm-ag--set-command-features ()
+  (let ((cmd (intern (car (split-string helm-ag-base-command)))))
+    (setq helm-ag--command-features (list cmd))
+    (when (eq cmd 'ack)
+      (add-to-list 'helm-ag--command-features
+                   (if (or (string-match-p "-Q" helm-ag-base-command)
+                           (string-match-p "--literal" helm-ag-base-command))
+                       'fixed 'pcre)))
+    (when (eq cmd 'ag)
+      (add-to-list 'helm-ag--command-features
+                   (if (or (string-match-p "-Q" helm-ag-base-command)
+                           (string-match-p "--literal" helm-ag-base-command)
+                           (string-match-p "-F" helm-ag-base-command)
+                           (string-match-p "--fixed-strings" helm-ag-base-command))
+                       'fixed 'pcre)))
+    (when (eq cmd 'pt)
+      (add-to-list 'helm-ag--command-features
+                   (if (string-match-p "-e" helm-ag-base-command)
+                       're2 'fixed)))
+    (when (eq cmd 'rg)
+      (add-to-list 'helm-ag--command-features
+                   (if (or (string-match-p "-F" helm-ag-base-command)
+                           (string-match-p "--fixed-strings" helm-ag-base-command))
+                       'fixed 're2)))))
 
 (defun helm-ag--do-ag-searched-extensions ()
   (when (and current-prefix-arg (= (abs (prefix-numeric-value current-prefix-arg)) 4))
@@ -1112,7 +1132,7 @@ Continue searching the parent directory? "))
          (one-directory-p (helm-do-ag--target-one-directory-p
                            helm-ag--default-target)))
     (helm-ag--set-do-ag-option)
-    (helm-ag--set-command-feature)
+    (helm-ag--set-command-features)
     (helm-ag--save-current-context)
     (helm-attrset 'search-this-file
                   (and (= (length helm-ag--default-target) 1)
