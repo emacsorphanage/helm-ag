@@ -474,16 +474,17 @@ Default behaviour shows finish and result in mode-line."
   (interactive)
   (setq helm-ag--context-stack nil))
 
-(defsubst helm-ag--marked-input ()
+(defun helm-ag--marked-input (escape)
   (when (use-region-p)
-    (let* ((text (buffer-substring-no-properties (region-beginning) (region-end)))
-           (text (replace-regexp-in-string " " "\\\\ " text)))
+    (let ((input (buffer-substring-no-properties (region-beginning) (region-end))))
       (deactivate-mark)
-      text)))
+      (if (not escape)
+          input
+        (replace-regexp-in-string " " "\\\\ " input)))))
 
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
-         (marked-word (helm-ag--marked-input))
+         (marked-word (helm-ag--marked-input nil))
          (query (read-string "Pattern: " (or marked-word searched-word) 'helm-ag--command-history)))
     (when (string-empty-p query)
       (error "Input is empty!!"))
@@ -1085,7 +1086,7 @@ Continue searching the parent directory? "))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
-          :input (or (helm-ag--marked-input)
+          :input (or (helm-ag--marked-input t)
                      (helm-ag--insert-thing-at-point helm-ag-insert-at-point)))))
 
 ;;;###autoload
