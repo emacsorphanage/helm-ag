@@ -110,18 +110,24 @@
           (expected '("ag" "--nocolor" "--nogroup" "somepattern")))
       (should (equal got expected)))
 
-    (let ((got (helm-ag--construct-do-ag-command "pat1 pat2"))
-          (expected '("ag" "--nocolor" "--nogroup" "(?=.*pat1.*)(?=.*pat2.*)")))
-      (should (equal got expected)))
-
-    (let* ((helm-ag--command-feature 'pt)
+    (let* ((helm-ag--command-features '())  ;; unknown pattern
            (got (helm-ag--construct-do-ag-command "pat1 pat2"))
            (expected '("ag" "--nocolor" "--nogroup" "pat1 pat2")))
       (should (equal got expected)))
 
-    (let* ((helm-ag--command-feature 'pt-regexp)
+    (let* ((helm-ag--command-features '(fixed))
+           (got (helm-ag--construct-do-ag-command "pat1 pat2"))
+           (expected '("ag" "--nocolor" "--nogroup" "pat1 pat2")))
+      (should (equal got expected)))
+
+    (let* ((helm-ag--command-features '(re2))
            (got (helm-ag--construct-do-ag-command "pat1 pat2"))
            (expected '("ag" "--nocolor" "--nogroup" "pat1.*pat2")))
+      (should (equal got expected)))
+
+    (let* ((helm-ag--command-features '(pcre))
+           (got (helm-ag--construct-do-ag-command "pat1 pat2"))
+           (expected '("ag" "--nocolor" "--nogroup" "(?=.*pat1.*)(?=.*pat2.*)")))
       (should (equal got expected)))
 
     (let ((helm-ag-command-option "--ignore-case --all-text"))
@@ -223,15 +229,19 @@
 
 (ert-deftest join-pattern ()
   "Convert pattern like normal helm command in helm-do-ag"
-  (let ((helm-ag--command-feature 'pt))
+  (let ((helm-ag--command-features '()))  ;; unknown pattern
     (should (equal (helm-ag--join-patterns "foo") "foo"))
     (should (equal (helm-ag--join-patterns "foo bar") "foo bar")))
 
-  (let ((helm-ag--command-feature 'pt-regexp))
+  (let ((helm-ag--command-features '(fixed)))
+    (should (equal (helm-ag--join-patterns "foo") "foo"))
+    (should (equal (helm-ag--join-patterns "foo bar") "foo bar")))
+
+  (let ((helm-ag--command-features '(re2)))
     (should (equal (helm-ag--join-patterns "foo") "foo"))
     (should (equal (helm-ag--join-patterns "foo bar") "foo.*bar")))
 
-  (let ((helm-ag--command-feature nil))
+  (let ((helm-ag--command-features '(pcre)))
     (should (equal (helm-ag--join-patterns "foo") "foo"))
     (should (equal (helm-ag--join-patterns "!") "!"))
     (should (equal (helm-ag--join-patterns "!foo") "^(?!.*foo).+$"))
