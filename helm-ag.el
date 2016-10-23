@@ -1065,7 +1065,7 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--set-command-feature ()
   (setq helm-ag--command-feature
-        (when (string-prefix-p "pt" helm-ag-base-command)
+        (when (or (string-prefix-p "rg" helm-ag-base-command) (string-prefix-p "pt" helm-ag-base-command))
           (if (string-match-p "-e" helm-ag-base-command)
               'pt-regexp
             'pt))))
