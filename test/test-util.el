@@ -293,4 +293,40 @@ option specified"
            (got (helm-ag--file-visited-buffers)))
       (should (equal got '("aa.txt"))))))
 
+(ert-deftest set-command-features ()
+  "Set search command features to `helm-ag--command-features'"
+
+  ;; ack
+  (dolist (expected '(("-Q" . fixed)
+                      ("--literal" . fixed)
+                      ("-Quiet" . pcre)))
+    (let ((helm-ag-base-command (concat "ack " (car expected))))
+      (helm-ag--set-command-features)
+      (should (memq (cdr expected) helm-ag--command-features))))
+
+  ;; ag
+  (dolist (expected '(("-Q" . fixed)
+                      ("--literal" . fixed)
+                      ("-F" . fixed)
+                      ("--fixed-strings" . fixed)
+                      ("-False" . pcre)))
+    (let ((helm-ag-base-command (concat "ag " (car expected))))
+      (helm-ag--set-command-features)
+      (should (memq (cdr expected) helm-ag--command-features))))
+
+  ;; pt
+  (dolist (expected '(("-e" . re2)
+                      ("--eee" . fixed)))
+    (let ((helm-ag-base-command (concat "pt " (car expected))))
+      (helm-ag--set-command-features)
+      (should (memq (cdr expected) helm-ag--command-features))))
+
+  ;; rg
+  (dolist (expected '(("-F" . fixed)
+                      ("--fixed-strings" . fixed)
+                      ("--fixed-stringssss" . re2)))
+    (let ((helm-ag-base-command (concat "rg " (car expected))))
+      (helm-ag--set-command-features)
+      (should (memq (cdr expected) helm-ag--command-features)))))
+
 ;;; test-util.el ends here
