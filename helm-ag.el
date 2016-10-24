@@ -295,7 +295,7 @@ Default behaviour shows finish and result in mode-line."
         target))))
 
 (defun helm-ag--find-file-action (candidate find-func this-file &optional persistent)
-  (when (member 'pt helm-ag--command-features)
+  (when (memq 'pt helm-ag--command-features)
     ;; 'pt' always show filename if matched file is only one.
     (setq this-file nil))
   (let* ((file-line (helm-grep-split-line candidate))
@@ -851,7 +851,7 @@ Continue searching the parent directory? "))
       (reverse (cl-loop for p in patterns unless (string= p "") collect p)))))
 
 (defsubst helm-ag--convert-invert-pattern (pattern)
-  (when (and (member 'pcre helm-ag--command-features)
+  (when (and (memq 'pcre helm-ag--command-features)
              (string-prefix-p "!" pattern) (> (length pattern) 1))
     (concat "^(?!.*" (substring pattern 1) ").+$")))
 
@@ -860,19 +860,19 @@ Continue searching the parent directory? "))
     (if (= (length patterns) 1)
         (or (helm-ag--convert-invert-pattern (car patterns))
             (car patterns))
-      (cond ((member 'pcre helm-ag--command-features)
+      (cond ((memq 'pcre helm-ag--command-features)
              (cl-loop for s in patterns
                       if (helm-ag--convert-invert-pattern s)
                       concat (concat "(?=" it ")")
                       else
                       concat (concat "(?=.*" s ".*)")))
-            ((member 're2 helm-ag--command-features)
+            ((memq 're2 helm-ag--command-features)
              (string-join patterns ".*"))
             ;; we don't know anything about this pattern
             (t input)))))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
-  (if (member 'pcre helm-ag--command-features)
+  (if (memq 'pcre helm-ag--command-features)
       (cl-loop with regexp = (helm-ag--pcre-to-elisp-regexp input)
                for pattern in (helm-ag--split-string regexp)
                when (helm-ag--validate-regexp pattern)
@@ -1068,27 +1068,23 @@ Continue searching the parent directory? "))
 (defun helm-ag--set-command-features ()
   (let ((cmd (intern (car (split-string helm-ag-base-command)))))
     (setq helm-ag--command-features (list cmd))
-    (when (eq cmd 'ack)
-      (add-to-list 'helm-ag--command-features
-                   (if (or (string-match-p "-Q" helm-ag-base-command)
-                           (string-match-p "--literal" helm-ag-base-command))
-                       'fixed 'pcre)))
-    (when (eq cmd 'ag)
-      (add-to-list 'helm-ag--command-features
-                   (if (or (string-match-p "-Q" helm-ag-base-command)
-                           (string-match-p "--literal" helm-ag-base-command)
-                           (string-match-p "-F" helm-ag-base-command)
-                           (string-match-p "--fixed-strings" helm-ag-base-command))
-                       'fixed 'pcre)))
-    (when (eq cmd 'pt)
-      (add-to-list 'helm-ag--command-features
-                   (if (string-match-p "-e" helm-ag-base-command)
-                       're2 'fixed)))
-    (when (eq cmd 'rg)
-      (add-to-list 'helm-ag--command-features
-                   (if (or (string-match-p "-F" helm-ag-base-command)
-                           (string-match-p "--fixed-strings" helm-ag-base-command))
-                       'fixed 're2)))))
+    (cl-case cmd
+      (ack (add-to-list 'helm-ag--command-features
+                        (if (string-match-p "-\\(?:Q\\|-literal\\)\\>" helm-ag-base-command)
+                            'fixed
+                          'pcre)))
+      (ag (add-to-list 'helm-ag--command-features
+                       (if (string-match-p "-\\(?:[QF]\\|-literal\\|-fixed-strings\\)\\>" helm-ag-base-command)
+                           'fixed
+                         'pcre)))
+      (pt (add-to-list 'helm-ag--command-features
+                       (if (string-match-p "-e\\>" helm-ag-base-command)
+                           're2
+                         'fixed)))
+      (rg (add-to-list 'helm-ag--command-features
+                       (if (string-match-p "-\\(?:F\\|-fixed-strings\\)\\>" helm-ag-base-command)
+                           'fixed
+                         're2))))))
 
 (defun helm-ag--do-ag-searched-extensions ()
   (when (and current-prefix-arg (= (abs (prefix-numeric-value current-prefix-arg)) 4))
