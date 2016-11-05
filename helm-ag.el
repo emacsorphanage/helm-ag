@@ -150,10 +150,10 @@ Default behaviour shows finish and result in mode-line."
         (push (list :file it :point curpoint) helm-ag--context-stack)
       (push (list :buffer helm-current-buffer :point curpoint) helm-ag--context-stack))))
 
-(defsubst helm-ag--insert-thing-at-point (thing)
-  (helm-aif (thing-at-point thing)
-      (substring-no-properties it)
-    ""))
+(defun helm-ag--insert-thing-at-point (thing)
+    (helm-aif (thing-at-point thing)
+        (substring-no-properties it)
+      ""))
 
 (defun helm-ag--searched-word ()
   (if helm-ag-insert-at-point
