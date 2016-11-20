@@ -113,6 +113,7 @@ Default behaviour shows finish and result in mode-line."
   "Face of deleted line in edit mode.")
 
 (defvar helm-ag--command-history '())
+(defvar helm-ag--helm-history '())
 (defvar helm-ag--context-stack nil)
 (defvar helm-ag--default-directory nil)
 (defvar helm-ag--last-default-directory nil)
@@ -799,7 +800,8 @@ Continue searching the parent directory? "))
                   (helm-ag--default-directory parent))
              (setq helm-ag--last-default-directory default-directory)
              (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
-             (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))))
+             (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map
+                   :history 'helm-ag--helm-history)))))
     (message nil)))
 
 ;;;###autoload
@@ -813,7 +815,8 @@ Continue searching the parent directory? "))
     (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
                   helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))
+    (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map
+          :history 'helm-ag--helm-history)))
 
 ;;;###autoload
 (defun helm-ag (&optional basedir)
@@ -829,7 +832,8 @@ Continue searching the parent directory? "))
       (helm-ag--query)
       (helm-attrset 'search-this-file nil helm-ag-source)
       (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
-      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))))
+      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map
+            :history 'helm-ag--helm-history))))
 
 (defun helm-ag--split-string (str)
   (with-temp-buffer
@@ -1055,7 +1059,8 @@ Continue searching the parent directory? "))
              (helm-attrset 'name (helm-ag--helm-header parent)
                            helm-source-do-ag)
              (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-                   :keymap helm-do-ag-map :input initial-input)))))
+                   :keymap helm-do-ag-map :input initial-input
+                   :history 'helm-ag--helm-history)))))
     (message nil)))
 
 (defun helm-ag--set-do-ag-option ()
@@ -1103,7 +1108,8 @@ Continue searching the parent directory? "))
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
           :input (or (helm-ag--marked-input t)
-                     (helm-ag--insert-thing-at-point helm-ag-insert-at-point)))))
+                     (helm-ag--insert-thing-at-point helm-ag-insert-at-point))
+          :history 'helm-ag--helm-history)))
 
 ;;;###autoload
 (defun helm-do-ag-this-file ()
