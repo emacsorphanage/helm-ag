@@ -281,7 +281,7 @@ I think the searching tool which supports grep like output, helm-ag can work wit
 When using `ag` or `ack`, `helm-do-ag` convert pattern from `foo bar` to `"(?=.*" foo ".*)(?=.*" bar ".*)"`
 which pattern matches line which contains both `foo` and `bar`. But when using `pt` or `rg`, `helm-do-ag`
 does not convert the pattern because Golang `regexp`(`pt` is written in Golang)
-and rust's `regex` (`regex` is written in rust) does not support look-a-head pattern.
+and rust's `regex` (`rg` is written in rust) does not support look-a-head pattern.
 So using `pt` or `rg` behaves differently from `ag` when you use such pattern.
 
 ## Alternatives
