@@ -137,9 +137,13 @@ Search pattern is `--count`.
 `ag`(`ack`, `pt`) takes Perl compatible PCRE so that you need to escape meta characters
 likes brackets, braces, asterisk, when you search them as literals.
 
+##### Use short option
+
+Don't use space between option and its value. For example `-tcpp` is ok, `-t cpp` is not ok.
+
 ##### Use long option
 
-Please always use `=` separator for using long option. For example `--ignore=pattern` is ok, `--ignore pattern` is not ok.
+Please always use `=` separator for using long option. Don't use space as separator. For example `--ignore=pattern` is ok, `--ignore pattern` is not ok.
 
 ## Customize
 
