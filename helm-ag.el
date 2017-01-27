@@ -456,6 +456,7 @@ Default behaviour shows finish and result in mode-line."
     :fuzzy-match helm-ag-fuzzy-match
     :action helm-ag--actions
     :candidate-number-limit 9999
+    :keymap helm-ag-map
     :follow (and helm-follow-mode-persistent 1)))
 
 ;;;###autoload
@@ -1044,6 +1045,7 @@ Continue searching the parent directory? "))
     :nohighlight t
     :requires-pattern 3
     :candidate-number-limit 9999
+    :keymap helm-do-ag-map
     :follow (and helm-follow-mode-persistent 1)))
 
 (defun helm-ag--do-ag-up-one-level ()
