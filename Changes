@@ -1,5 +1,11 @@
 Revision history for helm-ag.el
 
+Revision 0.58 2017/02/10 syohex
+   - Better input UX
+   - Fix default directory of save buffer issue
+   - Set own history variables
+   - Better support multiple search programs
+
 Revision 0.57 2016/10/10 syohex
    - Add customize variable of ignore buffer(#270)
    - Drop Emacs 24.3 support
