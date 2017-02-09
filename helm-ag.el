@@ -489,7 +489,13 @@ Default behaviour shows finish and result in mode-line."
 (defun helm-ag--query ()
   (let* ((searched-word (helm-ag--searched-word))
          (marked-word (helm-ag--marked-input nil))
-         (query (read-string "Pattern: " (or marked-word searched-word) 'helm-ag--command-history)))
+         (query (read-from-minibuffer "Pattern: "
+                                      (or marked-word searched-word)
+                                      nil
+                                      nil
+                                      'helm-ag--command-history
+                                      (helm-aif (symbol-at-point)
+                                          (symbol-name it)))))
     (when (string-empty-p query)
       (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
