@@ -149,7 +149,7 @@ Please always use `=` separator for using long option. Don't use space as separa
 
 ##### `helm-ag-base-command`(Default: `ag --nocolor --nogroup`)
 
-Base command of `ag`. Windows users should set `--vimgrep` option for using `helm-do-ag`.
+Base command of `ag`. Windows users should set `--vimgrep` option for using `helm-do-ag`. See [#293](https://github.com/syohex/emacs-helm-ag/issues/293#issuecomment-280850455)
 
 ##### `helm-ag-command-option`(Default: `nil`)
 
@@ -277,7 +277,7 @@ I think the searching tool which supports grep like output, helm-ag can work wit
 
 ```lisp
 (custom-set-variables
- '(helm-ag-base-command "rg --vimgrep --no-heading"))
+ '(helm-ag-base-command "rg --no-heading"))
 ```
 
 #### NOTE: For pt and rg users
