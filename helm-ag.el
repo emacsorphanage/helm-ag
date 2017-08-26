@@ -1108,7 +1108,7 @@ Continue searching the parent directory? "))
 (defsubst helm-do-ag--target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
-(defun helm-do-ag--helm ()
+(defun helm-do-ag--helm (&optional query)
   (let ((search-dir (if (not (helm-ag--windows-p))
                         helm-ag--default-directory
                       (if (helm-do-ag--target-one-directory-p helm-ag--default-target)
@@ -1117,7 +1117,8 @@ Continue searching the parent directory? "))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
-          :input (or (helm-ag--marked-input t)
+          :input (or query
+                     (helm-ag--marked-input t)
                      (helm-ag--insert-thing-at-point helm-ag-insert-at-point))
           :history 'helm-ag--helm-history)))
 
@@ -1129,7 +1130,7 @@ Continue searching the parent directory? "))
     (error "Error: This buffer is not visited file.")))
 
 ;;;###autoload
-(defun helm-do-ag (&optional basedir targets)
+(defun helm-do-ag (&optional basedir targets query)
   (interactive)
   (require 'helm-mode)
   (helm-ag--init-state)
@@ -1155,11 +1156,11 @@ Continue searching the parent directory? "))
                        (car helm-ag--default-target))
                   helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
-        (helm-do-ag--helm)
+        (helm-do-ag--helm query)
       (let* ((helm-ag--default-directory
               (file-name-as-directory (car helm-ag--default-target)))
              (helm-ag--default-target nil))
-        (helm-do-ag--helm)))))
+        (helm-do-ag--helm query)))))
 
 (defun helm-ag--project-root ()
   (cl-loop for dir in '(".git/" ".hg/" ".svn/" ".git")
