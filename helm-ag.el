@@ -315,7 +315,7 @@ Default behaviour shows finish and result in mode-line."
       (forward-line (1- (string-to-number line))))
     (ignore-errors
       (and (re-search-forward helm-ag--last-query (line-end-position) t)
-           ;; `helm-goto-char' exapnds folded headings/outlines if needed
+           ;; `helm-goto-char' expands folded headings/outlines if needed
            (helm-goto-char (match-beginning 0))))))
 
 (defun helm-ag--open-file-with-temp-buffer (filename)
