@@ -1182,19 +1182,19 @@ Continue searching the parent directory? "))
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
       (error "Could not find the project root. Create a git, hg, or svn repository there first. "))
-    (helm-do-ag rootdir query)))
+    (helm-do-ag rootdir nil query)))
 
 ;;;###autoload
 (defun helm-ag-buffers (&optional query)
   (interactive)
   (let ((helm-ag--buffer-search t))
-    (helm-ag query)))
+    (helm-ag nil query)))
 
 ;;;###autoload
 (defun helm-do-ag-buffers (&optional query)
   (interactive)
   (let ((helm-ag--buffer-search t))
-    (helm-do-ag query)))
+    (helm-do-ag nil nil query)))
 
 (provide 'helm-ag)
 
