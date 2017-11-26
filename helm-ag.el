@@ -974,7 +974,8 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
   "Not documented."
-  (if (memq 'pcre helm-ag--command-features)
+  (if (or (memq 'pcre helm-ag--command-features)
+          (memq 're2 helm-ag--command-features))
       (cl-loop with regexp = (helm-ag--pcre-to-elisp-regexp input)
                for pattern in (helm-ag--split-string regexp)
                when (helm-ag--validate-regexp pattern)
