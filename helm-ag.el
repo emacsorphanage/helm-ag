@@ -281,6 +281,8 @@ Default behaviour shows finish and result in mode-line."
             (unless (zerop ret)
               (unless (executable-find (car cmds))
                 (error "'ag' is not installed."))
+              (unless (file-exists-p (concat (file-remote-p default-directory) (executable-find (car cmds))))
+                (error "'ag' is not installed on remote system."))
               (error "Failed: '%s'" helm-ag--last-query))))
         (when helm-ag--buffer-search
           (helm-ag--abbreviate-file-name))
