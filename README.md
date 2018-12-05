@@ -230,11 +230,11 @@ current line indicates.
 
 ### Saved buffer keymap
 
-| Key   | Action                                      |
-|:------|:--------------------------------------------|
-| `RET` | Jump to current line posion                 |
-| `C-o` | Jump to current line posion in other window |
-| `g`   | Update result                               |
+| Key   | Action                                        |
+|:------|:----------------------------------------------|
+| `RET` | Jump to current line position                 |
+| `C-o` | Jump to current line position in other window |
+| `g`   | Update result                                 |
 
 
 ## Sample Configuration
