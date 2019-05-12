@@ -278,7 +278,7 @@ Default behaviour shows finish and result in mode-line."
         (let ((ret (apply #'process-file (car cmds) nil t nil (cdr cmds))))
           (if (zerop (length (buffer-string)))
               (error "No ag output: '%s'" helm-ag--last-query)
-            (unless (zerop ret)
+            (unless (memq ret '(0 2))
               (unless (executable-find (car cmds))
                 (error "'ag' is not installed."))
               (error "Failed: '%s'" helm-ag--last-query))))
