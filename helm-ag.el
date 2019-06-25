@@ -108,6 +108,10 @@ They are specified to `--ignore' options."
 Default behaviour shows finish and result in mode-line."
   :type 'function)
 
+(defcustom helm-ag-requires-pattern 3
+  "Characters pattern required to search with `ag'."
+  :type 'integer)
+
 (defface helm-ag-edit-deleted-line
   '((t (:inherit font-lock-comment-face :strike-through t)))
   "Face of deleted line in edit mode.")
@@ -1049,7 +1053,7 @@ Continue searching the parent directory? "))
     :persistent-action  'helm-ag--persistent-action
     :action helm-ag--actions
     :nohighlight t
-    :requires-pattern 3
+    :requires-pattern helm-ag-requires-pattern
     :candidate-number-limit 9999
     :keymap helm-do-ag-map
     :follow (and helm-follow-mode-persistent 1)))
