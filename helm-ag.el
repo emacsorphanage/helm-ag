@@ -1,4 +1,4 @@
-;;; helm-ag.el --- the silver searcher with helm interface -*- lexical-binding: t; -*-
+;;; helm-ag.el --- The silver searcher with helm interface -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 by Syohei YOSHIDA
 
@@ -38,10 +38,12 @@
 (require 'helm-utils)
 (require 'compile)
 (require 'subr-x)
+(require 'files)
 
 (declare-function helm-read-file-name "helm-mode")
 (declare-function helm-grep-get-file-extensions "helm-grep")
 (declare-function helm-help "helm-help")
+(declare-function helm-occur "helm-occur")
 
 (defgroup helm-ag nil
   "the silver searcher with helm interface"
@@ -120,6 +122,10 @@ They are specified to `--ignore' options."
 Default behaviour shows finish and result in mode-line."
   :type 'function
   :group 'helm-ag)
+
+(defcustom helm-ag-large-file-threshold 5000000
+  "Large file threshold."
+  :type 'integer)
 
 (defface helm-ag-edit-deleted-line
   '((t (:inherit font-lock-comment-face :strike-through t)))
@@ -285,12 +291,11 @@ Default behaviour shows finish and result in mode-line."
 
 (defun helm-ag--abbreviate-file-name ()
   "Not documented."
-  (unless (helm-ag--windows-p)
-    (save-excursion
-      (goto-char (point-min))
-      (forward-line 1)
-      (while (re-search-forward "^\\([^:]+\\)" nil t)
-        (replace-match (abbreviate-file-name (match-string-no-properties 1)))))))
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line 1)
+    (while (re-search-forward "^\\([[:lower:][:upper:]]?:?[^:]+\\)" nil t)
+      (replace-match (abbreviate-file-name (match-string-no-properties 1))))))
 
 (defun helm-ag--init ()
   "Not documented."
@@ -325,16 +330,20 @@ Default behaviour shows finish and result in mode-line."
       (unless (file-directory-p target)
         target))))
 
+(defun helm-ag--split-line (line)
+  (when (string-match (helm-ag--match-line-regexp) line)
+    ;; Don't use split-string because buffer/file name or string
+    ;; may contain a ":".
+    (cl-loop for n from 1 to 4 collect (match-string n line))))
+
 (defun helm-ag--find-file-action (candidate find-func this-file &optional persistent)
   "Not documented."
   (when (memq 'pt helm-ag--command-features)
     ;; 'pt' always show filename if matched file is only one.
     (setq this-file nil))
-  (let* ((file-line (helm-grep-split-line candidate))
+  (let* ((file-line (helm-ag--split-line candidate))
          (filename (or this-file (cl-first file-line) candidate))
-         (line (if this-file
-                   (cl-first (split-string candidate ":"))
-                 (cl-second file-line)))
+         (line (cl-second file-line))
          (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
                                 default-directory)))
@@ -366,10 +375,9 @@ Default behaviour shows finish and result in mode-line."
 
 (defun helm-ag--search-this-file-p ()
   "Not documented."
-  (unless (helm-ag--vimgrep-option)
-    (if (eq (helm-get-current-source) 'helm-source-do-ag)
-        (helm-ag--search-only-one-file-p)
-      (helm-attr 'search-this-file))))
+  (if (eq (helm-get-current-source) 'helm-source-do-ag)
+      (helm-ag--search-only-one-file-p)
+    (helm-attr 'search-this-file)))
 
 (defun helm-ag--persistent-action (candidate)
   "Not documented."
@@ -442,18 +450,18 @@ Default behaviour shows finish and result in mode-line."
 
 (defun helm-ag--candidate-transform-for-this-file (candidate)
   "Not documented."
-  (when (string-match "\\`\\([^:]+\\):\\(.*\\)" candidate)
+  (when (string-match (helm-ag--match-line-regexp) candidate)
     (format "%s:%s"
-            (propertize (match-string 1 candidate) 'face 'helm-grep-lineno)
-            (helm-ag--highlight-candidate (match-string 2 candidate)))))
+            (propertize (match-string 2 candidate) 'face 'helm-grep-lineno)
+            (helm-ag--highlight-candidate (match-string 4 candidate)))))
 
 (defun helm-ag--candidate-transform-for-files (candidate)
   "Not documented."
-  (helm-aif (helm-grep-split-line candidate)
-            (format "%s:%s:%s"
-                    (propertize (cl-first it) 'face 'helm-moccur-buffer)
-                    (propertize (cl-second it) 'face 'helm-grep-lineno)
-                    (helm-ag--highlight-candidate (cl-third it)))))
+  (helm-aif (helm-ag--split-line candidate)
+      (format "%s:%s:%s"
+              (propertize (cl-first it) 'face 'helm-moccur-buffer)
+              (propertize (cl-second it) 'face 'helm-grep-lineno)
+              (helm-ag--highlight-candidate (cl-fourth it)))))
 
 (defun helm-ag--candidate-transformer (candidate)
   "Not documented."
@@ -591,14 +599,16 @@ Default behaviour shows finish and result in mode-line."
   "Not documented."
   ;; $1: file name
   ;; $2: line
-  ;; $3: match body
-  ;; $4: file attributes part(filename, line, column)
-  (cond ((helm-ag--vimgrep-option)
-         "^\\(?4:\\(?1:[^:]+\\):\\(?2:[1-9][0-9]*\\):[^:]+:\\)\\(?3:.*\\)$")
-        (helm-ag--search-this-file-p
-         "^\\(?4:\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?3:.*\\)$")
-        (t
-         "^\\(?4:\\(?1:[^:]+\\):\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?3:.*\\)$")))
+  ;; $3: column
+  ;; $4: match body
+  ;; $5: file attributes part(filename, line, column)
+  (cond
+   ((helm-ag--vimgrep-option)
+    "^\\(?5:\\(?1:[[:lower:][:upper:]]?:?.*?\\):\\(?2:[1-9][0-9]*\\):\\(?3:[^:]+\\):\\)\\(?4:.*\\)$")
+   (helm-ag--search-this-file-p
+    "^\\(?5:\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?4:.*\\)$")
+   (t
+    "^\\(?5:\\(?1:[[:lower:][:upper:]]?:?.*?\\):\\(?2:[1-9][0-9]*\\)[:-]\\)\\(?4:.*\\)$")))
 
 (defun helm-ag--edit-commit ()
   "Not documented."
@@ -614,7 +624,7 @@ Default behaviour shows finish and result in mode-line."
     (while (re-search-forward regexp nil t)
       (let* ((file (or (match-string-no-properties 1) helm-ag--search-this-file-p))
              (line (string-to-number (match-string-no-properties 2)))
-             (body (match-string-no-properties 3))
+             (body (match-string-no-properties 4))
              (ovs (overlays-at (line-beginning-position))))
         (with-current-buffer (find-file-noselect file)
           (cl-pushnew (current-buffer) open-buffers)
@@ -690,9 +700,8 @@ Default behaviour shows finish and result in mode-line."
       (let ((inhibit-read-only t))
         (erase-buffer))
       (setq-local helm-ag--default-directory helm-buf-dir)
-      (unless (helm-ag--vimgrep-option)
-        (setq-local helm-ag--search-this-file-p
-                    (assoc-default 'search-this-file (helm-get-current-source))))
+      (setq-local helm-ag--search-this-file-p
+                  (assoc-default 'search-this-file (helm-get-current-source)))
       (let (buf-content)
         (with-current-buffer (get-buffer "*helm-ag*")
           (goto-char (point-min))
@@ -717,10 +726,10 @@ Default behaviour shows finish and result in mode-line."
                         (helm-ag--edit-func-to-keys #'helm-ag--edit-abort)))
           (goto-char (point-min))
           (while (re-search-forward regexp nil t)
-            (let ((file-line-begin (match-beginning 4))
-                  (file-line-end (match-end 4))
-                  (body-begin (match-beginning 3))
-                  (body-end (match-end 3)))
+            (let ((file-line-begin (match-beginning 5))
+                  (file-line-end (match-end 5))
+                  (body-begin (match-beginning 4))
+                  (body-end (match-end 4)))
               (add-text-properties file-line-begin file-line-end
                                    '(face font-lock-function-name-face
                                           intangible t))
@@ -794,8 +803,7 @@ Special commands:
     (save-excursion
       (insert result)))
   (helm-ag-mode)
-  (unless (helm-ag--vimgrep-option)
-    (setq-local helm-ag--search-this-file-p search-this-file-p))
+  (setq-local helm-ag--search-this-file-p search-this-file-p)
   (setq-local helm-ag--default-directory default-directory))
 
 (defun helm-ag--save-results (use-other-buf)
@@ -848,7 +856,7 @@ Special commands:
 (defun helm-ag--file-of-current-file ()
   "Not documented."
   (let ((line (helm-current-line-contents)))
-    (when (string-match helm-grep-split-line-regexp line)
+    (when (string-match (helm-ag--match-line-regexp) line)
       (match-string-no-properties 1 line))))
 
 (defun helm-ag--move-file-common (pred move-fn wrap-fn)
@@ -985,35 +993,39 @@ Continue searching the parent directory? "))
   (save-excursion
     (goto-char (point-min))
     (forward-line 1)
-    (let ((patterns (helm-ag--do-ag-highlight-patterns input)))
-      (cl-loop with one-file-p = (and (not (helm-ag--vimgrep-option))
-                                      (helm-ag--search-only-one-file-p))
-               while (not (eobp))
-               for num = 1 then (1+ num)
-               do
-               (progn
-                 (let ((start (point))
-                       (bound (line-end-position)))
-                   (if (and one-file-p (search-forward ":" bound t))
-                       (set-text-properties (line-beginning-position) (1- (point))
-                                            '(face helm-grep-lineno))
-                     (when (re-search-forward helm-grep-split-line-regexp bound t)
-                       (set-text-properties (match-beginning 1) (match-end 1) '(face helm-moccur-buffer))
-                       (set-text-properties (match-beginning 2) (match-end 2) '(face helm-grep-lineno))
-                       (goto-char (match-beginning 3))))
-                   (let ((curpoint (point))
-                         (case-fold-search helm-ag--ignore-case))
-                     (dolist (pattern patterns)
-                       (let ((last-point (point)))
-                         (while (re-search-forward pattern bound t)
-                           (set-text-properties (match-beginning 0) (match-end 0)
-                                                '(face helm-match))
-                           (when (= last-point (point))
-                             (forward-char 1))
-                           (setq last-point (point)))
-                         (goto-char curpoint))))
-                   (put-text-property start bound 'helm-cand-num num))
-                 (forward-line 1))))))
+    (let ((patterns (helm-ag--do-ag-highlight-patterns input))
+          (split-line-regexp (helm-ag--match-line-regexp)))
+      (cl-loop
+       with one-file-p = (helm-ag--search-only-one-file-p)
+       while (not (eobp))
+       for num = 1 then (1+ num)
+       do
+       (progn
+         (let ((start (point))
+               (bound (line-end-position)))
+           (when (re-search-forward split-line-regexp bound t)
+             (if one-file-p
+                 (set-text-properties (match-beginning 1) (1+ (match-end 1)) '(invisible t))
+               (set-text-properties (match-beginning 1) (match-end 1) '(face helm-moccur-buffer)))
+             (set-text-properties (match-beginning 2) (match-end 2) '(face helm-grep-lineno))
+             (when (match-beginning 3)
+               (if one-file-p
+                 (set-text-properties (match-beginning 3) (1+ (match-end 3)) '(invisible t))
+               (set-text-properties (match-beginning 3) (match-end 3) '(face helm-grep-lineno))))
+             (goto-char (match-beginning 4)))
+           (let ((curpoint (point))
+                 (case-fold-search helm-ag--ignore-case))
+             (dolist (pattern patterns)
+               (let ((last-point (point)))
+                 (while (re-search-forward pattern bound t)
+                   (set-text-properties (match-beginning 0) (match-end 0)
+                                        '(face helm-match))
+                   (when (= last-point (point))
+                     (forward-char 1))
+                   (setq last-point (point)))
+                 (goto-char curpoint))))
+           (put-text-property start bound 'helm-cand-num num))
+         (forward-line 1))))))
 
 (defun helm-ag-show-status-default-mode-line ()
   "Not documented."
@@ -1222,8 +1234,7 @@ Continue searching the parent directory? "))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
-          :input (let ((input (or query
-                                  (helm-ag--marked-input t)
+          :input (let ((input (or query (helm-ag--marked-input t)
                                   (helm-ag--insert-thing-at-point helm-ag-insert-at-point))))
                    (if (string-prefix-p "-" input)
                        (concat "-- " input)
@@ -1237,6 +1248,18 @@ Continue searching the parent directory? "))
   (helm-aif (buffer-file-name)
             (helm-do-ag default-directory (list it) query)
             (error "Error: This buffer is not visited file.")))
+
+;;;###autoload
+(defun helm-do-ag-this-file-or-occur (&optional query)
+  "Grep file smartly based of `helm-ag-large-file-threshold'."
+  (interactive)
+  (require 'helm-occur)
+  (cond
+   ((and buffer-file-name
+         (> (file-attribute-size (file-attributes buffer-file-name))
+            helm-ag-large-file-threshold))
+    (helm-do-ag-this-file query))
+   (t (funcall-interactively #'helm-occur))))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets query)

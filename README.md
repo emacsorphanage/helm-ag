@@ -56,6 +56,10 @@ You can specify extra command line option of `ag` with minus prefix(`M--` or `C-
 
 Same as `helm-do-ag` except to search only current file
 
+##### `helm-do-ag-this-file-or-occur`
+
+Smartly switch between `helm-do-ag-this-file` and `helm-occur` based on `helm-ag-large-file-threshold`.
+
 ##### `helm-ag-project-root`
 
 Call `helm-ag` at project root. `helm-ag` seems directory as project root where

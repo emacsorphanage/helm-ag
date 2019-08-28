@@ -168,13 +168,16 @@
 
 (ert-deftest transform-for-this-file ()
   "helm-ag--candidate-transform-for-this-file"
-  (let ((helm-ag--last-query "hoge"))
+  (let ((helm-ag--last-command `("ag" "--nogroup"))
+        (helm-ag--search-this-file-p t)
+        (helm-ag--last-query "hoge"))
     (should (helm-ag--candidate-transform-for-this-file "10:hoge"))
     (should-not (helm-ag--candidate-transform-for-this-file ":hoge"))))
 
 (ert-deftest transform-for-files ()
   "helm-ag--candidate-transform-for-files"
-  (let ((helm-ag--last-query "hoge"))
+  (let ((helm-ag--last-command `("ag" "--nogroup"))
+        (helm-ag--last-query "hoge"))
     (should (helm-ag--candidate-transform-for-files "10:5:hoge"))
     (should-not (helm-ag--candidate-transform-for-files "10:hoge"))))
 
@@ -258,11 +261,6 @@
     (should (equal (helm-ag--join-patterns "foo !bar") "(?=.*foo.*)(?=^(?!.*bar).+$)"))))
 
 (ert-deftest search-this-file-p ()
-  "Ag does not show file name at searching only one file except '--vimgrep'
-option specified"
-  (let ((helm-ag--last-command '("--vimgrep")))
-    (should-not (helm-ag--search-this-file-p)))
-
   (cl-letf (((symbol-function 'helm-get-current-source)
              (lambda () 'helm-source-ag))
             ((symbol-function 'helm-attr)
