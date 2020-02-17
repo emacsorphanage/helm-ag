@@ -617,10 +617,10 @@ Default behaviour shows finish and result in mode-line."
              (line (string-to-number (match-string-no-properties 2)))
              (body (match-string-no-properties 3))
              (ovs (overlays-at (line-beginning-position))))
-        (with-current-buffer (find-file-noselect file)
-          (cl-pushnew (current-buffer) open-buffers)
-          (if buffer-read-only
-              (cl-incf read-only-files)
+        (if (not (file-writable-p file))
+            (cl-incf read-only-files)
+          (with-temp-buffer
+            (insert-file-contents file)
             (goto-char (point-min))
             (let ((deleted-lines (gethash file line-deletes 0))
                   (deleted (and ovs (overlay-get (car ovs) 'helm-ag-deleted))))
@@ -632,14 +632,8 @@ Default behaviour shows finish and result in mode-line."
                   (forward-line 1)
                   (delete-region beg (point))
                   (puthash file (1+ deleted-lines) line-deletes)))
-              (cl-pushnew (current-buffer) saved-buffers))))))
-    (when helm-ag-edit-save
-      (dolist (buf saved-buffers)
-        (with-current-buffer buf
-          (save-buffer))))
-    (dolist (buf open-buffers)
-      (unless (memq buf kept-buffers)
-        (kill-buffer buf)))
+              (when helm-ag-edit-save
+                (write-region (point-min) (point-max) file)))))))
     (helm-ag--exit-from-edit-mode)
     (if (not (zerop read-only-files))
         (message "%d files are read-only and not editable." read-only-files)
