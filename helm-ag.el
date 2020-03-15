@@ -623,7 +623,8 @@ Default behaviour shows finish and result in mode-line."
                            default-directory))
          (default-directory helm-buf-dir))
     (with-current-buffer (get-buffer-create "*helm-ag-edit*")
-      (erase-buffer)
+      (let ((inhibit-read-only t))
+        (erase-buffer))
       (setq-local helm-ag--default-directory helm-buf-dir)
       (unless (helm-ag--vimgrep-option)
         (setq-local helm-ag--search-this-file-p
