@@ -486,16 +486,17 @@ Default behaviour shows finish and result in mode-line."
           input
         (replace-regexp-in-string " " "\\\\ " input)))))
 
-(defun helm-ag--query ()
+(defun helm-ag--query (&optional query)
   (let* ((searched-word (helm-ag--searched-word))
          (marked-word (helm-ag--marked-input nil))
-         (query (read-from-minibuffer "Pattern: "
-                                      (or marked-word searched-word)
-                                      nil
-                                      nil
-                                      'helm-ag--command-history
-                                      (helm-aif (symbol-at-point)
-                                          (symbol-name it)))))
+         (query (or query
+                    (read-from-minibuffer "Pattern: "
+                                          (or marked-word searched-word)
+                                          nil
+                                          nil
+                                          'helm-ag--command-history
+                                          (helm-aif (symbol-at-point)
+                                              (symbol-name it))))))
     (when (string-empty-p query)
       (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
@@ -815,12 +816,12 @@ Continue searching the parent directory? "))
     (message nil)))
 
 ;;;###autoload
-(defun helm-ag-this-file ()
+(defun helm-ag-this-file (&optional query)
   (interactive)
   (helm-ag--init-state)
   (let ((filename (file-name-nondirectory (buffer-file-name)))
         (helm-ag--default-directory default-directory))
-    (helm-ag--query)
+    (helm-ag--query query)
     (helm-ag--set-command-features)
     (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
                   helm-ag-source)
@@ -829,7 +830,7 @@ Continue searching the parent directory? "))
           :history 'helm-ag--helm-history)))
 
 ;;;###autoload
-(defun helm-ag (&optional basedir)
+(defun helm-ag (&optional basedir query)
   (interactive)
   (helm-ag--init-state)
   (let ((dir (helm-ag--get-default-directory))
@@ -839,7 +840,7 @@ Continue searching the parent directory? "))
             targets dir))
     (let ((helm-ag--default-directory (or basedir dir))
           (helm-ag--default-target targets))
-      (helm-ag--query)
+      (helm-ag--query query)
       (helm-attrset 'search-this-file nil helm-ag-source)
       (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
       (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map
@@ -1109,7 +1110,7 @@ Continue searching the parent directory? "))
 (defsubst helm-do-ag--target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
-(defun helm-do-ag--helm ()
+(defun helm-do-ag--helm (&optional query)
   (let ((search-dir (if (not (helm-ag--windows-p))
                         helm-ag--default-directory
                       (if (helm-do-ag--target-one-directory-p helm-ag--default-target)
@@ -1118,19 +1119,20 @@ Continue searching the parent directory? "))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
-          :input (or (helm-ag--marked-input t)
+          :input (or query
+                     (helm-ag--marked-input t)
                      (helm-ag--insert-thing-at-point helm-ag-insert-at-point))
           :history 'helm-ag--helm-history)))
 
 ;;;###autoload
-(defun helm-do-ag-this-file ()
+(defun helm-do-ag-this-file (&optional query)
   (interactive)
   (helm-aif (buffer-file-name)
-      (helm-do-ag default-directory (list it))
+      (helm-do-ag default-directory (list it) query)
     (error "Error: This buffer is not visited file.")))
 
 ;;;###autoload
-(defun helm-do-ag (&optional basedir targets)
+(defun helm-do-ag (&optional basedir targets query)
   (interactive)
   (require 'helm-mode)
   (helm-ag--init-state)
@@ -1156,11 +1158,11 @@ Continue searching the parent directory? "))
                        (car helm-ag--default-target))
                   helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
-        (helm-do-ag--helm)
+        (helm-do-ag--helm query)
       (let* ((helm-ag--default-directory
               (file-name-as-directory (car helm-ag--default-target)))
              (helm-ag--default-target nil))
-        (helm-do-ag--helm)))))
+        (helm-do-ag--helm query)))))
 
 (defun helm-ag--project-root ()
   (cl-loop for dir in '(".git/" ".hg/" ".svn/" ".git")
@@ -1168,32 +1170,32 @@ Continue searching the parent directory? "))
            return it))
 
 ;;;###autoload
-(defun helm-ag-project-root ()
+(defun helm-ag-project-root (&optional query)
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
       (error "Could not find the project root. Create a git, hg, or svn repository there first. "))
-    (helm-ag rootdir)))
+    (helm-ag rootdir query)))
 
 ;;;###autoload
-(defun helm-do-ag-project-root ()
+(defun helm-do-ag-project-root (&optional query)
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
       (error "Could not find the project root. Create a git, hg, or svn repository there first. "))
-    (helm-do-ag rootdir)))
+    (helm-do-ag rootdir nil query)))
 
 ;;;###autoload
-(defun helm-ag-buffers ()
+(defun helm-ag-buffers (&optional query)
   (interactive)
   (let ((helm-ag--buffer-search t))
-    (helm-ag)))
+    (helm-ag nil query)))
 
 ;;;###autoload
-(defun helm-do-ag-buffers ()
+(defun helm-do-ag-buffers (&optional query)
   (interactive)
   (let ((helm-ag--buffer-search t))
-    (helm-do-ag)))
+    (helm-do-ag nil nil query)))
 
 (provide 'helm-ag)
 
