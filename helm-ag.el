@@ -1120,7 +1120,7 @@ Continue searching the parent directory? "))
           :input (let ((input (or (helm-ag--marked-input t)
                                   (helm-ag--insert-thing-at-point helm-ag-insert-at-point))))
                    (if (string-prefix-p "-" input)
-                       (concatenate 'string "-- " input)
+                       (concat "-- " input)
                      input))
           :history 'helm-ag--helm-history)))
 
