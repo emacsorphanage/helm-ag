@@ -1016,6 +1016,7 @@ Continue searching the parent directory? "))
                  (forward-line 1))))))
 
 (defun helm-ag-show-status-default-mode-line ()
+  "Not documented."
   (setq mode-line-format
         '(" " mode-line-buffer-identification " "
           (:eval (propertize
@@ -1025,6 +1026,7 @@ Continue searching the parent directory? "))
                   'face 'helm-grep-finish)))))
 
 (defun helm-ag--do-ag-propertize (input)
+  "Not documented."
   (with-helm-window
    (helm-ag--remove-carrige-returns)
    (when helm-ag--buffer-search
@@ -1035,6 +1037,7 @@ Continue searching the parent directory? "))
      (force-mode-line-update))))
 
 (defun helm-ag--construct-extension-options ()
+  "Not documented."
   (cl-loop for ext in helm-do-ag--extensions
            unless (string= ext "*")
            collect
@@ -1043,11 +1046,13 @@ Continue searching the parent directory? "))
                          (replace-regexp-in-string "\\." "\\\\." ext)))))
 
 (defun helm-ag--show-result-p (options has-query)
+  "Not documented."
   (or has-query
       (cl-loop for opt in options
                thereis (string-prefix-p "-g" opt))))
 
 (defun helm-ag--construct-do-ag-command (pattern)
+  "Not documented."
   (let* ((opt-query (helm-ag--parse-options-and-query pattern))
          (options (car opt-query))
          (query (cdr opt-query))
@@ -1061,6 +1066,7 @@ Continue searching the parent directory? "))
               (cdr helm-do-ag--commands)))))
 
 (defun helm-ag--do-ag-set-command ()
+  "Not documented."
   (let ((cmd-opts (split-string helm-ag-base-command nil t)))
     (when helm-ag-command-option
       (setq cmd-opts (append cmd-opts (split-string helm-ag-command-option nil t))))
@@ -1086,6 +1092,7 @@ Continue searching the parent directory? "))
                     targets))))))
 
 (defun helm-ag--do-ag-candidate-process ()
+  "Not documented."
   (let* ((non-essential nil)
          (default-directory (or helm-ag--default-directory
                                 helm-ag--last-default-directory
@@ -1116,9 +1123,11 @@ Continue searching the parent directory? "))
 \\[helm-ag-edit]\t\t-> Edit search results.
 \\[helm-ag--do-ag-help]\t\t-> Show this help.
 \n** Helm Ag Map\n
-\\{helm-map}")
+\\{helm-map}"
+  "Not documented.")
 
 (defun helm-ag--do-ag-help ()
+  "Not documented."
   (interactive)
   (let ((helm-help-message helm-do-ag--help-message))
     (helm-help)))
@@ -1141,9 +1150,11 @@ Continue searching the parent directory? "))
                            :requires-pattern 3
                            :candidate-number-limit 9999
                            :keymap helm-do-ag-map
-                           :follow (and helm-follow-mode-persistent 1)))
+                           :follow (and helm-follow-mode-persistent 1))
+  "Not documented.")
 
 (defun helm-ag--do-ag-up-one-level ()
+  "Not documented."
   (interactive)
   (if (or (not (helm-ag--root-directory-p))
           (y-or-n-p "Current directory might be the project root. \
@@ -1163,6 +1174,7 @@ Continue searching the parent directory? "))
     (message nil)))
 
 (defun helm-ag--set-do-ag-option ()
+  "Not documented."
   (when (or (< (prefix-numeric-value current-prefix-arg) 0)
             helm-ag-always-set-extra-option)
     (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
@@ -1170,6 +1182,7 @@ Continue searching the parent directory? "))
       (setq helm-ag--extra-options option))))
 
 (defun helm-ag--set-command-features ()
+  "Not documented."
   (let ((cmd (intern (car (split-string helm-ag-base-command)))))
     (setq helm-ag--command-features (list cmd))
     (cl-case cmd
@@ -1191,13 +1204,16 @@ Continue searching the parent directory? "))
                          're2))))))
 
 (defun helm-ag--do-ag-searched-extensions ()
+  "Not documented."
   (when (and current-prefix-arg (= (abs (prefix-numeric-value current-prefix-arg)) 4))
     (helm-grep-get-file-extensions helm-ag--default-target)))
 
 (defsubst helm-do-ag--target-one-directory-p (targets)
+  "Not documented."
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
 (defun helm-do-ag--helm (&optional query)
+  "Not documented."
   (let ((search-dir (if (not (helm-ag--windows-p))
                         helm-ag--default-directory
                       (if (helm-do-ag--target-one-directory-p helm-ag--default-target)
@@ -1216,6 +1232,7 @@ Continue searching the parent directory? "))
 
 ;;;###autoload
 (defun helm-do-ag-this-file (&optional query)
+  "Not documented."
   (interactive)
   (helm-aif (buffer-file-name)
             (helm-do-ag default-directory (list it) query)
@@ -1223,6 +1240,7 @@ Continue searching the parent directory? "))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets query)
+  "Not documented."
   (interactive)
   (require 'helm-mode)
   (helm-ag--init-state)
@@ -1255,12 +1273,14 @@ Continue searching the parent directory? "))
         (helm-do-ag--helm query)))))
 
 (defun helm-ag--project-root ()
+  "Not documented."
   (cl-loop for dir in '(".git/" ".hg/" ".svn/" ".git")
            when (locate-dominating-file default-directory dir)
            return it))
 
 ;;;###autoload
 (defun helm-ag-project-root (&optional query)
+  "Not documented."
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
@@ -1269,6 +1289,7 @@ Continue searching the parent directory? "))
 
 ;;;###autoload
 (defun helm-do-ag-project-root (&optional query)
+  "Not documented."
   (interactive)
   (let ((rootdir (helm-ag--project-root)))
     (unless rootdir
@@ -1277,12 +1298,14 @@ Continue searching the parent directory? "))
 
 ;;;###autoload
 (defun helm-ag-buffers (&optional query)
+  "Not documented."
   (interactive)
   (let ((helm-ag--buffer-search t))
     (helm-ag nil query)))
 
 ;;;###autoload
 (defun helm-do-ag-buffers (&optional query)
+  "Not documented."
   (interactive)
   (let ((helm-ag--buffer-search t))
     (helm-do-ag nil nil query)))
