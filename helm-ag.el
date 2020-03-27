@@ -1205,9 +1205,12 @@ Continue searching the parent directory? "))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
-          :input (or query
-                     (helm-ag--marked-input t)
-                     (helm-ag--insert-thing-at-point helm-ag-insert-at-point))
+          :input (let ((input (or query
+                                  (helm-ag--marked-input t)
+                                  (helm-ag--insert-thing-at-point helm-ag-insert-at-point))))
+                   (if (string-prefix-p "-" input)
+                       (concat "-- " input)
+                     input))
           :history 'helm-ag--helm-history)))
 
 ;;;###autoload
