@@ -749,7 +749,8 @@ Default behaviour shows finish and result in mode-line."
 \\[helm-ag-edit]\t\t-> Edit search results.
 \\[helm-ag-help]\t\t-> Show this help.
 \n** Helm Ag Map\n
-\\{helm-map}")
+\\{helm-map}"
+  "Not documented.")
 
 (defun helm-ag-help ()
   "Not documented."
