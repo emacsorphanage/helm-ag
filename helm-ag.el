@@ -1202,7 +1202,9 @@ Continue searching the parent directory? "))
       (rg (add-to-list 'helm-ag--command-features
                        (if (string-match-p "-\\(?:F\\|-fixed-strings\\)\\>" helm-ag-base-command)
                            'fixed
-                         're2))))))
+                         (if (string-match-p "--pcre2\\>" helm-ag-base-command)
+                             'pcre
+                           're2)))))))
 
 (defun helm-ag--do-ag-searched-extensions ()
   "Not documented."
