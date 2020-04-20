@@ -1108,7 +1108,7 @@ Continue searching the parent directory? "))
 (defsubst helm-do-ag--target-one-directory-p (targets)
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
-(defun helm-do-ag--helm (&optional default-input)
+(defun helm-do-ag--helm (default-input)
   (let ((search-dir (if (not (helm-ag--windows-p))
                         helm-ag--default-directory
                       (if (helm-do-ag--target-one-directory-p helm-ag--default-target)
