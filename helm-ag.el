@@ -1215,7 +1215,7 @@ Continue searching the parent directory? "))
   "Not documented."
   (and (listp targets) (= (length targets) 1) (file-directory-p (car targets))))
 
-(defun helm-do-ag--helm (&optional query)
+(defun helm-do-ag--helm (default-input)
   "Not documented."
   (let ((search-dir (if (not (helm-ag--windows-p))
                         helm-ag--default-directory
@@ -1225,12 +1225,8 @@ Continue searching the parent directory? "))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
     (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
-          :input (let ((input (or query
-                                  (helm-ag--marked-input t)
-                                  (helm-ag--insert-thing-at-point helm-ag-insert-at-point))))
-                   (if (string-prefix-p "-" input)
-                       (concat "-- " input)
-                     input))
+          :input (or default-input (helm-ag--marked-input t)
+                     (helm-ag--insert-thing-at-point helm-ag-insert-at-point))
           :history 'helm-ag--helm-history)))
 
 ;;;###autoload
@@ -1242,7 +1238,7 @@ Continue searching the parent directory? "))
             (error "Error: This buffer is not visited file.")))
 
 ;;;###autoload
-(defun helm-do-ag (&optional basedir targets query)
+(defun helm-do-ag (&optional basedir targets default-input)
   "Not documented."
   (interactive)
   (require 'helm-mode)
@@ -1269,11 +1265,11 @@ Continue searching the parent directory? "))
                        (car helm-ag--default-target))
                   helm-source-do-ag)
     (if (or (helm-ag--windows-p) (not one-directory-p)) ;; Path argument must be specified on Windows
-        (helm-do-ag--helm query)
+        (helm-do-ag--helm default-input)
       (let* ((helm-ag--default-directory
               (file-name-as-directory (car helm-ag--default-target)))
              (helm-ag--default-target nil))
-        (helm-do-ag--helm query)))))
+        (helm-do-ag--helm default-input)))))
 
 (defun helm-ag--project-root ()
   "Not documented."
