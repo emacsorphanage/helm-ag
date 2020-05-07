@@ -1083,6 +1083,8 @@ Continue searching the parent directory? "))
                 (setq cmd-opts (append cmd-opts (list "-p" it)))))
     (when helm-do-ag--extensions
       (setq cmd-opts (append cmd-opts (helm-ag--construct-extension-options))))
+    (when helm-ag-use-grep-ignore-list
+      (setq cmd-opts (append cmd-opts (helm-ag--grep-ignore-list-to-options))))
     (let (targets)
       (when helm-ag--buffer-search
         (setq targets (helm-ag--file-visited-buffers)))
