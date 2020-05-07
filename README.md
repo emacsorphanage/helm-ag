@@ -1,6 +1,6 @@
 # helm-ag.el
 
-[![travis badge][travis-badge]][travis-link] [![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
+[![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
 
 
 ## Introduction
@@ -230,11 +230,11 @@ current line indicates.
 
 ### Saved buffer keymap
 
-| Key   | Action                                      |
-|:------|:--------------------------------------------|
-| `RET` | Jump to current line posion                 |
-| `C-o` | Jump to current line posion in other window |
-| `g`   | Update result                               |
+| Key   | Action                                        |
+|:------|:----------------------------------------------|
+| `RET` | Jump to current line position                 |
+| `C-o` | Jump to current line position in other window |
+| `g`   | Update result                                 |
 
 
 ## Sample Configuration
@@ -293,8 +293,6 @@ So using `pt` or `rg` behaves differently from `ag` when you use such pattern.
 [ag.el](https://github.com/Wilfred/ag.el) provides `M-x grep` interface.
 Also it can work without helm.
 
-[travis-badge]: https://travis-ci.org/syohex/emacs-helm-ag.svg
-[travis-link]: https://travis-ci.org/syohex/emacs-helm-ag
 [melpa-link]: https://melpa.org/#/helm-ag
 [melpa-stable-link]: https://stable.melpa.org/#/helm-ag
 [melpa-badge]: https://melpa.org/packages/helm-ag-badge.svg
