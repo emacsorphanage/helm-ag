@@ -35,6 +35,7 @@
 (require 'cl-lib)
 (require 'helm)
 (require 'helm-grep)
+(require 'helm-occur)
 (require 'helm-utils)
 (require 'compile)
 (require 'subr-x)
