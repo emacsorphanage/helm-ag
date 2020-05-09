@@ -264,6 +264,10 @@ Default behaviour shows finish and result in mode-line."
       (while (re-search-forward "^\\([^:]+\\)" nil t)
         (replace-match (abbreviate-file-name (match-string-no-properties 1)))))))
 
+(defun helm-ag--command-succeeded-p (cmd exit-status)
+  (cond ((string= cmd "rg") (member exit-status '(0 2))) ;; add more commands if necessary
+        (t (zerop exit-status))))
+
 (defun helm-ag--init ()
   (let ((buf-coding buffer-file-coding-system))
     (helm-attrset 'recenter t)
@@ -278,9 +282,9 @@ Default behaviour shows finish and result in mode-line."
         (let ((ret (apply #'process-file (car cmds) nil t nil (cdr cmds))))
           (if (zerop (length (buffer-string)))
               (error "No ag output: '%s'" helm-ag--last-query)
-            (unless (memq ret '(0 2))
+            (unless (helm-ag--command-succeeded-p (car cmds) ret)
               (unless (executable-find (car cmds))
-                (error "'ag' is not installed."))
+                (error "'%s' is not installed." (car cmds)))
               (error "Failed: '%s'" helm-ag--last-query))))
         (when helm-ag--buffer-search
           (helm-ag--abbreviate-file-name))
