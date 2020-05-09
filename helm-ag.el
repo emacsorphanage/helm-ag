@@ -61,6 +61,12 @@
   "Command line option of `ag'. This is appended after `helm-ag-base-command'"
   :type 'string)
 
+(defcustom helm-ag-success-exit-status nil
+  "Allows specifying the return code or codes of
+  `helm-ag-base-command' that will be treated as successful."
+  :type '(choice integer
+                 (list integer)))
+
 (defcustom helm-ag-insert-at-point nil
   "Insert thing at point as search pattern.
    You can set value same as `thing-at-point'"
@@ -265,7 +271,8 @@ Default behaviour shows finish and result in mode-line."
         (replace-match (abbreviate-file-name (match-string-no-properties 1)))))))
 
 (defun helm-ag--command-succeeded-p (cmd exit-status)
-  (cond ((string= cmd "rg") (member exit-status '(0 2))) ;; add more commands if necessary
+  (cond ((integerp helm-ag-success-exit-status) (= exit-status helm-ag-success-exit-status))
+        ((listp helm-ag-success-exit-status) (member exit-status helm-ag-success-exit-status))
         (t (zerop exit-status))))
 
 (defun helm-ag--init ()
