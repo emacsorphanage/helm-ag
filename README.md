@@ -275,9 +275,12 @@ I think the searching tool which supports grep like output, helm-ag can work wit
 
 #### [ripgrep](https://github.com/BurntSushi/ripgrep/)
 
+Ripgrep uses exit-status 2 to indicate a partial success:
+
 ```lisp
 (custom-set-variables
- '(helm-ag-base-command "rg --no-heading"))
+ '(helm-ag-base-command "rg --no-heading")
+ `(helm-ag-success-exit-status '(0 2)))
 ```
 
 #### NOTE: For pt and rg users

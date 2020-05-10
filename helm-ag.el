@@ -65,6 +65,12 @@
   :type 'string
   :group 'helm-ag)
 
+(defcustom helm-ag-success-exit-status nil
+  "Allows specifying the return code or codes of
+  `helm-ag-base-command' that will be treated as successful."
+  :type '(choice integer
+                 (list integer)))
+
 (defcustom helm-ag-insert-at-point nil
   "Insert thing at point as search pattern.
 You can set value same as `thing-at-point'"
@@ -293,6 +299,11 @@ Default behaviour shows finish and result in mode-line."
       (while (re-search-forward "^\\([^:]+\\)" nil t)
         (replace-match (abbreviate-file-name (match-string-no-properties 1)))))))
 
+(defun helm-ag--command-succeeded-p (cmd exit-status)
+  (cond ((integerp helm-ag-success-exit-status) (= exit-status helm-ag-success-exit-status))
+        ((listp helm-ag-success-exit-status) (member exit-status helm-ag-success-exit-status))
+        (t (zerop exit-status))))
+
 (defun helm-ag--init ()
   "Not documented."
   (let ((buf-coding buffer-file-coding-system))
@@ -308,9 +319,9 @@ Default behaviour shows finish and result in mode-line."
         (let ((ret (apply #'process-file (car cmds) nil t nil (cdr cmds))))
           (if (zerop (length (buffer-string)))
               (error "No ag output: '%s'" helm-ag--last-query)
-            (unless (zerop ret)
+            (unless (helm-ag--command-succeeded-p (car cmds) ret)
               (unless (executable-find (car cmds))
-                (error "'ag' is not installed."))
+                (error "'%s' is not installed." (car cmds)))
               (error "Failed: '%s'" helm-ag--last-query))))
         (when helm-ag--buffer-search
           (helm-ag--abbreviate-file-name))
