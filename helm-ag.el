@@ -301,7 +301,7 @@ Default behaviour shows finish and result in mode-line."
 
 (defun helm-ag--command-succeeded-p (cmd exit-status)
   (cond ((integerp helm-ag-success-exit-status) (= exit-status helm-ag-success-exit-status))
-        ((listp helm-ag-success-exit-status) (member exit-status helm-ag-success-exit-status))
+        ((consp helm-ag-success-exit-status) (member exit-status helm-ag-success-exit-status))
         (t (zerop exit-status))))
 
 (defun helm-ag--init ()
