@@ -220,7 +220,7 @@ Default behaviour shows finish and result in mode-line."
     (when helm-ag-use-emacs-lisp-regexp
       (setq query (helm-ag--elisp-regexp-to-pcre query)))
     (setq helm-ag--last-query query
-          helm-ag--elisp-regexp-query (helm-ag--pcre-to-elisp-regexp query))
+          helm-ag--elisp-regexp-query (helm-ag--convert-to-elisp-regexp query))
     (setq helm-ag--valid-regexp-for-emacs
           (helm-ag--validate-regexp helm-ag--elisp-regexp-query))
     (if (not options)
@@ -400,11 +400,11 @@ Default behaviour shows finish and result in mode-line."
         t)
     (invalid-regexp nil)))
 
-(defun helm-ag--pcre-to-elisp-regexp (pcre)
+(defun helm-ag--convert-to-elisp-regexp (regexp)
   "Not documented."
   ;; This is very simple conversion
   (with-temp-buffer
-    (insert pcre)
+    (insert regexp)
     (goto-char (point-min))
     ;; convert (, ), {, }, |
     (while (re-search-forward "[(){}|]" nil t)
@@ -986,8 +986,9 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--do-ag-highlight-patterns (input)
   "Not documented."
-  (if (memq 'pcre helm-ag--command-features)
-      (cl-loop with regexp = (helm-ag--pcre-to-elisp-regexp input)
+  (if (or (memq 'pcre helm-ag--command-features)
+          (memq 're2 helm-ag--command-features))
+      (cl-loop with regexp = (helm-ag--convert-to-elisp-regexp input)
                for pattern in (helm-ag--split-string regexp)
                when (helm-ag--validate-regexp pattern)
                collect pattern)
