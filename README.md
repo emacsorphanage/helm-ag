@@ -1,6 +1,6 @@
 # helm-ag.el
 
-[![travis badge][travis-badge]][travis-link] [![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
+[![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
 
 
 ## Introduction
@@ -279,9 +279,12 @@ I think the searching tool which supports grep like output, helm-ag can work wit
 
 #### [ripgrep](https://github.com/BurntSushi/ripgrep/)
 
+Ripgrep uses exit-status 2 to indicate a partial success:
+
 ```lisp
 (custom-set-variables
- '(helm-ag-base-command "rg --no-heading"))
+ '(helm-ag-base-command "rg --no-heading")
+ `(helm-ag-success-exit-status '(0 2)))
 ```
 
 #### NOTE: For pt and rg users
@@ -297,8 +300,6 @@ So using `pt` or `rg` behaves differently from `ag` when you use such pattern.
 [ag.el](https://github.com/Wilfred/ag.el) provides `M-x grep` interface.
 Also it can work without helm.
 
-[travis-badge]: https://travis-ci.org/syohex/emacs-helm-ag.svg
-[travis-link]: https://travis-ci.org/syohex/emacs-helm-ag
 [melpa-link]: https://melpa.org/#/helm-ag
 [melpa-stable-link]: https://stable.melpa.org/#/helm-ag
 [melpa-badge]: https://melpa.org/packages/helm-ag-badge.svg
