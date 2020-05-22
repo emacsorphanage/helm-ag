@@ -1221,11 +1221,22 @@ Continue searching the parent directory? "))
 
 (defvar helm-source-do-ag nil)
 
+(defun helm-ag--do-ag-set-source (dir &optional search-dir)
+  (let ((search-dir (or search-dir dir)))
+    (setq helm-source-do-ag
+          (helm-make-source "AG" 'helm-do-ag-class
+            :candidates-process (lambda ()
+                                  (helm-ag--do-ag-set-command)
+                                  (helm-ag--do-ag-candidate-process dir))
+            :header-name (lambda (_name)
+                           (helm-ag--helm-header search-dir))
+            :follow (and helm-follow-mode-persistent 1)))))
+
 (defun helm-ag--do-ag-up-one-level ()
   "Not documented."
   (interactive)
   (if (or (not (helm-ag--root-directory-p))
-          (y-or-n-p "Current directory might be the project root.  \
+          (y-or-n-p "Current directory might be the project root. \
 Continue searching the parent directory? "))
       (let ((parent (file-name-directory (directory-file-name default-directory)))
             (initial-input helm-input))
@@ -1234,9 +1245,8 @@ Continue searching the parent directory? "))
            (let ((default-directory parent)
                  (helm-ag--default-directory parent))
              (setq helm-ag--last-default-directory default-directory)
-             (helm-attrset 'name (helm-ag--helm-header parent)
-                           helm-source-do-ag)
-             (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+             (helm-ag--do-ag-set-source default-directory)
+             (helm :sources 'helm-source-do-ag :buffer "*helm-ag*"
                    :keymap helm-do-ag-map :input initial-input
                    :history 'helm-ag--helm-history)))))
     (message nil)))
@@ -1291,14 +1301,7 @@ Continue searching the parent directory? "))
         (dir (or helm-ag--default-directory
                  helm-ag--last-default-directory
                  default-directory)))
-    (setq helm-source-do-ag
-          (helm-make-source "AG" 'helm-do-ag-class
-            :candidates-process (lambda ()
-                                  (helm-ag--do-ag-set-command)
-                                  (helm-ag--do-ag-candidate-process dir))
-            :header-name (lambda (_name)
-                           (helm-ag--helm-header search-dir))
-            :follow (and helm-follow-mode-persistent 1)))
+    (helm-ag--do-ag-set-source dir search-dir)
     (helm-attrset 'search-this-file search-this-file helm-source-do-ag)
     (helm :sources 'helm-source-do-ag :buffer "*helm-ag*" :keymap helm-do-ag-map
           :input (or default-input (helm-ag--marked-input t)
