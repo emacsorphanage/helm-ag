@@ -1186,7 +1186,7 @@ Continue searching the parent directory? "))
                           (helm-ag--highlight-string-matched
                            (match-string-no-properties 2 candidate) patterns))
                   candidate)
-          "")
+          candidate)
       (let* ((split (helm-grep-split-line candidate))
              (file (nth 0 split))
              (lineno (nth 1 split))
@@ -1198,7 +1198,7 @@ Continue searching the parent directory? "))
                           ":"
                           (helm-ag--highlight-string-matched str patterns))
                   candidate)
-          "")))))
+          candidate)))))
 
 (defun helm-do-ag--filter-one-by-one (candidate)
   "Not documented, CANDIDATE."
