@@ -1222,6 +1222,7 @@ Continue searching the parent directory? "))
 (defvar helm-source-do-ag nil)
 
 (defun helm-ag--do-ag-set-source (dir &optional search-dir)
+  "Not documented, DIR, SEARCH-DIR."
   (let ((search-dir (or search-dir dir)))
     (setq helm-source-do-ag
           (helm-make-source "AG" 'helm-do-ag-class
@@ -1236,7 +1237,7 @@ Continue searching the parent directory? "))
   "Not documented."
   (interactive)
   (if (or (not (helm-ag--root-directory-p))
-          (y-or-n-p "Current directory might be the project root. \
+          (y-or-n-p "Current directory might be the project root.  \
 Continue searching the parent directory? "))
       (let ((parent (file-name-directory (directory-file-name default-directory)))
             (initial-input helm-input))
