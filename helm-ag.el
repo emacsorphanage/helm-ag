@@ -1,4 +1,4 @@
-;;; helm-ag.el --- the silver searcher with helm interface -*- lexical-binding: t; -*-
+;;; helm-ag.el --- The silver searcher with helm interface -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 by Syohei YOSHIDA
 
