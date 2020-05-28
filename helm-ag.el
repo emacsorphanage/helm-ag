@@ -390,9 +390,13 @@ Default behaviour shows finish and result in mode-line."
   "Not documented, CANDIDATE."
   (let ((find-func (if helm-ag-use-temp-buffer
                        #'helm-ag--open-file-with-temp-buffer
-                     #'find-file)))
+                     #'find-file))
+        (helm-ag-p (assoc-default 'real-to-display (helm-get-current-source))))
     (helm-ag--find-file-action candidate find-func (helm-ag--search-this-file-p) t)
-    (helm-highlight-current-line)))
+    (let ((helm-input (if helm-ag-p
+                          (concat helm-ag--last-query " " helm-input)
+                        helm-input)))
+      (helm-highlight-current-line))))
 
 (defun helm-ag--validate-regexp (regexp)
   "Not documented, REGEXP."
