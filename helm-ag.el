@@ -1220,7 +1220,7 @@ Continue searching the parent directory? "))
    (candidate-number-limit :initform 99999)
    (requires-pattern :initform 3)
    (persistent-action :initform 'helm-ag--persistent-action)
-   (nomark :initform t)
+   (nomark :initform nil)
    (action :initform 'helm-ag--actions))
   "Not documented.")
 
