@@ -1259,11 +1259,12 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--set-do-ag-option ()
   "Not documented."
-  (when (or (< (prefix-numeric-value current-prefix-arg) 0)
-            helm-ag-always-set-extra-option)
-    (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
-                               'helm-ag--extra-options-history)))
-      (setq helm-ag--extra-options option))))
+  (if (or (< (prefix-numeric-value current-prefix-arg) 0)
+          helm-ag-always-set-extra-option)
+      (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
+                                 'helm-ag--extra-options-history)))
+        (setq helm-ag--extra-options option))
+    (setq helm-ag--extra-options nil)))
 
 (defun helm-ag--set-command-features ()
   "Not documented."
