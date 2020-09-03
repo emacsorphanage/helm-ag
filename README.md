@@ -1,5 +1,6 @@
 # helm-ag.el
 
+[![Build Status](https://travis-ci.org/emacsorphanage/helm-ag.svg?branch=master)](https://travis-ci.org/emacsorphanage/helm-ag)
 [![melpa badge][melpa-badge]][melpa-link]
 [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
 
