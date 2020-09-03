@@ -1,23 +1,20 @@
 # helm-ag.el
 
-[![melpa badge][melpa-badge]][melpa-link] [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
-
+[![melpa badge][melpa-badge]][melpa-link]
+[![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
 
 ## Introduction
 
 `helm-ag.el` provides interfaces of [The Silver Searcher](https://github.com/ggreer/the_silver_searcher) with helm.
-
 
 ## Features
 
 - Support multiple search tools(ag, [the platinum searcher][pt-link], [ack][ack-link] etc)
 - Edit search result like [wgrep](https://github.com/mhayashi1120/Emacs-wgrep)
 
-
 ## Screenshot
 
 ![helm-ag](image/helm-ag.png)
-
 
 ## Requirements
 
@@ -32,7 +29,6 @@
 You can install `helm-ag` with the following command.
 
 <kbd>M-x package-install [RET] helm-ag [RET]</kbd>
-
 
 ## Basic Usage
 
@@ -65,21 +61,17 @@ Smartly switch between `helm-do-ag-this-file` and `helm-occur` based on `helm-ag
 Call `helm-ag` at project root. `helm-ag` seems directory as project root where
 there is `.git` or `.hg` or `.svn`.
 
-
 ##### `helm-do-ag-project-root`
 
 Call `helm-do-ag` at project root.
-
 
 ##### `helm-ag-buffers`
 
 Search buffers by `helm-ag`
 
-
 ##### `helm-do-ag-buffers`
 
 Search buffers by `helm-do-ag`
-
 
 ##### `helm-ag-pop-stack`
 
@@ -88,7 +80,6 @@ Move to point before jump
 ##### `helm-ag-clear-stack`
 
 Clear context stack
-
 
 ## Enable helm-follow-mode by default
 
@@ -99,11 +90,9 @@ Please set `helm-follow-mode-persistent` to non-nil if you want to use `helm-fol
  '(helm-follow-mode-persistent t))
 ```
 
-
 ## Persistent action
 
 You can see file content temporarily by persistent action(`C-j`).
-
 
 ## Search Tips of `helm-ag`
 
@@ -203,7 +192,6 @@ Ignore buffer patterns of buffer search commands.
 
 `helm` removes `file-line` type feature from 1.6.9. So `helm-ag-source-type` is no longer available.
 
-
 ## Keymap
 
 `helm-ag-map` and `helm-do-ag-map` are inherited by `helm-map`.
@@ -218,7 +206,6 @@ Ignore buffer patterns of buffer search commands.
 | `C-c >`, `right` | Move to next file                                                          |
 | `C-c <`, `left`  | Move to previous file                                                      |
 | `C-c ?`          | Show help message                                                          |
-
 
 ### Edit mode keymap
 
@@ -239,7 +226,6 @@ current line indicates.
 | `RET` | Jump to current line position                 |
 | `C-o` | Jump to current line position in other window |
 | `g`   | Update result                                 |
-
 
 ## Sample Configuration
 
