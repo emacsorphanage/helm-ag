@@ -300,8 +300,8 @@ Default behaviour shows finish and result in mode-line."
       (while (re-search-forward "^\\([^:]+\\)" nil t)
         (replace-match (abbreviate-file-name (match-string-no-properties 1)))))))
 
-(defun helm-ag--command-succeeded-p (cmd exit-status)
-  "Not documented, CMD, EXIT-STATUS."
+(defun helm-ag--command-succeeded-p (exit-status)
+  "Not documented, EXIT-STATUS."
   (cond ((integerp helm-ag-success-exit-status) (= exit-status helm-ag-success-exit-status))
         ((consp helm-ag-success-exit-status) (member exit-status helm-ag-success-exit-status))
         (t (zerop exit-status))))
@@ -321,7 +321,7 @@ Default behaviour shows finish and result in mode-line."
         (let ((ret (apply #'process-file (car cmds) nil t nil (cdr cmds))))
           (if (zerop (length (buffer-string)))
               (error "No ag output: '%s'" helm-ag--last-query)
-            (unless (helm-ag--command-succeeded-p (car cmds) ret)
+            (unless (helm-ag--command-succeeded-p ret)
               (unless (executable-find (car cmds))
                 (error "'%s' is not installed" (car cmds)))
               (error "Failed: '%s'" helm-ag--last-query))))
