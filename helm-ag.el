@@ -1231,12 +1231,13 @@ Continue searching the parent directory? "))
   (let ((search-dir (or search-dir dir)))
     (setq helm-source-do-ag
           (helm-make-source "AG" 'helm-do-ag-class
-            :candidates-process (lambda ()
-                                  (helm-ag--do-ag-set-command)
-                                  (helm-ag--do-ag-candidate-process dir))
-            :header-name (lambda (_name)
-                           (helm-ag--helm-header search-dir))
-            :follow (and helm-follow-mode-persistent 1)))))
+                            :candidates-process
+                            (lambda ()
+                              (helm-ag--do-ag-set-command)
+                              (helm-ag--do-ag-candidate-process dir))
+                            :header-name
+                            (lambda (_name) (helm-ag--helm-header search-dir))
+                            :follow (and helm-follow-mode-persistent 1)))))
 
 (defun helm-ag--do-ag-up-one-level ()
   "Not documented."
