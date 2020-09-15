@@ -624,7 +624,7 @@ Default behaviour shows finish and result in mode-line."
   (interactive)
   (goto-char (point-min))
   (let ((read-only-files 0)
-        (files-to-lines (make-hash-table))
+        (files-to-lines (make-hash-table :test #'equal))
         (regexp (helm-ag--match-line-regexp))
         (line-deletes (make-hash-table :test #'equal)))
     ;; Group changes by file
@@ -637,14 +637,16 @@ Default behaviour shows finish and result in mode-line."
         (if (not (file-writable-p file))
             (cl-incf read-only-files)
           (if lines-list
-              (push (list line body ovs) lines-list)
+              (progn
+                (push (list line body ovs) lines-list)
+                (puthash file lines-list files-to-lines))
             (puthash file (list (list line body ovs)) files-to-lines)))))
     ;; Batch edits by file
     (maphash
      (lambda (curr-file lines-data)
        (with-temp-buffer
          (insert-file-contents curr-file)
-         (dolist (curr-line-data lines-data)
+         (dolist (curr-line-data (reverse lines-data))
            (cl-destructuring-bind
                (line body ovs) curr-line-data
              (goto-char (point-min))
