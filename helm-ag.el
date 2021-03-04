@@ -1135,7 +1135,9 @@ Continue searching the parent directory? "))
            proc
            (lambda (process event)
              (helm-process-deferred-sentinel-hook
-              process event (helm-default-directory)))))))))
+              process event (helm-default-directory))
+             (when (string= event "finished\n")
+               (helm-ag--do-ag-propertize helm-input)))))))))
 
 (defconst helm-do-ag--help-message
   "\n* Helm Do Ag\n
