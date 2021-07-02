@@ -367,7 +367,8 @@ Default behaviour shows finish and result in mode-line."
   "Not documented, FILENAME."
   (let ((search-directory default-directory))
     (switch-to-buffer (get-buffer-create " *helm-ag persistent*"))
-    (setq default-directory search-directory)
+    (setq default-directory search-directory
+          buffer-read-only nil)
     (fundamental-mode)
     (erase-buffer)
     (insert-file-contents filename)
