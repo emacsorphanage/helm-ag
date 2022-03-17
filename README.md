@@ -1,8 +1,10 @@
-# helm-ag.el
-
-[![Build Status](https://travis-ci.org/emacsorphanage/helm-ag.svg?branch=master)](https://travis-ci.org/emacsorphanage/helm-ag)
 [![melpa badge][melpa-badge]][melpa-link]
 [![melpa stable badge][melpa-stable-badge]][melpa-stable-link]
+
+# helm-ag.el
+
+[![CI](https://github.com/emacsorphanage/helm-ag/actions/workflows/test.yml/badge.svg)](https://github.com/emacsorphanage/helm-ag/actions/workflows/test.yml)
+[![Build Status](https://travis-ci.org/emacsorphanage/helm-ag.svg?branch=master)](https://travis-ci.org/emacsorphanage/helm-ag)
 
 ## Introduction
 
