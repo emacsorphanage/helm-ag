@@ -220,16 +220,18 @@ Default behaviour shows finish and result in mode-line."
   "Not documented, INPUT."
   (let* ((parsed (helm-ag--parse-options-and-query input))
          (options (car parsed))
-         (query (cdr parsed)))
+         (query (helm-ag--join-patterns (cdr parsed)))
+         (has-query (not (string= query ""))))
     (when helm-ag-use-emacs-lisp-regexp
       (setq query (helm-ag--elisp-regexp-to-pcre query)))
     (setq helm-ag--last-query query
           helm-ag--elisp-regexp-query (helm-ag--convert-to-elisp-regexp query))
     (setq helm-ag--valid-regexp-for-emacs
           (helm-ag--validate-regexp helm-ag--elisp-regexp-query))
-    (if (not options)
-        (list query)
-      (nconc (nreverse options) (list query)))))
+    (when (helm-ag--show-result-p options has-query)
+      (if (not options)
+          (list query)
+        (nconc (nreverse options) (list query))))))
 
 (defsubst helm-ag--search-buffer-p (bufname)
   "Not documented, BUFNAME."
@@ -262,13 +264,14 @@ Default behaviour shows finish and result in mode-line."
           (ag (when (file-exists-p ".agignore")
                 (list '--path-to-ignore'
                       expand-file-name (concat default-directory ".agignore"))))
-          (rg (when (file-exits-p ".rgignore")
+          (rg (when (file-exists-p ".rgignore")
                 (list '--ignore-file'
                       (expend-file-name (concat default-directory ".rgignore"))))))))))
 
-(defun helm-ag--construct-command (this-file)
+(defun helm-ag--construct-command (&optional this-file)
   "Not documented, THIS-FILE."
   (let* ((commands (split-string helm-ag-base-command nil t))
+         (inputs (helm-ag--parse-query helm-ag--last-query))
          (command (car commands))
          (args (cdr commands)))
     (cl-case (intern command)
@@ -289,14 +292,14 @@ please use ag, rg, pt or ack" command))))
                                       helm-ag-ignore-patterns))))
     (when helm-ag-use-grep-ignore-list
       (setq args (append args (helm-ag--grep-ignore-list-to-options))))
-    (setq args (append args (helm-ag--parse-query helm-ag--last-query)))
+    (setq args (append args inputs))
     (when this-file
       (setq args (append args (list this-file))))
-  (when helm-ag--buffer-search
-    (setq args (append args (helm-ag--file-visited-buffers))))
-  (when helm-ag--default-target
-    (setq args (append args (helm-ag--construct-targets helm-ag--default-target))))
-  (cons command args)))
+    (when helm-ag--buffer-search
+      (setq args (append args (helm-ag--file-visited-buffers))))
+    (when helm-ag--default-target
+      (setq args (append args (helm-ag--construct-targets helm-ag--default-target))))
+    (cons command args)))
 
 (defun helm-ag--remove-carrige-returns ()
   "Not documented."
@@ -1097,41 +1100,26 @@ Continue searching the parent directory? "))
         (cl-loop for opt in options
                  thereis (string-prefix-p "-g" opt)))))
 
-(defun helm-ag--construct-do-ag-command (pattern &optional this-file)
-  "Not documented, PATTERN."
-  (let* ((opt-query (helm-ag--parse-options-and-query pattern))
-         (options (car opt-query))
-         (query (cdr opt-query))
-         (has-query (not (string= query ""))))
-    (when helm-ag-use-emacs-lisp-regexp
-      (setq query (helm-ag--elisp-regexp-to-pcre query)))
-    (when (helm-ag--show-result-p options has-query)
-      (let ((cmds (helm-ag--construct-command this-file))
-           (append (car cmds) ;; command
-                   options ;; options
-                   (and has-query (list (helm-ag--join-patterns query))) ;; patterns
-                   (cdr cmds))))))) ;; paths
-
 (defun helm-ag--do-ag-candidate-process (dir)
   "Not documented, DIR."
   (let* ((non-essential nil)
          (default-directory dir)
          (this-file (helm-get-attr 'search-this-file))
-         (cmd-args (helm-ag--construct-do-ag-command helm-pattern this-file)))
-    (when cmd-args
-      (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
-        (setq helm-ag--last-query helm-pattern
-              helm-ag--last-command cmd-args
-              helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
-              helm-ag--last-default-directory default-directory)
-        (prog1 proc
-          (set-process-sentinel
-           proc
-           (lambda (process event)
-             (helm-process-deferred-sentinel-hook
-              process event (helm-default-directory))
+         (helm-ag--last-query helm-pattern)
+         (cmd-args (helm-ag--construct-command this-file)))
+    (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
+      (setq helm-ag--last-query helm-pattern
+            helm-ag--last-command cmd-args
+            helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
+            helm-ag--last-default-directory default-directory)
+      (prog1 proc
+        (set-process-sentinel
+         proc
+         (lambda (process event)
+           (helm-process-deferred-sentinel-hook
+            process event (helm-default-directory))
              (when (string= event "finished\n")
-               (helm-ag--do-ag-propertize helm-input)))))))))
+               (helm-ag--do-ag-propertize helm-input))))))))
 
 (defconst helm-do-ag--help-message
   "\n* Helm Do Ag\n
