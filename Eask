@@ -2,7 +2,12 @@
          "0.64"
          "The silver searcher with helm interface")
 
+(website-url "https://github.com/syohex/emacs-helm-ag")
+(keywords "")
+
 (package-file "helm-ag.el")
+
+(script "test" "echo \"Error: no test specified\" && exit 1")
 
 (source "gnu")
 (source "melpa")
