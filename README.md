@@ -272,7 +272,7 @@ Ripgrep uses exit-status 2 to indicate a partial success:
 
 ```lisp
 (custom-set-variables
- '(helm-ag-base-command "rg --no-heading")
+ '(helm-ag-base-command "rg --no-heading --line-number --color never")
  `(helm-ag-success-exit-status '(0 2)))
 ```
 
