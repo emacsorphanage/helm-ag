@@ -9,10 +9,10 @@
 
 (script "test" "echo \"Error: no test specified\" && exit 1")
 
-(source "gnu")
-(source "melpa")
+(source 'gnu)
+(source 'melpa)
 
-(depends-on "emacs" "25.1")
+(depends-on "emacs" "27.1")
 (depends-on "helm")
 
 (development
