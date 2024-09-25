@@ -1,11 +1,11 @@
 ;;; helm-ag.el --- The silver searcher with helm interface -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017 by Syohei YOSHIDA
+;; Copyright (C) 2017  Syohei YOSHIDA
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-helm-ag
 ;; Version: 0.64
-;; Package-Requires: ((emacs "25.1") (helm "2.0"))
+;; Package-Requires: ((emacs "27.1") (helm "2.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
