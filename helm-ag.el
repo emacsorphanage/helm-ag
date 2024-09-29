@@ -135,6 +135,7 @@ Default behaviour shows finish and result in mode-line."
   '((t (:inherit font-lock-comment-face :strike-through t)))
   "Face of deleted line in edit mode.")
 
+(defvar helm-ag--command nil)
 (defvar helm-ag--command-history '())
 (defvar helm-ag--helm-history '())
 (defvar helm-ag--context-stack nil)
@@ -171,16 +172,16 @@ Default behaviour shows finish and result in mode-line."
 (defun helm-ag--save-current-context ()
   "Not documented."
   (let ((curpoint (with-helm-current-buffer
-                   (point))))
+                    (point))))
     (helm-aif (buffer-file-name helm-current-buffer)
-              (push (list :file it :point curpoint) helm-ag--context-stack)
-              (push (list :buffer helm-current-buffer :point curpoint) helm-ag--context-stack))))
+        (push (list :file it :point curpoint) helm-ag--context-stack)
+      (push (list :buffer helm-current-buffer :point curpoint) helm-ag--context-stack))))
 
 (defun helm-ag--insert-thing-at-point (thing)
   "Not documented, THING."
   (helm-aif (thing-at-point thing)
-            (substring-no-properties it)
-            ""))
+      (substring-no-properties it)
+    ""))
 
 (defun helm-ag--searched-word ()
   "Not documented."
@@ -190,7 +191,9 @@ Default behaviour shows finish and result in mode-line."
 
 (defun helm-ag--construct-ignore-option (pattern)
   "Not documented, PATTERN."
-  (concat "--ignore=" pattern))
+  (cl-case helm-ag--command
+    (ag (concat "--ignore=" pattern))
+    (rg (concat "--glob=!" pattern))))
 
 (defun helm-ag--grep-ignore-list-to-options ()
   "Not documented."
@@ -219,16 +222,18 @@ Default behaviour shows finish and result in mode-line."
   "Not documented, INPUT."
   (let* ((parsed (helm-ag--parse-options-and-query input))
          (options (car parsed))
-         (query (cdr parsed)))
+         (query (helm-ag--join-patterns (cdr parsed)))
+         (has-query (not (string= query ""))))
     (when helm-ag-use-emacs-lisp-regexp
       (setq query (helm-ag--elisp-regexp-to-pcre query)))
     (setq helm-ag--last-query query
           helm-ag--elisp-regexp-query (helm-ag--convert-to-elisp-regexp query))
     (setq helm-ag--valid-regexp-for-emacs
           (helm-ag--validate-regexp helm-ag--elisp-regexp-query))
-    (if (not options)
-        (list query)
-      (nconc (nreverse options) (list query)))))
+    (when (helm-ag--show-result-p options has-query)
+      (if (not options)
+          (list query)
+        (nconc (nreverse options) (list query))))))
 
 (defsubst helm-ag--search-buffer-p (bufname)
   "Not documented, BUFNAME."
@@ -252,31 +257,44 @@ Default behaviour shows finish and result in mode-line."
     (cl-loop for target in targets
              collect (file-relative-name target))))
 
-(defun helm-ag--root-agignore ()
+(defun helm-ag--ignore-file-option ()
   "Not documented."
   (let ((root (helm-ag--project-root)))
     (when root
       (let ((default-directory root))
-        (when (file-exists-p ".agignore")
-          (expand-file-name (concat default-directory ".agignore")))))))
+        (cl-case helm-ag--command
+          (ag (when (file-exists-p ".agignore")
+                (list '--path-to-ignore'
+                      expand-file-name (concat default-directory ".agignore"))))
+          (rg (when (file-exists-p ".rgignore")
+                (list '--ignore-file'
+                      (expend-file-name (concat default-directory ".rgignore"))))))))))
 
-(defun helm-ag--construct-command (this-file)
+(defun helm-ag--construct-command (&optional this-file)
   "Not documented, THIS-FILE."
   (let* ((commands (split-string helm-ag-base-command nil t))
+         (inputs (helm-ag--parse-query helm-ag--last-query))
          (command (car commands))
          (args (cdr commands)))
+    (cl-case (intern command)
+      (ag (setq helm-ag--command 'ag))
+      (rg (setq helm-ag--command 'rg))
+      (pt (setq helm-ag--command 'pt))
+      (ack (setq helm-ag--command 'ack))
+      (t (error (format "Error: grep command %s is not supported,
+please use ag, rg, pt or ack" command))))
     (when helm-ag-command-option
       (let ((ag-options (split-string helm-ag-command-option nil t)))
         (setq args (append args ag-options))))
-    (when helm-ag-use-agignore
-      (helm-aif (helm-ag--root-agignore)
-                (setq args (append args (list "-p" it)))))
+    (when helm-ag--extra-options
+      (setq args (append args (split-string helm-ag--extra-options))))
+    (setq args (append args (helm-ag--ignore-file-option)))
     (when helm-ag-ignore-patterns
       (setq args (append args (mapcar 'helm-ag--construct-ignore-option
                                       helm-ag-ignore-patterns))))
     (when helm-ag-use-grep-ignore-list
       (setq args (append args (helm-ag--grep-ignore-list-to-options))))
-    (setq args (append args (helm-ag--parse-query helm-ag--last-query)))
+    (setq args (append args inputs))
     (when this-file
       (setq args (append args (list this-file))))
     (when helm-ag--buffer-search
@@ -311,11 +329,11 @@ Default behaviour shows finish and result in mode-line."
 (defun helm-ag--init ()
   "Not documented."
   (let ((buf-coding buffer-file-coding-system))
-    (helm-attrset 'recenter t)
+    (helm-set-attr 'recenter t)
     (with-current-buffer (helm-candidate-buffer 'global)
       (let* ((default-directory (or helm-ag--default-directory
                                     default-directory))
-             (cmds (helm-ag--construct-command (helm-attr 'search-this-file)))
+             (cmds (helm-ag--construct-command (helm-get-attr 'search-this-file)))
              (coding-system-for-read buf-coding)
              (coding-system-for-write buf-coding))
         (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmds helm-ag--last-query)
@@ -387,7 +405,7 @@ Default behaviour shows finish and result in mode-line."
   (unless (helm-ag--vimgrep-option)
     (if (eq (helm-get-current-source) 'helm-source-do-ag)
         (helm-ag--search-only-one-file-p)
-      (helm-attr 'search-this-file))))
+      (helm-get-attr 'search-this-file))))
 
 (defun helm-ag--persistent-action (candidate)
   "Not documented, CANDIDATE."
@@ -472,14 +490,14 @@ Default behaviour shows finish and result in mode-line."
 (defun helm-ag--candidate-transform-for-files (candidate)
   "Not documented, CANDIDATE."
   (helm-aif (helm-grep-split-line candidate)
-            (format "%s:%s:%s"
-                    (propertize (cl-first it) 'face 'helm-moccur-buffer)
-                    (propertize (cl-second it) 'face 'helm-grep-lineno)
-                    (helm-ag--highlight-candidate (cl-third it)))))
+      (format "%s:%s:%s"
+              (propertize (cl-first it) 'face 'helm-moccur-buffer)
+              (propertize (cl-second it) 'face 'helm-grep-lineno)
+              (helm-ag--highlight-candidate (cl-third it)))))
 
 (defun helm-ag--candidate-transformer (candidate)
   "Not documented, CANDIDATE."
-  (or (if (helm-attr 'search-this-file)
+  (or (if (helm-get-attr 'search-this-file)
           (helm-ag--candidate-transform-for-this-file candidate)
         (helm-ag--candidate-transform-for-files candidate))
       candidate))
@@ -517,14 +535,14 @@ Default behaviour shows finish and result in mode-line."
 
 (defvar helm-ag-source
   (helm-build-in-buffer-source "The Silver Searcher"
-                               :init 'helm-ag--init
-                               :real-to-display 'helm-ag--candidate-transformer
-                               :persistent-action 'helm-ag--persistent-action
-                               :fuzzy-match helm-ag-fuzzy-match
-                               :action helm-ag--actions
-                               :candidate-number-limit 9999
-                               :keymap helm-ag-map
-                               :follow (and helm-follow-mode-persistent 1))
+    :init 'helm-ag--init
+    :real-to-display 'helm-ag--candidate-transformer
+    :persistent-action 'helm-ag--persistent-action
+    :fuzzy-match helm-ag-fuzzy-match
+    :action helm-ag--actions
+    :candidate-number-limit 9999
+    :keymap helm-ag-map
+    :follow (and helm-follow-mode-persistent 1))
   "Not documented.")
 
 ;;;###autoload
@@ -535,11 +553,11 @@ Default behaviour shows finish and result in mode-line."
     (unless context
       (error "Context stack is empty !"))
     (helm-aif (plist-get context :file)
-              (find-file it)
-              (let ((buf (plist-get context :buffer)))
-                (if (buffer-live-p buf)
-                    (switch-to-buffer buf)
-                  (error "The buffer is already killed"))))
+        (find-file it)
+      (let ((buf (plist-get context :buffer)))
+        (if (buffer-live-p buf)
+            (switch-to-buffer buf)
+          (error "The buffer is already killed"))))
     (goto-char (plist-get context :point))))
 
 ;;;###autoload
@@ -568,7 +586,7 @@ Default behaviour shows finish and result in mode-line."
                                           nil
                                           'helm-ag--command-history
                                           (helm-aif (symbol-at-point)
-                                                    (symbol-name it))))))
+                                              (symbol-name it))))))
     (when (string-empty-p query)
       (error "Input is empty!!"))
     (setq helm-ag--last-query query)))
@@ -601,7 +619,7 @@ Default behaviour shows finish and result in mode-line."
   "Not documented."
   (interactive)
   (with-helm-alive-p
-   (helm-exit-and-execute-action #'helm-ag--action-find-file-other-window)))
+    (helm-exit-and-execute-action #'helm-ag--action-find-file-other-window)))
 
 (defun helm-ag--exit-from-edit-mode ()
   "Not documented."
@@ -869,9 +887,9 @@ Special commands:
   (interactive)
   (let ((use-other-buf-p current-prefix-arg))
     (with-helm-alive-p
-     (helm-exit-and-execute-action
-      (lambda (_arg)
-        (helm-ag--save-results use-other-buf-p))))))
+      (helm-exit-and-execute-action
+       (lambda (_arg)
+         (helm-ag--save-results use-other-buf-p))))))
 
 (defun helm-ag--file-of-current-file ()
   "Not documented."
@@ -882,12 +900,12 @@ Special commands:
 (defun helm-ag--move-file-common (pred move-fn wrap-fn)
   "Not documented, PRED, MOVE-FN, WRAP-FN."
   (with-helm-window
-   (let ((file (helm-ag--file-of-current-file)))
-     (funcall move-fn)
-     (while (and (not (funcall pred)) (string= file (helm-ag--file-of-current-file)))
-       (funcall move-fn))
-     (when (funcall pred)
-       (funcall wrap-fn)))))
+    (let ((file (helm-ag--file-of-current-file)))
+      (funcall move-fn)
+      (while (and (not (funcall pred)) (string= file (helm-ag--file-of-current-file)))
+        (funcall move-fn))
+      (when (funcall pred)
+        (funcall wrap-fn)))))
 
 (defun helm-ag--previous-file ()
   "Not documented."
@@ -918,7 +936,7 @@ Continue searching the parent directory? "))
            (let* ((default-directory parent)
                   (helm-ag--default-directory parent))
              (setq helm-ag--last-default-directory default-directory)
-             (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
+             (helm-set-attr 'name (helm-ag--helm-header default-directory) helm-ag-source)
              (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map
                    :history 'helm-ag--helm-history)))))
     (message nil)))
@@ -932,9 +950,9 @@ Continue searching the parent directory? "))
         (helm-ag--default-directory default-directory))
     (helm-ag--query query)
     (helm-ag--set-command-features)
-    (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
-                  helm-ag-source)
-    (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
+    (helm-set-attr 'search-this-file (file-relative-name (buffer-file-name))
+                   helm-ag-source)
+    (helm-set-attr 'name (format "Search at %s" filename) helm-ag-source)
     (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map
           :history 'helm-ag--helm-history)))
 
@@ -951,8 +969,9 @@ Continue searching the parent directory? "))
     (let ((helm-ag--default-directory (or basedir dir))
           (helm-ag--default-target targets))
       (helm-ag--query query)
-      (helm-attrset 'search-this-file nil helm-ag-source)
-      (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
+      (helm-ag--set-command-features)
+      (helm-set-attr 'search-this-file nil helm-ag-source)
+      (helm-set-attr 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
       (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map
             :history 'helm-ag--helm-history))))
 
@@ -1058,90 +1077,52 @@ Continue searching the parent directory? "))
 (defun helm-ag--do-ag-propertize (input)
   "Not documented, INPUT."
   (with-helm-window
-   (helm-ag--remove-carrige-returns)
-   (when helm-ag--buffer-search
-     (helm-ag--abbreviate-file-name))
-   (helm-ag--propertize-candidates input)
-   (when helm-ag-show-status-function
-     (funcall helm-ag-show-status-function)
-     (force-mode-line-update))))
+    (helm-ag--remove-carrige-returns)
+    (when helm-ag--buffer-search
+      (helm-ag--abbreviate-file-name))
+    (helm-ag--propertize-candidates input)
+    (when helm-ag-show-status-function
+      (funcall helm-ag-show-status-function)
+      (force-mode-line-update))))
 
 (defun helm-ag--construct-extension-options ()
   "Not documented."
   (cl-loop for ext in helm-do-ag--extensions
            unless (string= ext "*")
            collect
-           (concat "-G" (replace-regexp-in-string
-                         "\\*" ""
-                         (replace-regexp-in-string "\\." "\\\\." ext)))))
+           (cl-case helm-ag--command
+             (ag (concat "--file-search-regex" (replace-regexp-in-string
+                                                "\\*" ""
+                                                (replace-regexp-in-string "\\." "\\\\." ext))))
+             (rg (concat "--glob=" (replace-regexp-in-string "\\." "\\\\." ext))))))
 
 (defun helm-ag--show-result-p (options has-query)
   "Not documented, OPTIONS, HAS-QUERY."
   (or has-query
-      (cl-loop for opt in options
-               thereis (string-prefix-p "-g" opt))))
-
-(defun helm-ag--construct-do-ag-command (pattern)
-  "Not documented, PATTERN."
-  (let* ((opt-query (helm-ag--parse-options-and-query pattern))
-         (options (car opt-query))
-         (query (cdr opt-query))
-         (has-query (not (string= query ""))))
-    (when helm-ag-use-emacs-lisp-regexp
-      (setq query (helm-ag--elisp-regexp-to-pcre query)))
-    (when (helm-ag--show-result-p options has-query)
-      (append (car helm-do-ag--commands)
-              options
-              (and has-query (list (helm-ag--join-patterns query)))
-              (cdr helm-do-ag--commands)))))
-
-(defun helm-ag--do-ag-set-command ()
-  "Not documented."
-  (let ((cmd-opts (split-string helm-ag-base-command nil t)))
-    (when helm-ag-command-option
-      (setq cmd-opts (append cmd-opts (split-string helm-ag-command-option nil t))))
-    (when helm-ag--extra-options
-      (setq cmd-opts (append cmd-opts (split-string helm-ag--extra-options))))
-    (when helm-ag-ignore-patterns
-      (setq cmd-opts
-            (append cmd-opts
-                    (mapcar #'helm-ag--construct-ignore-option
-                            helm-ag-ignore-patterns))))
-    (when helm-ag-use-agignore
-      (helm-aif (helm-ag--root-agignore)
-                (setq cmd-opts (append cmd-opts (list "-p" it)))))
-    (when helm-do-ag--extensions
-      (setq cmd-opts (append cmd-opts (helm-ag--construct-extension-options))))
-    (when helm-ag-use-grep-ignore-list
-      (setq cmd-opts (append cmd-opts (helm-ag--grep-ignore-list-to-options))))
-    (let (targets)
-      (when helm-ag--buffer-search
-        (setq targets (helm-ag--file-visited-buffers)))
-      (setq helm-do-ag--commands
-            (cons cmd-opts
-                  (if helm-ag--default-target
-                      (append targets (helm-ag--construct-targets helm-ag--default-target))
-                    targets))))))
+      (when (eq helm-ag--command 'ag)
+        (cl-loop for opt in options
+                 thereis (string-prefix-p "-g" opt)))))
 
 (defun helm-ag--do-ag-candidate-process (dir)
   "Not documented, DIR."
   (let* ((non-essential nil)
          (default-directory dir)
-         (cmd-args (helm-ag--construct-do-ag-command helm-pattern)))
-    (when cmd-args
-      (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
-        (setq helm-ag--last-query helm-pattern
-              helm-ag--last-command cmd-args
-              helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
-              helm-ag--last-default-directory default-directory)
-        (prog1 proc
-          (set-process-sentinel
-           proc
-           (lambda (process event)
-             (helm-process-deferred-sentinel-hook
-              process event (helm-default-directory))
+         (this-file (helm-get-attr 'search-this-file))
+         (helm-ag--last-query helm-pattern)
+         (cmd-args (helm-ag--construct-command this-file)))
+    (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
+      (setq helm-ag--last-query helm-pattern
+            helm-ag--last-command cmd-args
+            helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
+            helm-ag--last-default-directory default-directory)
+      (prog1 proc
+        (set-process-sentinel
+         proc
+         (lambda (process event)
+           (helm-process-deferred-sentinel-hook
+            process event (helm-default-directory))
              (when (string= event "finished\n")
-               (helm-ag--do-ag-propertize helm-input)))))))))
+               (helm-ag--do-ag-propertize helm-input))))))))
 
 (defconst helm-do-ag--help-message
   "\n* Helm Do Ag\n
@@ -1239,13 +1220,12 @@ Continue searching the parent directory? "))
   (let ((search-dir (or search-dir dir)))
     (setq helm-source-do-ag
           (helm-make-source "AG" 'helm-do-ag-class
-                            :candidates-process
-                            (lambda ()
-                              (helm-ag--do-ag-set-command)
-                              (helm-ag--do-ag-candidate-process dir))
-                            :header-name
-                            (lambda (_name) (helm-ag--helm-header search-dir))
-                            :follow (and helm-follow-mode-persistent 1)))))
+            :candidates-process
+            (lambda ()
+              (helm-ag--do-ag-candidate-process dir))
+            :header-name
+            (lambda (_name) (helm-ag--helm-header search-dir))
+            :follow (and helm-follow-mode-persistent 1)))))
 
 (defun helm-ag--do-ag-up-one-level ()
   "Not documented."
@@ -1318,7 +1298,7 @@ Continue searching the parent directory? "))
                  helm-ag--last-default-directory
                  default-directory)))
     (helm-ag--do-ag-set-source dir search-dir)
-    (helm-attrset 'search-this-file search-this-file helm-source-do-ag)
+    (helm-set-attr 'search-this-file search-this-file helm-source-do-ag)
     (helm :sources 'helm-source-do-ag :buffer "*helm-ag*" :keymap helm-do-ag-map
           :input (or default-input (helm-ag--marked-input t)
                      (helm-ag--insert-thing-at-point helm-ag-insert-at-point))
@@ -1329,8 +1309,8 @@ Continue searching the parent directory? "))
   "Not documented, QUERY."
   (interactive)
   (helm-aif (buffer-file-name)
-            (helm-do-ag default-directory (list it) query)
-            (error "Error: This buffer is not visited file")))
+      (helm-do-ag default-directory (list it) query)
+    (error "Error: This buffer is not visited file")))
 
 ;;;###autoload
 (defun helm-do-ag (&optional basedir targets default-input)
