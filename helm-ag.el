@@ -1186,6 +1186,7 @@ Continue searching the parent directory? "))
          (helm-ag--last-query helm-pattern)
          (cmd-args (helm-ag--construct-command this-file)))
     (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
+      (set 'helm-ag--last-query helm-pattern)
       (setq helm-ag--last-query helm-pattern
             helm-ag--last-command cmd-args
             helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
