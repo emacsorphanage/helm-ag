@@ -346,7 +346,7 @@ please use ag, rg, pt or ack" command))))
     (with-current-buffer (helm-candidate-buffer 'global)
       (let* ((default-directory (or helm-ag--default-directory
                                     default-directory))
-             (cmds (helm-ag--construct-command (helm-attr 'search-this-file)))
+             (cmds (helm-ag--construct-command (helm-get-attr 'search-this-file)))
              (coding-system-for-read buf-coding)
              (coding-system-for-write buf-coding))
         (setq helm-ag--ignore-case (helm-ag--ignore-case-p cmds helm-ag--last-query)
@@ -424,7 +424,7 @@ this is a temporary preview action."
   (unless (helm-ag--vimgrep-option)
     (if (eq (helm-get-current-source) 'helm-source-do-ag)
         (helm-ag--search-only-one-file-p)
-      (helm-attr 'search-this-file))))
+      (helm-get-attr 'search-this-file))))
 
 (defun helm-ag--persistent-action (candidate)
   "Display CANDIDATE in a buffer temporarily for preview."
@@ -516,7 +516,7 @@ this is a temporary preview action."
 
 (defun helm-ag--candidate-transformer (candidate)
   "Transform CANDIDATE for display based on search context."
-  (or (if (helm-attr 'search-this-file)
+  (or (if (helm-get-attr 'search-this-file)
           (helm-ag--candidate-transform-for-this-file candidate)
         (helm-ag--candidate-transform-for-files candidate))
       candidate))
@@ -1183,7 +1183,7 @@ Continue searching the parent directory? "))
   (setq helm-ag--last-query helm-pattern)
   (let* ((non-essential nil)
          (default-directory dir)
-         (this-file (helm-attr 'search-this-file))
+         (this-file (helm-get-attr 'search-this-file))
          (cmd-args (helm-ag--construct-command this-file)))
     (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
       (setq helm-ag--last-query helm-pattern
