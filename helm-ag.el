@@ -1180,13 +1180,12 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--do-ag-candidate-process (dir)
   "Execute `helm-do-ag' in the specified directory DIR."
+  (setq helm-ag--last-query helm-pattern)
   (let* ((non-essential nil)
          (default-directory dir)
          (this-file (helm-attr 'search-this-file))
-         (helm-ag--last-query helm-pattern)
          (cmd-args (helm-ag--construct-command this-file)))
     (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
-      (set 'helm-ag--last-query helm-pattern)
       (setq helm-ag--last-query helm-pattern
             helm-ag--last-command cmd-args
             helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
