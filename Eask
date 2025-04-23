@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "helm-ag"
          "0.64"
          "The silver searcher with helm interface")
